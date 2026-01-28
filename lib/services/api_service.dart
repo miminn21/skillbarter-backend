@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flutter/foundation.dart';
-
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
@@ -12,9 +10,9 @@ class ApiService {
   String? _token;
 
   // Base URL - sesuaikan dengan backend
-  static const String baseUrl = kIsWeb
-      ? 'http://localhost:5000/api'
-      : 'http://192.168.100.166:5000/api';
+  // Base URL - Railway Production
+  static const String baseUrl =
+      'https://skillbarter-backend-production-1e6b.up.railway.app/api';
 
   Future<void> initialize() async {
     _dio = Dio(
