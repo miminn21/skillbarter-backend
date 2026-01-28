@@ -1,3 +1,7 @@
 [build]
-root = "backend"
+root = "/backend"
 builder = "NIXPACKS"
+buildCommand = "npm install"
+
+[deploy]
+startCommand = "npm start"
