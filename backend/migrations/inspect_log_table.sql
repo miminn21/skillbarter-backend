@@ -1,0 +1,1 @@
+DESCRIBE log_transaksi;

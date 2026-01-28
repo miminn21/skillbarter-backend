@@ -1,0 +1,23 @@
+﻿Analyzing offer_detail_screen.dart...                           
+
+   info - Parameter 'key' could be a super parameter - lib\screens\barter\offer_detail_screen.dart:19:9 - use_super_parameters
+   info - Don't use 'BuildContext's across async gaps - lib\screens\barter\offer_detail_screen.dart:123:52 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:164:31 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\screens\barter\offer_detail_screen.dart:175:15 - avoid_print
+warning - Dead code - lib\screens\barter\offer_detail_screen.dart:459:42 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\screens\barter\offer_detail_screen.dart:459:45 - dead_null_aware_expression
+  error - The getter 'hargaCoinPenawar' isn't defined for the type 'BarterOffer' - lib\screens\barter\offer_detail_screen.dart:462:31 - undefined_getter
+  error - The getter 'hargaCoinDitawar' isn't defined for the type 'BarterOffer' - lib\screens\barter\offer_detail_screen.dart:463:31 - undefined_getter
+  error - The getter 'hargaCoinDitawar' isn't defined for the type 'BarterOffer' - lib\screens\barter\offer_detail_screen.dart:467:31 - undefined_getter
+  error - The getter 'hargaCoinPenawar' isn't defined for the type 'BarterOffer' - lib\screens\barter\offer_detail_screen.dart:468:31 - undefined_getter
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:700:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:702:19 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:736:53 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:756:57 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:773:23 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:799:17 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:965:17 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:972:17 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\barter\offer_detail_screen.dart:975:29 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:980:17 - use_build_context_synchronously
+

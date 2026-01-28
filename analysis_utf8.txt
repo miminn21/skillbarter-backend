@@ -1,0 +1,36 @@
+﻿Analyzing offer_detail_screen.dart...                           
+
+warning - Unused import: 'package:image_picker/image_picker.dart' - lib\screens\barter\offer_detail_screen.dart:5:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\screens\barter\offer_detail_screen.dart:20:9 - use_super_parameters
+   info - Don't use 'BuildContext's across async gaps - lib\screens\barter\offer_detail_screen.dart:124:52 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:165:31 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\screens\barter\offer_detail_screen.dart:176:15 - avoid_print
+  error - The named parameter 'durasiJam' is required, but there's no corresponding argument - lib\screens\barter\offer_detail_screen.dart:458:13 - missing_required_argument
+  error - The named parameter 'hargaPerJamAnda' is required, but there's no corresponding argument - lib\screens\barter\offer_detail_screen.dart:458:13 - missing_required_argument
+  error - The named parameter 'hargaPerJamPartner' is required, but there's no corresponding argument - lib\screens\barter\offer_detail_screen.dart:458:13 - missing_required_argument
+  error - The named parameter 'skillAnda' is required, but there's no corresponding argument - lib\screens\barter\offer_detail_screen.dart:458:13 - missing_required_argument
+  error - The named parameter 'skillUser' isn't defined - lib\screens\barter\offer_detail_screen.dart:459:15 - undefined_named_parameter
+  error - The named parameter 'levelUser' isn't defined - lib\screens\barter\offer_detail_screen.dart:460:15 - undefined_named_parameter
+  error - The named parameter 'levelPartner' isn't defined - lib\screens\barter\offer_detail_screen.dart:462:15 - undefined_named_parameter
+  error - The named parameter 'duration' isn't defined - lib\screens\barter\offer_detail_screen.dart:463:15 - undefined_named_parameter
+  error - The getter 'myConfirmation' isn't defined for the type 'BarterProvider' - lib\screens\barter\offer_detail_screen.dart:555:29 - undefined_getter
+  error - The getter 'partnerConfirmation' isn't defined for the type 'BarterProvider' - lib\screens\barter\offer_detail_screen.dart:556:34 - undefined_getter
+warning - The declaration '_buildInfoRow' isn't referenced - lib\screens\barter\offer_detail_screen.dart:643:10 - unused_element
+warning - The declaration '_buildProofSection' isn't referenced - lib\screens\barter\offer_detail_screen.dart:663:10 - unused_element
+  error - Too many positional arguments: 1 expected, but 2 found - lib\screens\barter\offer_detail_screen.dart:732:17 - extra_positional_arguments_could_be_named
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:735:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:737:19 - use_build_context_synchronously
+  error - Too many positional arguments: 1 expected, but 2 found - lib\screens\barter\offer_detail_screen.dart:767:17 - extra_positional_arguments_could_be_named
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:769:53 - use_build_context_synchronously
+  error - The argument for the named parameter 'foregroundColor' was already specified - lib\screens\barter\offer_detail_screen.dart:775:15 - duplicate_named_argument
+  error - Too many positional arguments: 1 expected, but 2 found - lib\screens\barter\offer_detail_screen.dart:789:21 - extra_positional_arguments_could_be_named
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:791:57 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:808:23 - use_build_context_synchronously
+  error - The method 'startBarterSession' isn't defined for the type 'BarterProvider' - lib\screens\barter\offer_detail_screen.dart:832:44 - undefined_method
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:835:17 - use_build_context_synchronously
+  error - The getter 'myConfirmation' isn't defined for the type 'BarterProvider' - lib\screens\barter\offer_detail_screen.dart:854:31 - undefined_getter
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:1004:17 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:1011:17 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\barter\offer_detail_screen.dart:1014:29 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\barter\offer_detail_screen.dart:1019:17 - use_build_context_synchronously
+
