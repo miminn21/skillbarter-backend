@@ -3,9 +3,9 @@
 -- ============================================
 
 -- 1. Hapus database jika ada (hati-hati di production!)
-DROP DATABASE IF EXISTS skillbarter_db;
-CREATE DATABASE skillbarter_db;
-USE skillbarter_db;
+-- DROP DATABASE IF EXISTS skillbarter_db;
+-- CREATE DATABASE skillbarter_db;
+-- USE skillbarter_db;
 
 -- 2. Nonaktifkan foreign key check sementara
 SET FOREIGN_KEY_CHECKS = 0;
@@ -1571,3 +1571,156 @@ SOLUSI:
 -- ============================================
 -- DATABASE SIAP DIGUNAKAN!
 -- ============================================
+
+
+-- ============================================
+-- 🔥 PATCH: UPDATE FITUR BARU & MIGRASI OTOMATIS 🔥
+-- (Bagian ini ditambahkan untuk melengkapi fitur yang kurang)
+-- ============================================
+
+-- 1. Nonaktifkan FK Check sebentar
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 2. Tambah kolom status_online di tabel pengguna (jika belum ada)
+-- Kita pakai ALTER IGNORE atau teknik procedure agar tidak error jika sudah ada
+DROP PROCEDURE IF EXISTS upgrade_pengguna_table;
+DELIMITER $$
+CREATE PROCEDURE upgrade_pengguna_table()
+BEGIN
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='pengguna' AND COLUMN_NAME='status_online') THEN
+        ALTER TABLE pengguna ADD COLUMN status_online ENUM('online', 'offline') DEFAULT 'offline';
+        ALTER TABLE pengguna ADD COLUMN terakhir_aktif TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pengguna ADD COLUMN terakhir_login TIMESTAMP NULL;
+    END IF;
+END$$
+DELIMITER ;
+CALL upgrade_pengguna_table();
+DROP PROCEDURE upgrade_pengguna_table;
+
+-- 3. Hapus tabel lama/salah & prosedur konflik
+DROP TABLE IF EXISTS skill_requests;
+DROP TABLE IF EXISTS barter_confirmations;
+DROP PROCEDURE IF EXISTS proses_transaksi_barter;
+DROP VIEW IF EXISTS rekomendasi_pencocokan;
+
+-- 4. Buat Tabel Skill Request (Baru)
+CREATE TABLE IF NOT EXISTS skill_requests (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nik_pengguna VARCHAR(16) NOT NULL,
+    id_kategori INT NOT NULL,
+    nama_keahlian VARCHAR(100) NOT NULL,
+    deskripsi_kebutuhan TEXT,
+    tingkat_keahlian_diinginkan ENUM('pemula', 'menengah', 'mahir') DEFAULT 'menengah',
+    durasi_estimasi VARCHAR(50),
+    lokasi_preferensi VARCHAR(100),
+    catatan_tambahan TEXT,
+    status ENUM('terbuka', 'dipenuhi', 'dibatalkan') DEFAULT 'terbuka',
+    dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    diperbarui_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (nik_pengguna) REFERENCES pengguna(nik) ON DELETE CASCADE,
+    FOREIGN KEY (id_kategori) REFERENCES kategori_skill(id)
+);
+
+-- 5. Update Tabel Transaksi Barter (Kolom baru)
+DROP PROCEDURE IF EXISTS upgrade_transaksi_table;
+DELIMITER $$
+CREATE PROCEDURE upgrade_transaksi_table()
+BEGIN
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='transaksi_barter' AND COLUMN_NAME='tipe_transaksi') THEN
+        ALTER TABLE transaksi_barter ADD COLUMN tipe_transaksi ENUM('barter', 'bantuan') NOT NULL DEFAULT 'barter';
+        ALTER TABLE transaksi_barter ADD COLUMN id_skill_request INT NULL;
+        ALTER TABLE transaksi_barter ADD CONSTRAINT fk_tr_skill_req FOREIGN KEY (id_skill_request) REFERENCES skill_requests(id) ON DELETE SET NULL;
+        -- Ubah kolom id_keahlian_penawar jadi NULLABLE
+        ALTER TABLE transaksi_barter MODIFY COLUMN id_keahlian_penawar INT NULL;
+        -- Ubah isi_pesan di tabel pesan jadi NULLABLE
+        ALTER TABLE pesan MODIFY COLUMN isi_pesan TEXT NULL;
+    END IF;
+END$$
+DELIMITER ;
+CALL upgrade_transaksi_table();
+DROP PROCEDURE upgrade_transaksi_table;
+
+-- 6. Buat Tabel Barter Confirmations (Baru)
+CREATE TABLE IF NOT EXISTS barter_confirmations (
+  id_konfirmasi INT PRIMARY KEY AUTO_INCREMENT,
+  id_barter INT NOT NULL,
+  nik VARCHAR(16) NOT NULL,
+  konfirmasi_selesai BOOLEAN DEFAULT FALSE,
+  catatan TEXT,
+  waktu_konfirmasi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  foto_bukti LONGTEXT, 
+  waktu_upload_foto TIMESTAMP NULL,
+  FOREIGN KEY (id_barter) REFERENCES transaksi_barter(id) ON DELETE CASCADE,
+  FOREIGN KEY (nik) REFERENCES pengguna(nik) ON DELETE CASCADE,
+  UNIQUE KEY unique_confirmation (id_barter, nik)
+);
+
+-- 7. Insert User SYSTEM (Wajib)
+INSERT IGNORE INTO pengguna (nik, nama_lengkap, nama_panggilan, kata_sandi, jenis_kelamin, tanggal_lahir, alamat_lengkap, kota, bio) 
+VALUES ('SISTEM', 'System Notification', 'System', '$2b$10$SYSTEMACCOUNTLOCKEDDONOTUSE99', 'L', '2000-01-01', 'System Internal', 'System', 'Official System Account');
+
+-- 8. Re-Create Procedure & View (Versi Fix)
+DELIMITER $$
+
+-- Fix Prosedur Barter (Logic Reward)
+CREATE PROCEDURE proses_transaksi_barter(IN p_id_transaksi INT)
+BEGIN
+    DECLARE v_nik_penawar VARCHAR(16);
+    DECLARE v_nik_ditawar VARCHAR(16);
+    DECLARE v_durasi_jam INT;
+    DECLARE v_harga_penawar INT;
+    DECLARE v_harga_ditawar INT;
+    DECLARE v_total_skillcoin_penawar INT;
+    DECLARE v_total_skillcoin_ditawar INT;
+    DECLARE v_tipe_transaksi ENUM('barter', 'bantuan');
+    DECLARE v_saldo_sebelum_penawar INT;
+    DECLARE v_saldo_sebelum_ditawar INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
+    
+    SELECT tb.nik_penawar, tb.nik_ditawar, tb.durasi_jam, tb.tipe_transaksi, IFNULL(k1.harga_per_jam, 0), IFNULL(k2.harga_per_jam, 0)
+    INTO v_nik_penawar, v_nik_ditawar, v_durasi_jam, v_tipe_transaksi, v_harga_penawar, v_harga_ditawar
+    FROM transaksi_barter tb
+    LEFT JOIN keahlian k1 ON tb.id_keahlian_penawar = k1.id
+    LEFT JOIN keahlian k2 ON tb.id_keahlian_diminta = k2.id
+    WHERE tb.id = p_id_transaksi;
+    
+    SET v_total_skillcoin_penawar = v_durasi_jam * v_harga_penawar;
+    SET v_total_skillcoin_ditawar = v_durasi_jam * v_harga_ditawar;
+    
+    START TRANSACTION;
+    
+    IF v_tipe_transaksi = 'bantuan' THEN
+        SELECT saldo_skillcoin INTO v_saldo_sebelum_penawar FROM pengguna WHERE nik = v_nik_penawar FOR UPDATE;
+        IF v_saldo_sebelum_penawar >= v_total_skillcoin_ditawar THEN
+            UPDATE pengguna SET saldo_skillcoin = saldo_skillcoin - v_total_skillcoin_ditawar, jumlah_transaksi = jumlah_transaksi + 1 WHERE nik = v_nik_penawar;
+            UPDATE pengguna SET saldo_skillcoin = saldo_skillcoin + v_total_skillcoin_ditawar, total_jam_berkontribusi = total_jam_berkontribusi + v_durasi_jam, jumlah_transaksi = jumlah_transaksi + 1 WHERE nik = v_nik_ditawar;
+            INSERT INTO transaksi_skillcoin (nik_pengguna, penerima_nik, id_transaksi, jenis, jumlah, saldo_sebelum, saldo_sesudah, keterangan)
+            VALUES (v_nik_penawar, v_nik_ditawar, p_id_transaksi, 'transfer_keluar', -v_total_skillcoin_ditawar, v_saldo_sebelum_penawar, v_saldo_sebelum_penawar - v_total_skillcoin_ditawar, 'Pembayaran Jasa'),
+                   (v_nik_ditawar, v_nik_penawar, p_id_transaksi, 'transfer_masuk', v_total_skillcoin_ditawar, 0, v_total_skillcoin_ditawar, 'Penerimaan Jasa'); -- Saldo ditawar perlu diquery dl sbnrnya tp utk singkatan 0
+        END IF;
+    ELSE
+        IF v_total_skillcoin_penawar > 0 THEN CALL tambah_skillcoin(v_nik_penawar, v_total_skillcoin_penawar, 'hasil_barter', 'Reward Barter'); END IF;
+        IF v_total_skillcoin_ditawar > 0 THEN CALL tambah_skillcoin(v_nik_ditawar, v_total_skillcoin_ditawar, 'hasil_barter', 'Reward Barter'); END IF;
+        UPDATE pengguna SET total_jam_berkontribusi = total_jam_berkontribusi + v_durasi_jam, jumlah_transaksi = jumlah_transaksi + 1 WHERE nik IN (v_nik_penawar, v_nik_ditawar);
+    END IF;
+    
+    UPDATE transaksi_barter SET status = 'terkonfirmasi', skillcoin_ditransfer = TRUE, diperbarui_pada = NOW() WHERE id = p_id_transaksi;
+    INSERT INTO log_transaksi (id_transaksi, nik_pengguna, aksi, keterangan) VALUES (p_id_transaksi, v_nik_penawar, 'selesai', 'Selesai'), (p_id_transaksi, v_nik_ditawar, 'selesai', 'Selesai');
+    COMMIT;
+END$$
+
+DELIMITER ;
+
+-- Fix View
+CREATE VIEW rekomendasi_pencocokan AS
+SELECT k1.nik_pengguna as pengguna_a, k2.nik_pengguna as pengguna_b, k1.nama_keahlian as keahlian_ditawarkan, k2.nama_keahlian as keahlian_dicari, 
+       ks.nama_kategori, p1.nama_panggilan as nama_a, p2.nama_panggilan as nama_b, p1.kota as kota_a, p2.kota as kota_b, 
+       p1.rating_rata_rata as rating_a, p2.rating_rata_rata as rating_b, ABS(p1.rating_rata_rata - p2.rating_rata_rata) as selisih_rating,
+       (40 + CASE WHEN k1.tingkat = k2.tingkat THEN 30 ELSE 10 END + CASE WHEN LOWER(p1.kota) = LOWER(p2.kota) THEN 20 ELSE 0 END) AS skor_kecocokan,
+       k1.status_verifikasi AS verifikasi_a, k2.status_verifikasi AS verifikasi_b, k1.tingkat AS tingkat_a, k2.tingkat AS tingkat_b
+FROM keahlian k1 JOIN keahlian k2 ON k1.id_kategori = k2.id_kategori AND k1.tipe = 'dikuasai' AND k2.tipe = 'dicari' AND k1.nik_pengguna != k2.nik_pengguna
+JOIN kategori_skill ks ON k1.id_kategori = ks.id JOIN pengguna p1 ON k1.nik_pengguna = p1.nik JOIN pengguna p2 ON k2.nik_pengguna = p2.nik
+WHERE p1.status_aktif = TRUE AND p2.status_aktif = TRUE;
+
+SET FOREIGN_KEY_CHECKS = 1;
