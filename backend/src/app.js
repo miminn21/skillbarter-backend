@@ -17,6 +17,7 @@ const skillcoinRoutes = require('./routes/skillcoin');
 const reviewRoutes = require('./routes/review');
 const notificationRoutes = require('./routes/notification');
 const chatRoutes = require('./routes/chat');
+const helpRoutes = require('./routes/help');
 
 // Create Express app
 const app = express();
@@ -41,6 +42,7 @@ app.use('/api/skillcoin', skillcoinRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/help', helpRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

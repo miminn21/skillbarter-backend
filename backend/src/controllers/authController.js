@@ -223,4 +223,46 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
+/**
+ * Change Password
+ * PUT /api/auth/change-password
+ */
+exports.changePassword = async (req, res) => {
+  try {
+    const { nik } = req.user;
+    const { password_lama, password_baru } = req.body;
+
+    if (!password_lama || !password_baru) {
+      return error(res, 'Password lama dan baru harus diisi', 400);
+    }
+
+    if (password_baru.length < 6) {
+      return error(res, 'Password baru minimal 6 karakter', 400);
+    }
+
+    // Get user with password
+    const user = await User.findByNik(nik);
+    if (!user) {
+      return error(res, 'User tidak ditemukan', 404);
+    }
+
+    // Verify old password
+    const isValid = await bcrypt.compare(password_lama, user.kata_sandi);
+    if (!isValid) {
+      return error(res, 'Password lama salah', 400);
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(password_baru, 10);
+
+    // Update
+    await User.updatePassword(nik, hashedPassword);
+
+    return success(res, 'Password berhasil diubah');
+  } catch (err) {
+    console.error('Change password error:', err);
+    return error(res, 'Gagal mengubah password: ' + err.message);
+  }
+};
+
 module.exports = exports;

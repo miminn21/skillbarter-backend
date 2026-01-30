@@ -6,6 +6,8 @@ import '../../providers/auth_provider.dart';
 import '../../services/profile_service.dart';
 import '../../widgets/custom_notification.dart';
 import 'edit_profile_screen.dart';
+import 'change_password_screen.dart';
+import 'help_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -267,7 +269,13 @@ class ProfileScreen extends StatelessWidget {
                           title: const Text('Ubah Password'),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () {
-                            // TODO: Navigate to change password
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ChangePasswordScreen(),
+                              ),
+                            );
                           },
                         ),
                         const Divider(height: 1),
@@ -285,7 +293,13 @@ class ProfileScreen extends StatelessWidget {
                           title: const Text('Bantuan'),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () {
-                            // TODO: Navigate to help
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const HelpScreen(),
+                              ),
+                            );
                           },
                         ),
                       ],
