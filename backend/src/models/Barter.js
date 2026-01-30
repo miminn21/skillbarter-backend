@@ -502,10 +502,11 @@ class Barter {
       WHERE (tb.nik_penawar = ? OR tb.nik_ditawar = ?)
       AND tb.status IN ('terkonfirmasi', 'selesai', 'ditolak', 'dibatalkan')
       ORDER BY tb.diperbarui_pada DESC
-      LIMIT ?
+      ORDER BY tb.diperbarui_pada DESC
+      LIMIT ${Number(limit) || 50}
     `;
 
-    const [rows] = await db.execute(query, [nik, nik, nik, nik, nik, nik, nik, nik, nik, limit]);
+    const [rows] = await db.execute(query, [nik, nik, nik, nik, nik, nik, nik, nik, nik]);
     
     // Convert BLOB to base64 for all photo fields
     const processedRows = rows.map(row => {

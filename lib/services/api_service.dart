@@ -11,8 +11,12 @@ class ApiService {
 
   // Base URL - sesuaikan dengan backend
   // Base URL - Railway Production
+  // Base URL - Railway Production - SIAP PUBLIK 🌍
   static const String baseUrl =
       'https://skillbarter-backend-production-1e6b.up.railway.app/api';
+
+  // Base URL - Localhost (WiFi IP) - HANYA TESTING 🏠
+  // static const String baseUrl = 'http://192.168.100.166:5000/api';
 
   Future<void> initialize() async {
     _dio = Dio(
