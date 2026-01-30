@@ -502,7 +502,6 @@ class Barter {
       WHERE (tb.nik_penawar = ? OR tb.nik_ditawar = ?)
       AND tb.status IN ('terkonfirmasi', 'selesai', 'ditolak', 'dibatalkan')
       ORDER BY tb.diperbarui_pada DESC
-      ORDER BY tb.diperbarui_pada DESC
       LIMIT ${Number(limit) || 50}
     `;
 
