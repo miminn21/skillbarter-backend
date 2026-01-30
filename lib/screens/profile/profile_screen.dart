@@ -269,11 +269,11 @@ class ProfileScreen extends StatelessWidget {
                           title: const Text('Ubah Password'),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () {
-                          onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const ChangePasswordScreen(),
+                                builder: (context) =>
+                                    const ChangePasswordScreen(),
                               ),
                             );
                           },
@@ -292,7 +292,6 @@ class ProfileScreen extends StatelessWidget {
                           leading: const Icon(Icons.help),
                           title: const Text('Bantuan'),
                           trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
                           onTap: () {
                             Navigator.push(
                               context,
