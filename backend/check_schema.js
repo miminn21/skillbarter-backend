@@ -1,55 +1,43 @@
 const mysql = require('mysql2/promise');
 
+const LOCAL_CONFIG = {
+    host: 'localhost', user: 'root', password: '', database: 'skillbarter_db'
+};
 const RAILWAY_CONFIG = {
-    host: 'switchyard.proxy.rlwy.net',
-    port: 38963,
-    user: 'root',
-    password: 'fSexsPKyjZtWdhESBvdEFrfBTFSORsfw',
-    database: 'railway'
+    host: 'switchyard.proxy.rlwy.net', port: 38963, user: 'root', password: 'fSexsPKyjZtWdhESBvdEFrfBTFSORsfw', database: 'railway'
 };
 
-async function checkSchema() {
-    console.log('📡 MEMERIKSA KELENGKAPAN "OTAK" DATABASE (TRIGGER/VIEW/PROCEDURE)...');
-    let connection;
+async function checkSchemaJson() {
+    let localConn, cloudConn;
     try {
-        connection = await mysql.createConnection(RAILWAY_CONFIG);
-        
-        // 1. Cek User (Data Dasar)
-        const [users] = await connection.query("SELECT COUNT(*) as total FROM pengguna");
-        console.log(`\n✅ DATA PENGGUNA: ${users[0].total} (Aman)`);
+        localConn = await mysql.createConnection(LOCAL_CONFIG);
+        cloudConn = await mysql.createConnection(RAILWAY_CONFIG);
 
-        // 2. Cek Views (Mata Cerdas)
-        const [views] = await connection.query("SHOW FULL TABLES WHERE Table_type = 'VIEW'");
-        console.log(`\n👀 VIEW (Tabel Pintar): ${views.length} ditemukan`);
-        views.forEach(v => console.log(`   - ${Object.values(v)[0]}`));
-
-        // 3. Cek Procedures (Mesin Otomatis)
-        const [procs] = await connection.query("SHOW PROCEDURE STATUS WHERE Db = 'railway'");
-        console.log(`\n⚙️  PROCEDURE (Prosess Otomatis): ${procs.length} ditemukan`);
-        procs.forEach(p => console.log(`   - ${p.Name}`));
-
-        // 4. Cek Functions (Rumus Pintar)
-        const [funcs] = await connection.query("SHOW FUNCTION STATUS WHERE Db = 'railway'");
-        console.log(`\n🧮 FUNCTION: ${funcs.length} ditemukan`);
-        funcs.forEach(f => console.log(`   - ${f.Name}`));
-
-        // 5. Cek Triggers (Pemicu Reaksi)
-        const [triggers] = await connection.query("SHOW TRIGGERS");
-        console.log(`\n🔫 TRIGGER: ${triggers.length} ditemukan`);
-        triggers.forEach(t => console.log(`   - ${t.Trigger}`));
-
-        console.log('\n----------------------------------------');
-        if (views.length > 0 && procs.length > 0 && triggers.length > 0) {
-             console.log('KESIMPULAN: LENGKAP! Semua fitur canggih sudah terpasang.');
-        } else {
-             console.log('KESIMPULAN: BELUM LENGKAP! Ada bagian "otak" yang hilang.');
+        async function getCounts(conn, dbName) {
+            const [views] = await conn.query(`SHOW FULL TABLES FROM \`${dbName}\` WHERE Table_type = 'VIEW'`);
+            const [procs] = await conn.query(`SHOW PROCEDURE STATUS WHERE Db = '${dbName}'`);
+            const [funcs] = await conn.query(`SHOW FUNCTION STATUS WHERE Db = '${dbName}'`);
+            // Triggers need different handling or just SHOW TRIGGERS FROM db
+            const [triggers] = await conn.query(`SHOW TRIGGERS FROM \`${dbName}\``);
+            
+            return {
+                views: views.length,
+                procedures: procs.length,
+                functions: funcs.length,
+                triggers: triggers.length
+            };
         }
 
+        const localCounts = await getCounts(localConn, 'skillbarter_db');
+        const cloudCounts = await getCounts(cloudConn, 'railway');
+
+        console.log(JSON.stringify({ local: localCounts, cloud: cloudCounts }, null, 2));
+
     } catch (err) {
-        console.error('❌ ERROR:', err.message);
+        console.error(err);
     } finally {
-        if (connection) await connection.end();
+        if (localConn) localConn.end();
+        if (cloudConn) cloudConn.end();
     }
 }
-
-checkSchema();
+checkSchemaJson();

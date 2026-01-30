@@ -122,9 +122,9 @@ const addSkillSchema = Joi.object({
     .messages({
       'number.min': 'Harga minimal 1 skillcoin'
     }),
-  link_portofolio: Joi.string().uri().max(255).allow('', null).optional()
+  link_portofolio: Joi.string().max(255).allow('', null).optional()
     .messages({
-      'string.uri': 'Link portofolio harus berupa URL yang valid'
+      // Removed uri restriction
     }),
   tanggal_berakhir: Joi.date().allow(null).optional()
     .messages({
@@ -139,7 +139,7 @@ const updateSkillSchema = Joi.object({
   pengalaman: Joi.string().max(50).allow('', null).optional(),
   deskripsi: Joi.string().max(1000).allow('', null).optional(),
   harga_per_jam: Joi.number().integer().min(1).optional(),
-  link_portofolio: Joi.string().uri().max(255).allow('', null).optional()
+  link_portofolio: Joi.string().max(255).allow('', null).optional()
 });
 
 /**
