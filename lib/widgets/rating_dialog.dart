@@ -68,129 +68,131 @@ class _RatingDialogState extends State<RatingDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Row(
-              children: [
-                const Icon(Icons.star, color: Colors.amber, size: 32),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Beri Rating',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Row(
+                children: [
+                  const Icon(Icons.star, color: Colors.amber, size: 32),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Beri Rating',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Partner name
-            Text(
-              'Bagaimana pengalaman Anda dengan ${widget.partnerName}?',
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-
-            // Star rating
-            RatingBar.builder(
-              initialRating: _rating,
-              minRating: 1,
-              direction: Axis.horizontal,
-              allowHalfRating: false,
-              itemCount: 5,
-              itemSize: 48,
-              itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-              itemBuilder: (context, _) =>
-                  const Icon(Icons.star, color: Colors.amber),
-              onRatingUpdate: (rating) {
-                setState(() => _rating = rating);
-              },
-            ),
-            const SizedBox(height: 8),
-
-            // Rating text
-            Text(
-              _getRatingText(_rating.toInt()),
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: _getRatingColor(_rating.toInt()),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 8),
 
-            // Comment field
-            TextField(
-              controller: _commentController,
-              maxLines: 3,
-              maxLength: 200,
-              decoration: InputDecoration(
-                hintText: 'Tulis ulasan Anda (opsional)',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                filled: true,
-                fillColor: Colors.grey[50],
+              // Partner name
+              Text(
+                'Bagaimana pengalaman Anda dengan ${widget.partnerName}?',
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-            // Anonymous checkbox
-            CheckboxListTile(
-              value: _isAnonymous,
-              onChanged: (value) {
-                setState(() => _isAnonymous = value ?? false);
-              },
-              title: const Text('Kirim sebagai anonim'),
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-            const SizedBox(height: 24),
+              // Star rating
+              RatingBar.builder(
+                initialRating: _rating,
+                minRating: 1,
+                direction: Axis.horizontal,
+                allowHalfRating: false,
+                itemCount: 5,
+                itemSize: 40,
+                itemPadding: const EdgeInsets.symmetric(horizontal: 2.0),
+                itemBuilder: (context, _) =>
+                    const Icon(Icons.star, color: Colors.amber),
+                onRatingUpdate: (rating) {
+                  setState(() => _rating = rating);
+                },
+              ),
+              const SizedBox(height: 8),
 
-            // Submit button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitRating,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
+              // Rating text
+              Text(
+                _getRatingText(_rating.toInt()),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: _getRatingColor(_rating.toInt()),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Comment field
+              TextField(
+                controller: _commentController,
+                maxLines: 3,
+                maxLength: 200,
+                decoration: InputDecoration(
+                  hintText: 'Tulis ulasan Anda (opsional)',
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(
-                        'Kirim Rating',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
               ),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 16),
 
-            // Skip button
-            TextButton(
-              onPressed: _isSubmitting
-                  ? null
-                  : () => Navigator.of(context).pop(),
-              child: const Text('Lewati'),
-            ),
-          ],
+              // Anonymous checkbox
+              CheckboxListTile(
+                value: _isAnonymous,
+                onChanged: (value) {
+                  setState(() => _isAnonymous = value ?? false);
+                },
+                title: const Text('Kirim sebagai anonim'),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+              const SizedBox(height: 24),
+
+              // Submit button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitRating,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Kirim Rating',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Skip button
+              TextButton(
+                onPressed: _isSubmitting
+                    ? null
+                    : () => Navigator.of(context).pop(),
+                child: const Text('Lewati'),
+              ),
+            ],
+          ),
         ),
       ),
     );
