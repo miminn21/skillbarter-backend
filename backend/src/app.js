@@ -67,6 +67,18 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   
+  // LOG TO FILE (CRITICAL FOR DEBUGGING)
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const logPath = path.join(__dirname, '../error_logs.txt');
+    const timestamp = new Date().toISOString();
+    const logMessage = `\n[${timestamp}] GLOBAL APP ERROR:\n${err.stack}\nRequest: ${req.method} ${req.url}\nUser: ${req.user ? req.user.nik : 'Unauth'}\n--------------------------\n`;
+    fs.appendFileSync(logPath, logMessage);
+  } catch (logErr) {
+    console.error('Failed to write to global log:', logErr);
+  }
+
   // Multer error
   if (err.name === 'MulterError') {
     if (err.code === 'LIMIT_FILE_SIZE') {
