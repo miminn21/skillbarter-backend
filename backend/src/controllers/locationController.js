@@ -24,7 +24,7 @@ exports.updateLocation = async (req, res) => {
 
 exports.getNearbyUsers = async (req, res) => {
     try {
-        const { latitude, longitude, radius = 10 } = req.query; // Radius in km
+        const { latitude, longitude, radius = 10000 } = req.query; // Radius in km (Expanded to 10000)
         const nik = req.user.nik;
 
         if (!latitude || !longitude) {
@@ -53,7 +53,7 @@ exports.getNearbyUsers = async (req, res) => {
               AND nik != ?
             HAVING distance < ?
             ORDER BY distance ASC
-            LIMIT 50
+            LIMIT 200
         `;
 
         const [rows] = await db.execute(query, [latitude, longitude, latitude, nik, radius]);

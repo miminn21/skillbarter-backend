@@ -92,7 +92,7 @@ class _RadarScreenState extends State<RadarScreen> {
         params: {
           'latitude': lat,
           'longitude': long,
-          'radius': 10, // 10 km
+          'radius': 10000, // 10,000 km (Nation-wide)
         },
       );
       if (response.statusCode == 200) {
