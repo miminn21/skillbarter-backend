@@ -234,7 +234,7 @@ class _RadarScreenState extends State<RadarScreen> {
       final api = ApiService();
       final response = await api.get(
         '/location/nearby',
-        params: {
+        queryParameters: {
           'latitude': lat,
           'longitude': long,
           'radius': 10000, // 10,000 km (Nation-wide)
@@ -253,11 +253,11 @@ class _RadarScreenState extends State<RadarScreen> {
   @override
   Widget build(BuildContext context) {
     if (_currentLocation == null) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(
           child: _isLoading
-              ? CircularProgressIndicator()
-              : Text("Izin Lokasi diperlukan untuk Radar"),
+              ? const CircularProgressIndicator()
+              : const Text("Izin Lokasi diperlukan untuk Radar"),
         ),
       );
     }
