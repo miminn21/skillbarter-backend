@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../profile/profile_screen.dart';
 import '../barter/transaction_list_screen.dart';
 import '../explore/explore_screen.dart';
+import '../explore/radar_screen.dart'; // Import RadarScreen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     const DashboardPage(),
     const ExploreScreen(),
+    const RadarScreen(), // New Radar Tab
     const TransactionListScreen(),
     const ProfileScreen(),
   ];
@@ -73,6 +75,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             activeItem: const Icon(Icons.explore, color: Colors.white),
             itemLabel: 'Jelajah',
+          ),
+          BottomBarItem(
+            inActiveItem: Icon(
+              Icons.radar_outlined,
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+            activeItem: const Icon(Icons.radar, color: Colors.white),
+            itemLabel: 'Radar',
           ),
           BottomBarItem(
             inActiveItem: Icon(

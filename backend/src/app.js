@@ -25,8 +25,8 @@ const app = express();
 // Middleware
 app.use(cors());
 // Increase limit for base64 images (default 100kb is too small)
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Static files (for uploaded images if needed)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -39,6 +39,7 @@ app.use('/api/barter', barterRoutes);
 app.use('/api', exploreRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/skillcoin', skillcoinRoutes);
+app.use('/api/location', locationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
