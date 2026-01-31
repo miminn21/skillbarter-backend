@@ -211,9 +211,16 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
 
       if (isAuthenticated) {
         _startHeartbeat(); // Start heartbeat
+        return true;
+      } else {
+        // Profile load failed but no exception - clear token
+        await logout();
+        return false;
       }
-      return isAuthenticated;
     } catch (e) {
+      // Any error during auto-login = invalid token
+      print('[AutoLogin] Failed: $e');
+      await logout(); // Clear invalid token
       _isLoading = false;
       notifyListeners();
       return false;

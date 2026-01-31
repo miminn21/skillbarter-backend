@@ -25,3 +25,13 @@
 [2026-01-31T22:53:15.773Z] GET /api/notifications/unread-count
 [2026-01-31T22:53:18.650Z] POST /api/auth/heartbeat
 [2026-01-31T22:53:18.655Z] POST /api/auth/status
+[2026-01-31T22:59:20.257Z] POST /api/auth/login
+[2026-01-31T22:59:36.822Z] POST /api/auth/login
+[2026-01-31T22:59:37.677Z] POST /api/auth/heartbeat
+[2026-01-31T22:59:37.701Z] GET /api/notifications?limit=50&offset=0
+[2026-01-31T22:59:37.757Z] GET /api/notifications/unread-count
+[2026-01-31T22:59:37.764Z] GET /api/auth/profile
+[2026-01-31T22:59:37.848Z] GET /api/notifications?limit=50&offset=0
+[2026-01-31T22:59:37.878Z] GET /api/notifications/unread-count
+[2026-01-31T22:59:38.105Z] GET /api/notifications?limit=50&offset=0
+[2026-01-31T22:59:38.127Z] GET /api/notifications/unread-count
