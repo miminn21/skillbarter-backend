@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart'; // for kIsWeb
 import '../../services/api_service.dart';
 import '../../widgets/custom_notification.dart';
 
@@ -17,7 +18,7 @@ class _HelpScreenState extends State<HelpScreen>
   late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
   final _messageController = TextEditingController();
-  File? _image;
+  XFile? _image; // Changed from File? to XFile? for Web support
   bool _isSubmitting = false;
 
   final List<Map<String, String>> _faqs = [
@@ -60,7 +61,7 @@ class _HelpScreenState extends State<HelpScreen>
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() => _image = File(picked.path));
+      setState(() => _image = picked);
     }
   }
 
@@ -72,11 +73,26 @@ class _HelpScreenState extends State<HelpScreen>
       final api = ApiService();
 
       // Prepare FormData
-      FormData formData = FormData.fromMap({
+      Map<String, dynamic> formDataMap = {
         'deskripsi': _messageController.text,
-        'jenis_laporan': 'lainnya', // Default for public help
-        if (_image != null) 'bukti': await MultipartFile.fromFile(_image!.path),
-      });
+        'jenis_laporan': 'lainnya',
+      };
+
+      if (_image != null) {
+        if (kIsWeb) {
+          // Web: Read bytes
+          final bytes = await _image!.readAsBytes();
+          formDataMap['bukti'] = MultipartFile.fromBytes(
+            bytes,
+            filename: _image!.name,
+          );
+        } else {
+          // Mobile: Use path
+          formDataMap['bukti'] = await MultipartFile.fromFile(_image!.path);
+        }
+      }
+
+      FormData formData = FormData.fromMap(formDataMap);
 
       // Dio post automatically handles FormData content-type
       final response = await api.post('/help/submit', data: formData);
@@ -89,7 +105,6 @@ class _HelpScreenState extends State<HelpScreen>
         );
         _messageController.clear();
         setState(() => _image = null);
-        // Maybe switch to FAQ tab or pop?
         _tabController.animateTo(0);
       }
     } catch (e) {
@@ -200,7 +215,12 @@ class _HelpScreenState extends State<HelpScreen>
                     : Stack(
                         fit: StackFit.expand,
                         children: [
-                          Image.file(_image!, fit: BoxFit.cover),
+                          kIsWeb
+                              ? Image.network(_image!.path, fit: BoxFit.cover)
+                              : Image.file(
+                                  File(_image!.path),
+                                  fit: BoxFit.cover,
+                                ),
                           Positioned(
                             right: 8,
                             top: 8,
