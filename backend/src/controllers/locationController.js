@@ -38,6 +38,7 @@ exports.getNearbyUsers = async (req, res) => {
                 nik, 
                 nama_lengkap, 
                 nama_panggilan,
+                foto_profil,
                 latitude, 
                 longitude,
                 (6371 * acos(
