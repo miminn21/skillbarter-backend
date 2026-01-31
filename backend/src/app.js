@@ -32,6 +32,20 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Static files (for uploaded images if needed)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// REQUEST LOGGER (DEBUGGING)
+app.use((req, res, next) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const logPath = path.join(__dirname, '../request_logs.txt');
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(logPath, `[${timestamp}] ${req.method} ${req.url}\n`);
+  } catch (e) {
+    console.error('Log error:', e);
+  }
+  next();
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
