@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../../services/api_service.dart';
 import '../../providers/auth_provider.dart';
+import 'user_profile_screen.dart';
 
 class RadarScreen extends StatefulWidget {
   const RadarScreen({super.key});
@@ -149,10 +150,16 @@ class _RadarScreenState extends State<RadarScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
-                    // TODO: Navigate to Chat or Profile
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            UserProfileScreen(nik: user['nik'].toString()),
+                      ),
+                    );
                   },
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: const Text("Chat User Ini"),
+                  icon: const Icon(Icons.person),
+                  label: const Text("Lihat Profil User"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
