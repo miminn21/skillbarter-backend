@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:convert';
 import 'dart:async';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -21,6 +23,148 @@ class _RadarScreenState extends State<RadarScreen> {
   List<dynamic> _nearbyUsers = [];
   Timer? _locationTimer;
   bool _isLoading = true;
+
+  // Cache addresses to avoid spamming API
+  final Map<String, String> _addressCache = {};
+
+  Future<String> _getAddress(double lat, double long) async {
+    final key = "$lat,$long";
+    if (_addressCache.containsKey(key)) return _addressCache[key]!;
+
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$long&zoom=18&addressdetails=1',
+      );
+
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'SkillBarter/1.0 (com.example.skillbarter)'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final address = data['display_name'] ?? 'Alamat tidak ditemukan';
+        _addressCache[key] = address;
+        return address;
+      }
+    } catch (e) {
+      debugPrint("Geocoding error: $e");
+    }
+    return "Gagal memuat alamat";
+  }
+
+  void _showUserDetail(BuildContext context, dynamic user) {
+    final lat = double.parse(user['latitude'].toString());
+    final long = double.parse(user['longitude'].toString());
+    final fotoProfil = user['foto_profil'];
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Avatar
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.grey[200],
+                backgroundImage:
+                    (fotoProfil != null && fotoProfil.toString().isNotEmpty)
+                    ? MemoryImage(base64Decode(fotoProfil.toString()))
+                    : null,
+                child: (fotoProfil == null || fotoProfil.toString().isEmpty)
+                    ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                    : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Name
+              Text(
+                user['nama_lengkap'] ?? 'User SkillBarter',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                "@${user['nama_panggilan']}",
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+
+              // Address Loading
+              FutureBuilder<String>(
+                future: _getAddress(lat, long),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 8),
+                        Text("Mencari alamat lengkap..."),
+                      ],
+                    );
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.map, color: Colors.blue),
+                          SizedBox(width: 8),
+                          Text(
+                            "Lokasi Terkini:",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        snapshot.data ?? "Alamat tidak tersedia",
+                        style: const TextStyle(fontSize: 14),
+                        textAlign: TextAlign.left,
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Action Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    // TODO: Navigate to Chat or Profile
+                  },
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: const Text("Chat User Ini"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -161,13 +305,7 @@ class _RadarScreenState extends State<RadarScreen> {
                       width: 80,
                       height: 80,
                       child: GestureDetector(
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("User: ${user['nama_lengkap']}"),
-                            ),
-                          );
-                        },
+                        onTap: () => _showUserDetail(context, user),
                         child: Column(
                           children: [
                             Container(
