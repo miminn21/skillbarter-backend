@@ -178,83 +178,80 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   ],
                 ),
               ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Skill yang Dikuasai',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '${_user!.skills.length} skill',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    if (_user!.skills.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.work_off,
-                                size: 48,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Belum ada skill',
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    else
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
-                        itemCount: _user!.skills.length,
-                        itemBuilder: (context, index) {
-                          final skill = _user!.skills[index];
-                          return SkillCard(
-                            skill: skill,
-                            showOwner: false,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      SkillDetailScreen(skillId: skill.id),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSkillSection(
+    String title,
+    List<dynamic> skills,
+    IconData emptyIcon,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              '${skills.length} skill',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (skills.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Icon(emptyIcon, size: 32, color: Colors.grey[300]),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Belum ada skill',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: skills.length,
+            itemBuilder: (context, index) {
+              final skill = skills[index];
+              return SkillCard(
+                skill: skill,
+                showOwner: false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          SkillDetailScreen(skillId: skill.id),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+      ],
     );
   }
 
