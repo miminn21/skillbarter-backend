@@ -59,7 +59,18 @@ exports.getNearbyUsers = async (req, res) => {
 
         const [rows] = await db.execute(query, [latitude, longitude, latitude, nik, radius]);
 
-        return success(res, 'Nearby users fetched', rows);
+        // Convert Buffer to Base64 string
+        const users = rows.map(user => {
+            if (user.foto_profil) {
+                // Check if it's a buffer (MySQL driver returns Buffer for BLOB)
+                if (Buffer.isBuffer(user.foto_profil)) {
+                    user.foto_profil = user.foto_profil.toString('base64');
+                }
+            }
+            return user;
+        });
+
+        return success(res, 'Nearby users fetched', users);
     } catch (e) {
         console.error('Get Nearby Error:', e);
         return error(res, 'Internal Server Error');
