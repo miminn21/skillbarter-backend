@@ -154,6 +154,8 @@ class _RadarScreenState extends State<RadarScreen> {
                   ..._nearbyUsers.map((user) {
                     final lat = double.parse(user['latitude'].toString());
                     final long = double.parse(user['longitude'].toString());
+                    final fotoProfil = user['foto_profil'];
+
                     return Marker(
                       point: LatLng(lat, long),
                       width: 80,
@@ -168,17 +170,52 @@ class _RadarScreenState extends State<RadarScreen> {
                         },
                         child: Column(
                           children: [
-                            const Icon(
-                              Icons.location_on,
-                              color: Colors.red,
-                              size: 40,
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                radius: 20,
+                                backgroundColor: Colors.grey[200],
+                                backgroundImage:
+                                    (fotoProfil != null &&
+                                        fotoProfil.toString().isNotEmpty)
+                                    ? MemoryImage(
+                                        base64Decode(fotoProfil.toString()),
+                                      )
+                                    : null,
+                                child:
+                                    (fotoProfil == null ||
+                                        fotoProfil.toString().isEmpty)
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 20,
+                                        color: Colors.grey,
+                                      )
+                                    : null,
+                              ),
                             ),
                             Container(
+                              margin: const EdgeInsets.only(top: 4),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 4,
                                 vertical: 2,
                               ),
-                              color: Colors.white.withOpacity(0.8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
                               child: Text(
                                 user['nama_panggilan'] ?? 'User',
                                 style: const TextStyle(
