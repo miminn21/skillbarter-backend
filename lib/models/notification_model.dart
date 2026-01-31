@@ -1,5 +1,5 @@
 class NotificationModel {
-  final int id;
+  final int idNotifikasi;
   final String nik;
   final String tipe;
   final String judul;
@@ -9,7 +9,7 @@ class NotificationModel {
   final DateTime createdAt;
 
   NotificationModel({
-    required this.id,
+    required this.idNotifikasi,
     required this.nik,
     required this.tipe,
     required this.judul,
@@ -21,7 +21,7 @@ class NotificationModel {
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
-      id: json['id_notifikasi'],
+      idNotifikasi: json['id_notifikasi'],
       nik: json['nik'],
       tipe: json['tipe'],
       judul: json['judul'],
@@ -34,7 +34,7 @@ class NotificationModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'id_notifikasi': id,
+      'id_notifikasi': idNotifikasi,
       'nik': nik,
       'tipe': tipe,
       'judul': judul,
@@ -101,7 +101,7 @@ class NotificationModel {
   bool get isReviewNotification => tipe == 'review_received';
 
   NotificationModel copyWith({
-    int? id,
+    int? idNotifikasi,
     String? nik,
     String? tipe,
     String? judul,
@@ -111,7 +111,7 @@ class NotificationModel {
     DateTime? createdAt,
   }) {
     return NotificationModel(
-      id: id ?? this.id,
+      idNotifikasi: idNotifikasi ?? this.idNotifikasi,
       nik: nik ?? this.nik,
       tipe: tipe ?? this.tipe,
       judul: judul ?? this.judul,

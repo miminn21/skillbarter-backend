@@ -11,6 +11,7 @@ import 'providers/barter_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/skill_request_provider.dart';
 import 'providers/chat_provider.dart';
+import 'providers/notification_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -55,6 +56,11 @@ class MyApp extends StatelessWidget {
                 ? (previous..updateService(service))
                 : BarterProvider(service);
           },
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, NotificationProvider>(
+          create: (_) => NotificationProvider(),
+          update: (context, auth, previous) =>
+              (previous ?? NotificationProvider())..updateAuth(auth),
         ),
       ],
       child: MaterialApp(
