@@ -3,12 +3,25 @@ const Notification = require('../models/Notification');
 // Get user notifications
 exports.getNotifications = async (req, res) => {
   try {
+    // DEBUG LOGS
+    console.log('[DEBUG NOTIF] Request received');
+    console.log('[DEBUG NOTIF] req.user:', JSON.stringify(req.user));
+    
+    if (!req.user || !req.user.nik) {
+      console.error('[DEBUG NOTIF] User not authenticated or NIK missing');
+      return res.status(401).json({ success: false, message: 'Unauthorized: No NIK' });
+    }
+
     const nik = req.user.nik;
     const limit = parseInt(req.query.limit) || 50;
     const offset = parseInt(req.query.offset) || 0;
     const unreadOnly = req.query.unread_only === 'true';
 
+    console.log(`[DEBUG NOTIF] Fetching for NIK: ${nik}, Limit: ${limit}, Offset: ${offset}`);
+
     const notifications = await Notification.getByUser(nik, limit, offset, unreadOnly);
+    console.log(`[DEBUG NOTIF] Got ${notifications.length} notifications`);
+    
     const unreadCount = await Notification.getUnreadCount(nik);
 
     res.json({
@@ -24,7 +37,8 @@ exports.getNotifications = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error getting notifications:', error);
+    console.error('[DEBUG NOTIF] CRITICAL ERROR:', error);
+    console.error('[DEBUG NOTIF] Stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Gagal mengambil notifikasi',

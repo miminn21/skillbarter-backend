@@ -116,9 +116,17 @@ class Notification {
     
     if (rows.length === 0) return null;
     
+    let parsedData = null;
+    try {
+      parsedData = rows[0].data ? JSON.parse(rows[0].data) : null;
+    } catch (e) {
+      console.error(`[Notification] JSON Parse Error for ID ${id}:`, e.message);
+      parsedData = null;
+    }
+
     return {
       ...rows[0],
-      data: rows[0].data ? JSON.parse(rows[0].data) : null
+      data: parsedData
     };
   }
 }
