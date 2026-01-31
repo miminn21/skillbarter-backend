@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const locationController = require('../controllers/locationController');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
-router.post('/update', auth, locationController.updateLocation);
-router.get('/nearby', auth, locationController.getNearbyUsers);
+router.post('/update', authenticate, locationController.updateLocation);
+router.get('/nearby', authenticate, locationController.getNearbyUsers);
 
 module.exports = router;
