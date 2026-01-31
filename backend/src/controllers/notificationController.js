@@ -37,6 +37,18 @@ exports.getNotifications = async (req, res) => {
       }
     });
   } catch (error) {
+    const fs = require('fs');
+    const path = require('path');
+    const logPath = path.join(__dirname, '../../error_logs.txt');
+    const timestamp = new Date().toISOString();
+    const logMessage = `\n[${timestamp}] CRITICAL NOTIF ERROR:\nStack: ${error.stack}\nNIK: ${req.user ? req.user.nik : 'Unknown'}\n--------------------------\n`;
+    
+    try {
+      fs.appendFileSync(logPath, logMessage);
+    } catch (e) {
+      console.error('Failed to write to error log:', e);
+    }
+
     console.error('[DEBUG NOTIF] CRITICAL ERROR:', error);
     console.error('[DEBUG NOTIF] Stack:', error.stack);
     res.status(500).json({
