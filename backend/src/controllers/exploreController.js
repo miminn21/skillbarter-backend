@@ -81,8 +81,8 @@ exports.getUserProfile = async (req, res) => {
       user.foto_profil = user.foto_profil.toString('base64');
     }
 
-    // Get user's dikuasai skills
-    const skills = await Skill.getUserSkills(nik, 'dikuasai');
+    // Get user's skills (all types: dikuasai & dicari)
+    const skills = await Skill.getUserSkills(nik);
 
     // Convert BLOB to base64 for skills
     if (skills && skills.length > 0) {

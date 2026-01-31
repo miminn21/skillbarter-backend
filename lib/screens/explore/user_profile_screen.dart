@@ -164,6 +164,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildSkillSection(
+                      'Skill yang Dikuasai',
+                      _user!.skills.where((s) => s.tipe == 'dikuasai').toList(),
+                      Icons.workspace_premium,
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSkillSection(
+                      'Skill yang Dicari',
+                      _user!.skills.where((s) => s.tipe == 'dicari').toList(),
+                      Icons.search,
+                    ),
+                  ],
+                ),
+              ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
