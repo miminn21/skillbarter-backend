@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../models/notification_model.dart';
+import '../barter/offer_detail_screen.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -52,11 +53,20 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
 
     // Determine navigation based on type
-    // Note: We might need to add specific routes or args for deep linking later
     if (notification.relatedBarterId != null) {
-      // Navigate to barter detail?
-      // For now, just show a snackbar or navigate to transactions tab
-      Navigator.pushNamed(context, '/transactions');
+      // Navigate to barter detail
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              OfferDetailScreen(offerId: notification.relatedBarterId!),
+        ),
+      );
+    } else {
+      // Fallback or other types (e.g. general info)
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Detail tidak tersedia')));
     }
   }
 

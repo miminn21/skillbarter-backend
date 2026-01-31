@@ -13,7 +13,10 @@ class NotificationService {
     bool unreadOnly = false,
   }) async {
     try {
-      final queryParams = {'limit': limit, 'offset': offset};
+      final Map<String, dynamic> queryParams = {
+        'limit': limit,
+        'offset': offset,
+      };
 
       if (unreadOnly) {
         queryParams['unread_only'] = true;

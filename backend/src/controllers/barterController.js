@@ -1,6 +1,15 @@
 const Barter = require('../models/Barter');
 const SkillcoinService = require('../services/skillcoinService');
 const db = require('../config/database');
+const {
+  notifyOfferReceived,
+  notifyOfferAccepted,
+  notifyOfferRejected,
+  notifyOfferCancelled,
+  notifyBarterStarted,
+  notifyConfirmationNeeded,
+  notifyBarterCompleted
+} = require('../helpers/notificationHelper');
 
 /**
  * Helper function to get user's SkillCoin balance
@@ -122,6 +131,9 @@ exports.createOffer = async (req, res) => {
 
     // Get created offer
     const offer = await Barter.findById(offerId);
+
+    // Send notification
+    await notifyOfferReceived({ ...offer, id_barter: offer.id });
 
     console.log('[CreateOffer] Success! Offer ID:', offerId);
 
@@ -262,6 +274,9 @@ exports.rejectOffer = async (req, res) => {
     await Barter.reject(id, userNik, reason);
 
     const updatedOffer = await Barter.findById(id);
+
+    // Send notification
+    await notifyOfferRejected({ ...updatedOffer, id_barter: updatedOffer.id });
 
     res.json({
       success: true,
@@ -411,6 +426,9 @@ exports.cancelOffer = async (req, res) => {
 
     const updatedOffer = await Barter.findById(id);
 
+    // Send notification
+    await notifyOfferCancelled({ ...updatedOffer, id_barter: updatedOffer.id });
+
     res.json({
       success: true,
       message: 'Offer cancelled successfully',
@@ -463,6 +481,9 @@ exports.acceptOffer = async (req, res) => {
 
     const updatedOffer = await Barter.findById(id);
 
+    // Send notification
+    await notifyOfferAccepted({ ...updatedOffer, id_barter: updatedOffer.id });
+
     res.json({
       success: true,
       message: 'Offer accepted successfully',
@@ -504,6 +525,9 @@ exports.startSession = async (req, res) => {
     await Barter.markOngoing(id, userNik);
 
     const updatedOffer = await Barter.findById(id);
+
+    // Send notification
+    await notifyBarterStarted({ ...updatedOffer, id_barter: updatedOffer.id });
 
     res.json({
       success: true,
@@ -616,6 +640,13 @@ exports.confirmCompletion = async (req, res) => {
     }
 
     const updatedOffer = await Barter.findById(id);
+
+    // Send notifications
+    if (bothConfirmed) {
+      await notifyBarterCompleted({ ...updatedOffer, id_barter: updatedOffer.id });
+    } else {
+      await notifyConfirmationNeeded({ ...updatedOffer, id_barter: updatedOffer.id }, userNik);
+    }
 
     res.json({
       success: true,

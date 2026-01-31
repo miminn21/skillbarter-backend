@@ -21,11 +21,17 @@ async function notifyOfferReceived(offer) {
     nama_penawar: offer.nama_penawar
   };
 
+  const isHelpRequest = offer.tipe_transaksi === 'bantuan';
+  const title = isHelpRequest ? 'Permintaan Bantuan Baru' : 'Penawaran Barter Baru';
+  const message = isHelpRequest 
+    ? `${offer.nama_penawar} meminta bantuan jasa Anda (via SkillCoin)`
+    : `${offer.nama_penawar} mengirim penawaran barter kepada Anda`;
+
   await createNotification(
     offer.nik_ditawar,
     'offer_received',
-    'Penawaran Barter Baru',
-    `${offer.nama_penawar} mengirim penawaran barter kepada Anda`,
+    title,
+    message,
     data
   );
 }

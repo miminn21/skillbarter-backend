@@ -76,14 +76,16 @@ class SkillcoinCalculator extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       const Text(
-                        'Anda Akan Terima:',
+                        'Anda Akan Terima: ',
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.monetization_on,
@@ -104,14 +106,16 @@ class SkillcoinCalculator extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       const Text(
-                        'Partner Akan Terima:',
+                        'Partner Akan Terima: ',
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.monetization_on,

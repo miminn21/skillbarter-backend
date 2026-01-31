@@ -472,7 +472,7 @@ class _DashboardPageState extends State<DashboardPage>
       crossAxisCount: 2,
       mainAxisSpacing: 15,
       crossAxisSpacing: 15,
-      childAspectRatio: 1.4,
+      childAspectRatio: 1.3, // Reduced from 1.4 to allow more height
       children: [
         _buildActionCard(
           context,
@@ -553,7 +553,9 @@ class _DashboardPageState extends State<DashboardPage>
               ),
             ],
           ),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(
+            12,
+          ), // Reduced from 16 to prevent overflow
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,

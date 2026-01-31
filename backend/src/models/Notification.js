@@ -40,10 +40,22 @@ class Notification {
     const [rows] = await db.execute(query, params);
     
     // Parse JSON data
-    return rows.map(row => ({
-      ...row,
-      data: row.data ? JSON.parse(row.data) : null
-    }));
+    return rows.map(row => {
+      let parsedData = null;
+      try {
+        if (row.data) {
+          parsedData = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+        }
+      } catch (e) {
+        console.error(`[Notification] JSON Parse Error for ID ${row.id_notifikasi}:`, e.message);
+        // Fallback: return null or raw string if needed, but null is safer for frontend
+        parsedData = null; 
+      }
+      return {
+        ...row,
+        data: parsedData
+      };
+    });
   }
 
   // Get unread count
