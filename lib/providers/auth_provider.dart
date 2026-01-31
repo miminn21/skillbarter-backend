@@ -159,6 +159,11 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
       }
     } catch (e) {
       _error = e.toString();
+      // Auto logout if 401
+      if (_error!.contains('401') ||
+          _error!.toLowerCase().contains('unauthorized')) {
+        await logout();
+      }
     }
 
     _isLoading = false;
