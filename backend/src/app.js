@@ -18,6 +18,7 @@ const reviewRoutes = require('./routes/review');
 const notificationRoutes = require('./routes/notification');
 const chatRoutes = require('./routes/chat');
 const helpRoutes = require('./routes/help');
+const locationRoutes = require('./routes/location');
 
 // Create Express app
 const app = express();
