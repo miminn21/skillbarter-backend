@@ -265,4 +265,26 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+/**
+ * Update FCM token for push notifications
+ * PUT /api/auth/fcm-token
+ */
+exports.updateFCMToken = async (req, res) => {
+  try {
+    const { fcm_token } = req.body;
+    const nik = req.user.nik;
+
+    if (!fcm_token) {
+      return error(res, 'FCM token required', 400);
+    }
+
+    await User.updateFCMToken(nik, fcm_token);
+
+    return success(res, 'FCM token updated successfully');
+  } catch (err) {
+    console.error('Update FCM token error:', err);
+    return error(res, 'Failed to update FCM token: ' + err.message);
+  }
+};
+
 module.exports = exports;

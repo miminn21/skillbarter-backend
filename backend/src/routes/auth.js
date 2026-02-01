@@ -18,5 +18,7 @@ router.post('/logout', authenticate, authController.logout);
 router.post('/heartbeat', authenticate, authController.heartbeat);
 router.post('/status', authenticate, authController.updateStatus);
 router.put('/change-password', authenticate, authController.changePassword);
+router.put('/fcm-token', authenticate, authController.updateFCMToken);
+
 
 module.exports = router;

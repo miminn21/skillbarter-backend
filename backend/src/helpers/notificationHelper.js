@@ -1,4 +1,6 @@
 const Notification = require('../models/Notification');
+const { sendPushNotification } = require('../services/fcmService');
+const User = require('../models/User');
 
 /**
  * Helper functions for creating notifications
@@ -34,6 +36,21 @@ async function notifyOfferReceived(offer) {
     message,
     data
   );
+
+  // Send push notification
+  try {
+    const user = await User.findByNik(offer.nik_ditawar);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: title,
+        pesan: message,
+        tipe: 'offer_received',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when offer is accepted
@@ -51,6 +68,21 @@ async function notifyOfferAccepted(offer) {
     `${offer.nama_ditawar} menerima penawaran barter Anda`,
     data
   );
+
+  // Send push notification
+  try {
+    const user = await User.findByNik(offer.nik_penawar);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: 'Penawaran Diterima',
+        pesan: `${offer.nama_ditawar} menerima penawaran barter Anda`,
+        tipe: 'offer_accepted',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when offer is rejected
@@ -68,6 +100,21 @@ async function notifyOfferRejected(offer) {
     `${offer.nama_ditawar} menolak penawaran barter Anda`,
     data
   );
+
+  // Send push notification
+  try {
+    const user = await User.findByNik(offer.nik_penawar);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: 'Penawaran Ditolak',
+        pesan: `${offer.nama_ditawar} menolak penawaran barter Anda`,
+        tipe: 'offer_rejected',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when offer is cancelled

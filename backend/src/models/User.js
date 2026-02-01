@@ -175,6 +175,14 @@ class User {
     const [result] = await db.execute(query, [status, nik]);
     return result;
   }
+
+  /**
+   * Update user's FCM token for push notifications
+   */
+  static async updateFCMToken(nik, fcmToken) {
+    const query = 'UPDATE pengguna SET fcm_token = ? WHERE nik = ?';
+    await db.execute(query, [fcmToken, nik]);
+  }
 }
 
 module.exports = User;
