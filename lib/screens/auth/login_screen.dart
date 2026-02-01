@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+// TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
+// import '../../providers/notification_provider.dart';
+// import '../../services/fcm_service.dart';
 import 'package:glossy/glossy.dart';
 
 import '../../widgets/animated_background.dart';
@@ -38,7 +41,15 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushReplacementNamed(context, '/home');
+      // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
+      // if (mounted) {
+      //   // Initialize FCM
+      //   final notificationProvider = context.read<NotificationProvider>();
+      //   await FCMService().initialize(notificationProvider, context);
+      // }
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

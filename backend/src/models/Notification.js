@@ -1,3 +1,4 @@
+console.log('🔥🔥🔥 NOTIFICATION.JS LOADED - VERSION 2.0 - SQL FIX APPLIED 🔥🔥🔥');
 const db = require('../config/database');
 
 class Notification {

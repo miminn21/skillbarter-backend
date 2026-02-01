@@ -5,6 +5,9 @@ import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/auth/login_screen.dart';
+// TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
+// import '../services/fcm_service.dart';
+// import '../providers/notification_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -69,7 +72,19 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Check auth status
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
+    // final notificationProvider = Provider.of<NotificationProvider>(
+    //   context,
+    //   listen: false,
+    // );
+
     final isAuthenticated = await authProvider.tryAutoLogin();
+
+    if (isAuthenticated && mounted) {
+      // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
+      // Initialize FCM Service
+      // await FCMService().initialize(notificationProvider, context);
+    }
 
     if (!mounted) return;
 

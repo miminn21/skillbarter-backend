@@ -22,7 +22,13 @@ import 'screens/barter/transaction_list_screen.dart';
 import 'screens/barter/create_offer_screen.dart';
 import 'screens/splash_screen.dart';
 
-void main() {
+// TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
+// import 'package:firebase_core/firebase_core.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
+  // await Firebase.initializeApp();
   runApp(const MyApp());
 }
 

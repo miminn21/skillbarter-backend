@@ -79,27 +79,13 @@ class NotificationProvider with ChangeNotifier {
           '[NotificationProvider] Loaded ${_notifications.length} notifications',
         );
       } else {
-        // Special handling: If error is about SQL execution, treat as empty
-        // This happens when Railway backend has query issues
-        if (response.message?.contains('mysqld_stmt_execute') == true ||
-            response.message?.contains('Incorrect arguments') == true) {
-          print(
-            '[NotificationProvider] SQL error - treating as empty notifications',
-          );
-          _notifications = [];
-          _unreadCount = 0;
-          _error = null; // Don't show error, show empty state instead
-        } else {
-          _error = response.message;
-          print('[NotificationProvider] Error: $_error');
-        }
+        _error = response.message;
+        print('[NotificationProvider] Error: $_error');
+        print('[NotificationProvider] Full response: ${response.data}');
       }
     } catch (e) {
       print('[NotificationProvider] Exception: $e');
-      // Also treat exceptions as empty instead of error
-      _notifications = [];
-      _unreadCount = 0;
-      _error = null;
+      _error = 'Terjadi kesalahan: $e';
     }
 
     _isLoading = false;
