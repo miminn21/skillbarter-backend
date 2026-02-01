@@ -20,57 +20,90 @@ class Notification {
     return result.insertId;
   }
 
-  // Get notifications for a user
+  // Get notifications for a user (merged from both tables)
   static async getByUser(nik, limit = 50, offset = 0, unreadOnly = false) {
     // Ensure limit and offset are safe integers
     const safeLimit = Math.max(1, Math.min(parseInt(limit) || 50, 100));
     const safeOffset = Math.max(0, parseInt(offset) || 0);
     
+    // Build UNION query to combine notifications from both tables
+    // Table 1: notifications (barter notifications)
+    // Table 2: notifikasi (skillcoin notifications)
     let query = `
-      SELECT *
+      SELECT 
+        id_notifikasi as id,
+        nik,
+        tipe,
+        judul,
+        pesan,
+        data,
+        CAST(is_read AS UNSIGNED) as dibaca,
+        created_at as dibuat_pada,
+        'barter' as source
       FROM notifications
       WHERE nik = ?
+      ${unreadOnly ? 'AND is_read = FALSE' : ''}
+      
+      UNION ALL
+      
+      SELECT
+        id,
+        nik_pengguna as nik,
+        tipe,
+        judul,
+        isi_pesan as pesan,
+        NULL as data,
+        dibaca,
+        dibuat_pada,
+        'skillcoin' as source
+      FROM notifikasi
+      WHERE nik_pengguna = ?
+      ${unreadOnly ? 'AND dibaca = 0' : ''}
+      
+      ORDER BY dibuat_pada DESC
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
     `;
     
-    const params = [nik];
-    
-    if (unreadOnly) {
-      query += ' AND is_read = FALSE';
-    }
-    
-    // Use string interpolation for LIMIT/OFFSET to avoid MySQL prepared statement bug
-    query += ` ORDER BY created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
+    const params = [nik, nik]; // NIK for both queries
     
     const [rows] = await db.execute(query, params);
     
-    // Parse JSON data
+    // Parse JSON data (only for barter notifications)
     return rows.map(row => {
       let parsedData = null;
-      try {
-        if (row.data) {
+      if (row.source === 'barter' && row.data) {
+        try {
           parsedData = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+        } catch (e) {
+          console.error(`[Notification] JSON Parse Error for ID ${row.id}:`, e.message);
+          parsedData = null;
         }
-      } catch (e) {
-        console.error(`[Notification] JSON Parse Error for ID ${row.id_notifikasi}:`, e.message);
-        // Fallback: return null or raw string if needed, but null is safer for frontend
-        parsedData = null; 
       }
       return {
         ...row,
-        data: parsedData
+        data: parsedData,
+        dibaca: Boolean(row.dibaca) // Normalize to boolean
       };
     });
   }
 
-  // Get unread count
+  // Get unread count (from both tables)
   static async getUnreadCount(nik) {
     const query = `
-      SELECT COUNT(*) as count
-      FROM notifications
-      WHERE nik = ? AND is_read = FALSE
+      SELECT COUNT(*) as count FROM (
+        SELECT id_notifikasi as id
+        FROM notifications
+        WHERE nik = ? AND is_read = FALSE
+        
+        UNION ALL
+        
+        SELECT id
+        FROM notifikasi
+        WHERE nik_pengguna = ? AND dibaca = 0
+      ) as combined_notifications
     `;
     
-    const [rows] = await db.execute(query, [nik]);
+    const [rows] = await db.execute(query, [nik, nik]);
     return rows[0].count;
   }
 
