@@ -22,9 +22,6 @@ class Notification {
 
   // Get notifications for a user
   static async getByUser(nik, limit = 50, offset = 0, unreadOnly = false) {
-    // Ensure limit and offset are integers
-    const safeLimit = parseInt(limit) || 50;
-    const safeOffset = parseInt(offset) || 0;
     
     let query = `
       SELECT *
@@ -39,22 +36,20 @@ class Notification {
     }
     
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(safeLimit, safeOffset);
+    params.push(limit, offset);
     
     const [rows] = await db.execute(query, params);
     
-    // Parse JSON data
+    // Parse JSON data field
     return rows.map(row => {
       let parsedData = null;
       try {
-        if (row.data) {
-          parsedData = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
-        }
+        parsedData = row.data ? JSON.parse(row.data) : null;
       } catch (e) {
         console.error(`[Notification] JSON Parse Error for ID ${row.id_notifikasi}:`, e.message);
-        // Fallback: return null or raw string if needed, but null is safer for frontend
-        parsedData = null; 
+        parsedData = null;
       }
+
       return {
         ...row,
         data: parsedData

@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const { notifyReviewReceived } = require('../helpers/notificationHelper');
 
 /**
  * Submit rating for completed barter
@@ -92,6 +93,23 @@ exports.submitRating = async (req, res) => {
 
     console.log(`[Rating] User ${userNik} rated ${nikDiulas} with ${rating} stars`);
     console.log(`[Rating] Updated average rating for ${nikDiulas}: ${avgRating}`);
+
+    // Send notification to rated user
+    const [reviewerInfo] = await db.execute(
+      'SELECT nama_lengkap FROM pengguna WHERE nik = ?',
+      [userNik]
+    );
+    const namaReviewer = reviewerInfo[0]?.nama_lengkap || 'Someone';
+    
+    await notifyReviewReceived(
+      {
+        id_review: null, // We don't have the ID yet, but it's not critical
+        id_barter: id,
+        rating: rating,
+        nik_reviewed: nikDiulas
+      },
+      namaReviewer
+    );
 
     res.json({
       success: true,

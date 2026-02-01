@@ -9,14 +9,19 @@ const User = require('../models/User');
 // Create notification helper
 async function createNotification(nik, tipe, judul, pesan, data = null) {
   try {
+    console.log(`[NOTIF] Creating notification: tipe=${tipe}, nik=${nik}, judul=${judul}`);
     await Notification.create(nik, tipe, judul, pesan, data);
+    console.log(`[NOTIF] ✅ Notification created successfully`);
   } catch (error) {
-    console.error('Error creating notification:', error);
+    console.error('[NOTIF] ❌ Error creating notification:', error);
+    console.error('[NOTIF] Error details:', error.message);
   }
 }
 
 // Notify when offer is received
 async function notifyOfferReceived(offer) {
+  console.log('[NOTIF] notifyOfferReceived called for offer:', offer.id_barter);
+  
   const data = {
     id_barter: offer.id_barter,
     nik_penawar: offer.nik_penawar,
@@ -37,20 +42,20 @@ async function notifyOfferReceived(offer) {
     data
   );
 
-  // Send push notification
-  try {
-    const user = await User.findByNik(offer.nik_ditawar);
-    if (user && user.fcm_token) {
-      await sendPushNotification(user.fcm_token, {
-        judul: title,
-        pesan: message,
-        tipe: 'offer_received',
-        data: data
-      });
-    }
-  } catch (error) {
-    console.error('FCM push error:', error.message);
-  }
+  // Send push notification (DISABLED FOR TESTING)
+  // try {
+  //   const user = await User.findByNik(offer.nik_ditawar);
+  //   if (user && user.fcm_token) {
+  //     await sendPushNotification(user.fcm_token, {
+  //       judul: title,
+  //       pesan: message,
+  //       tipe: 'offer_received',
+  //       data: data
+  //     });
+  //   }
+  // } catch (error) {
+  //   console.error('FCM push error:', error.message);
+  // }
 }
 
 // Notify when offer is accepted
@@ -69,24 +74,26 @@ async function notifyOfferAccepted(offer) {
     data
   );
 
-  // Send push notification
-  try {
-    const user = await User.findByNik(offer.nik_penawar);
-    if (user && user.fcm_token) {
-      await sendPushNotification(user.fcm_token, {
-        judul: 'Penawaran Diterima',
-        pesan: `${offer.nama_ditawar} menerima penawaran barter Anda`,
-        tipe: 'offer_accepted',
-        data: data
-      });
-    }
-  } catch (error) {
-    console.error('FCM push error:', error.message);
-  }
+  // Send push notification (DISABLED FOR TESTING)
+  // try {
+  //   const user = await User.findByNik(offer.nik_penawar);
+  //   if (user && user.fcm_token) {
+  //     await sendPushNotification(user.fcm_token, {
+  //       judul: 'Penawaran Diterima',
+  //       pesan: `${offer.nama_ditawar} menerima penawaran barter Anda`,
+  //       tipe: 'offer_accepted',
+  //       data: data
+  //     });
+  //   }
+  // } catch (error) {
+  //   console.error('FCM push error:', error.message);
+  // }
 }
 
 // Notify when offer is rejected
 async function notifyOfferRejected(offer) {
+  console.log('[NOTIF] notifyOfferRejected called for offer:', offer.id_barter);
+  
   const data = {
     id_barter: offer.id_barter,
     nik_ditawar: offer.nik_ditawar,
@@ -101,20 +108,20 @@ async function notifyOfferRejected(offer) {
     data
   );
 
-  // Send push notification
-  try {
-    const user = await User.findByNik(offer.nik_penawar);
-    if (user && user.fcm_token) {
-      await sendPushNotification(user.fcm_token, {
-        judul: 'Penawaran Ditolak',
-        pesan: `${offer.nama_ditawar} menolak penawaran barter Anda`,
-        tipe: 'offer_rejected',
-        data: data
-      });
-    }
-  } catch (error) {
-    console.error('FCM push error:', error.message);
-  }
+  // Send push notification (DISABLED FOR TESTING)
+  // try {
+  //   const user = await User.findByNik(offer.nik_penawar);
+  //   if (user && user.fcm_token) {
+  //     await sendPushNotification(user.fcm_token, {
+  //       judul: 'Penawaran Ditolak',
+  //       pesan: `${offer.nama_ditawar} menolak penawaran barter Anda`,
+  //       tipe: 'offer_rejected',
+  //       data: data
+  //     });
+  //   }
+  // } catch (error) {
+  //   console.error('FCM push error:', error.message);
+  // }
 }
 
 // Notify when offer is cancelled

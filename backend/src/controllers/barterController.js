@@ -244,6 +244,58 @@ exports.getUserOffers = async (req, res) => {
 /**
  * Accept offer
  */
+exports.acceptOffer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userNik = req.user.nik;
+
+    console.log('[AcceptOffer] Offer ID:', id);
+    console.log('[AcceptOffer] User NIK:', userNik);
+
+    // Check if user is receiver
+    const isReceiver = await Barter.isReceiver(id, userNik);
+    if (!isReceiver) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only the receiver can accept this offer'
+      });
+    }
+
+    // Check current status
+    const offer = await Barter.findById(id);
+    if (offer.status !== 'menunggu') {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot accept offer with status: ${offer.status}`
+      });
+    }
+
+    // Accept the offer
+    await Barter.accept(id, userNik);
+
+    // Get updated offer
+    const updatedOffer = await Barter.findById(id);
+
+    // Send notification to sender
+    console.log('[AcceptOffer] Sending notification...');
+    await notifyOfferAccepted({ ...updatedOffer, id_barter: updatedOffer.id });
+
+    console.log('[AcceptOffer] Success!');
+
+    res.json({
+      success: true,
+      message: 'Offer accepted successfully',
+      data: updatedOffer
+    });
+  } catch (error) {
+    console.error('Accept offer error:', error);
+    res.status(500).json({
+      success: false,
+      message: `Failed to accept offer: ${error.message}`
+    });
+  }
+};
+
 /**
  * Reject offer
  */
@@ -321,6 +373,9 @@ exports.cancelOffer = async (req, res) => {
     await Barter.cancel(id, userNik, reason);
 
     const updatedOffer = await Barter.findById(id);
+
+    // Send notification to receiver
+    await notifyOfferCancelled({ ...updatedOffer, id_barter: updatedOffer.id });
 
     res.json({
       success: true,
