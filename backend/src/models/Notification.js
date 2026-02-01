@@ -1,4 +1,3 @@
-console.log('🔥🔥🔥 NOTIFICATION.JS LOADED - VERSION 2.0 - SQL FIX APPLIED 🔥🔥🔥');
 const db = require('../config/database');
 
 class Notification {
@@ -23,6 +22,9 @@ class Notification {
 
   // Get notifications for a user
   static async getByUser(nik, limit = 50, offset = 0, unreadOnly = false) {
+    // Ensure limit and offset are safe integers
+    const safeLimit = Math.max(1, Math.min(parseInt(limit) || 50, 100));
+    const safeOffset = Math.max(0, parseInt(offset) || 0);
     
     let query = `
       SELECT *
@@ -36,21 +38,23 @@ class Notification {
       query += ' AND is_read = FALSE';
     }
     
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    // Use string interpolation for LIMIT/OFFSET to avoid MySQL prepared statement bug
+    query += ` ORDER BY created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
     
     const [rows] = await db.execute(query, params);
     
-    // Parse JSON data field
+    // Parse JSON data
     return rows.map(row => {
       let parsedData = null;
       try {
-        parsedData = row.data ? JSON.parse(row.data) : null;
+        if (row.data) {
+          parsedData = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+        }
       } catch (e) {
         console.error(`[Notification] JSON Parse Error for ID ${row.id_notifikasi}:`, e.message);
-        parsedData = null;
+        // Fallback: return null or raw string if needed, but null is safer for frontend
+        parsedData = null; 
       }
-
       return {
         ...row,
         data: parsedData
