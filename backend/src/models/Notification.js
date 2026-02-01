@@ -22,6 +22,10 @@ class Notification {
 
   // Get notifications for a user
   static async getByUser(nik, limit = 50, offset = 0, unreadOnly = false) {
+    // Ensure limit and offset are integers
+    const safeLimit = parseInt(limit) || 50;
+    const safeOffset = parseInt(offset) || 0;
+    
     let query = `
       SELECT *
       FROM notifications
@@ -35,7 +39,7 @@ class Notification {
     }
     
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    params.push(safeLimit, safeOffset);
     
     const [rows] = await db.execute(query, params);
     

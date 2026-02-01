@@ -60,18 +60,31 @@ class NotificationProvider with ChangeNotifier {
       notifyListeners();
     }
 
-    final response = await _notificationService.getNotifications(
-      limit: 50,
-      unreadOnly: unreadOnly,
-    );
+    try {
+      final response = await _notificationService.getNotifications(
+        limit: 50,
+        unreadOnly: unreadOnly,
+      );
 
-    if (response.success && response.data != null) {
-      final data = response.data!;
-      _notifications = data['notifications'] as List<NotificationModel>;
-      _unreadCount = data['unread_count'] as int;
-      _error = null;
-    } else {
-      _error = response.message;
+      print('[NotificationProvider] Response success: ${response.success}');
+      print('[NotificationProvider] Response message: ${response.message}');
+
+      if (response.success && response.data != null) {
+        final data = response.data!;
+        _notifications = data['notifications'] as List<NotificationModel>;
+        _unreadCount = data['unread_count'] as int;
+        _error = null;
+
+        print(
+          '[NotificationProvider] Loaded ${_notifications.length} notifications',
+        );
+      } else {
+        _error = response.message;
+        print('[NotificationProvider] Error: $_error');
+      }
+    } catch (e) {
+      _error = 'Terjadi kesalahan: $e';
+      print('[NotificationProvider] Exception: $e');
     }
 
     _isLoading = false;

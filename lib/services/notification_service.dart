@@ -22,10 +22,17 @@ class NotificationService {
         queryParams['unread_only'] = true;
       }
 
+      print(
+        '[NotificationService] Fetching notifications with params: $queryParams',
+      );
+
       final response = await _apiService.get(
         '/notifications',
         queryParameters: queryParams,
       );
+
+      print('[NotificationService] Response status: ${response.statusCode}');
+      print('[NotificationService] Response data: ${response.data}');
 
       final responseData = response.data['data'];
 
@@ -38,9 +45,15 @@ class NotificationService {
 
       return ApiResponse.success(result);
     } on DioException catch (e) {
+      print('[NotificationService] DioException: ${e.message}');
+      print('[NotificationService] Response: ${e.response?.data}');
+
       return ApiResponse.error(
         e.response?.data['message'] ?? 'Failed to get notifications',
       );
+    } catch (e) {
+      print('[NotificationService] Unexpected error: $e');
+      return ApiResponse.error('Terjadi kesalahan: $e');
     }
   }
 
