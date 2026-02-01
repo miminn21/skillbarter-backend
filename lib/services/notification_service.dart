@@ -48,9 +48,15 @@ class NotificationService {
       print('[NotificationService] DioException: ${e.message}');
       print('[NotificationService] Response: ${e.response?.data}');
 
-      return ApiResponse.error(
-        e.response?.data['message'] ?? 'Failed to get notifications',
-      );
+      // Build error message including error detail if available
+      String errorMsg =
+          e.response?.data['message'] ?? 'Failed to get notifications';
+      final errorDetail = e.response?.data['error'];
+      if (errorDetail != null) {
+        errorMsg = '$errorMsg: $errorDetail';
+      }
+
+      return ApiResponse.error(errorMsg);
     } catch (e) {
       print('[NotificationService] Unexpected error: $e');
       return ApiResponse.error('Terjadi kesalahan: $e');
