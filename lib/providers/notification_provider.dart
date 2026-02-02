@@ -37,11 +37,12 @@ class NotificationProvider with ChangeNotifier {
 
   void _startPolling() {
     _stopPolling();
-    // Poll every 30 seconds
-    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    // Poll every 15 seconds for faster updates
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (_authProvider?.isAuthenticated == true) {
+        // Fetch both unread count AND notifications for real-time updates
         fetchUnreadCount();
-        // Optionally fetch latest notifications quietly if screen is open
+        fetchNotifications(); // Also fetch new notifications
       }
     });
   }
@@ -129,6 +130,8 @@ class NotificationProvider with ChangeNotifier {
   }
 
   Future<bool> markAllAsRead() async {
+    print('[NotificationProvider] markAllAsRead() called');
+
     // Optimistic update
     _notifications = _notifications
         .map((n) => n.copyWith(isRead: true))
@@ -139,9 +142,20 @@ class NotificationProvider with ChangeNotifier {
     final response = await _notificationService.markAllAsRead();
 
     if (!response.success) {
+      print('[NotificationProvider] markAllAsRead() FAILED');
       fetchNotifications(); // Refresh to source of truth if failed
       return false;
     }
+
+    print('[NotificationProvider] markAllAsRead() SUCCESS');
+
+    // Force refresh unread count to update badge everywhere
+    await fetchUnreadCount();
+
+    // Reset polling timer to prevent race condition
+    _stopPolling();
+    _startPolling();
+    print('[NotificationProvider] Polling timer reset');
 
     return true;
   }

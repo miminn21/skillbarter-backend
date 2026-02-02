@@ -118,15 +118,38 @@ class Notification {
     await db.execute(query, [id]);
   }
 
+
   // Mark all as read for a user
   static async markAllAsRead(nik) {
-    const query = `
+    console.log(`[Notification.markAllAsRead] Starting for NIK: ${nik}`);
+    
+    // Update NEW notifications table
+    const query1 = `
       UPDATE notifications
       SET is_read = TRUE
       WHERE nik = ? AND is_read = FALSE
     `;
     
-    await db.execute(query, [nik]);
+    // Update OLD notifikasi table
+    const query2 = `
+      UPDATE notifikasi
+      SET dibaca = 1
+      WHERE nik_pengguna = ? AND dibaca = 0
+    `;
+    
+    try {
+      // Execute both updates
+      const [result1] = await db.execute(query1, [nik]);
+      console.log(`[Notification.markAllAsRead] Updated ${result1.affectedRows} rows in notifications table`);
+      
+      const [result2] = await db.execute(query2, [nik]);
+      console.log(`[Notification.markAllAsRead] Updated ${result2.affectedRows} rows in notifikasi table`);
+      
+      console.log(`[Notification.markAllAsRead] ✅ Completed for NIK: ${nik}`);
+    } catch (error) {
+      console.error(`[Notification.markAllAsRead] ❌ Error:`, error);
+      throw error;
+    }
   }
 
   // Delete notification
