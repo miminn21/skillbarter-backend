@@ -101,9 +101,15 @@ class User {
       WHERE nik = ?
     `;
     
-    const [result] = await db.execute(query, [
+    // Use null instead of undefined for mysql2 compatibility
+    const items = [
       nama_lengkap, nama_panggilan, jenis_kelamin,
-      tanggal_lahir, alamat_lengkap, kota, bio, nik
+      tanggal_lahir, alamat_lengkap, kota, bio
+    ].map(item => item === undefined ? null : item);
+
+    const [result] = await db.execute(query, [
+      ...items,
+      nik
     ]);
     
     return result;
