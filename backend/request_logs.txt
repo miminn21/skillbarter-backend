@@ -143,3 +143,8 @@
 [2026-02-01T01:18:07.925Z] GET /api/notifications/unread-count
 [2026-02-01T01:18:18.587Z] POST /api/auth/heartbeat
 [2026-02-01T01:18:37.929Z] GET /api/notifications/unread-count
+[2026-02-02T07:14:13.587Z] GET /api/auth/profile
+[2026-02-02T07:14:14.365Z] GET /api/auth/profile
+[2026-02-02T07:14:14.420Z] POST /api/auth/logout
+[2026-02-02T07:14:49.871Z] POST /api/auth/login
+[2026-02-02T07:15:00.183Z] POST /api/auth/login

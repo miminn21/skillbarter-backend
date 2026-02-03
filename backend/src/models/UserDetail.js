@@ -51,12 +51,21 @@ class UserDetail {
       WHERE nik = ?
     `;
     
+    // Use null instead of undefined for mysql2 compatibility
+    const items = [
+      pekerjaan, nama_instansi, pendidikan_terakhir,
+      keahlian_khusus, media_sosial, preferensi_lokasi,
+      zona_waktu, bahasa
+    ].map(item => item === undefined ? null : item);
+    
     const mediaSosialJson = media_sosial ? JSON.stringify(media_sosial) : null;
     
+    // Replace media_sosial in items array (index 4)
+    items[4] = mediaSosialJson;
+    
     const [result] = await db.execute(query, [
-      pekerjaan, nama_instansi, pendidikan_terakhir,
-      keahlian_khusus, mediaSosialJson, preferensi_lokasi,
-      zona_waktu, bahasa, nik
+      ...items,
+      nik
     ]);
     
     return result;

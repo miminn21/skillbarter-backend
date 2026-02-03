@@ -300,11 +300,30 @@ class SkillService {
     String filePath,
   ) async {
     try {
-      final response = await _apiService.uploadFile(
+      print('[SkillService] Uploading portfolio for skill $id');
+      print('[SkillService] File path: $filePath');
+
+      // Read file as bytes (works on all platforms)
+      final file = XFile(filePath);
+      final bytes = await file.readAsBytes();
+
+      print('[SkillService] File name: ${file.name}');
+      print('[SkillService] File size: ${bytes.length} bytes');
+
+      // Create FormData with MultipartFile.fromBytes
+      final formData = FormData.fromMap({
+        'portfolio': MultipartFile.fromBytes(bytes, filename: file.name),
+      });
+
+      print('[SkillService] FormData created, sending request...');
+
+      final response = await _apiService.post(
         '/skills/$id/upload-portfolio',
-        filePath,
-        'portfolio',
+        data: formData,
       );
+
+      print('[SkillService] Response status: ${response.statusCode}');
+      print('[SkillService] Response data: ${response.data}');
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -324,11 +343,17 @@ class SkillService {
         message: response.data['message'] ?? 'Failed to upload portfolio',
       );
     } on DioException catch (e) {
+      print('[SkillService] DioException caught!');
+      print('[SkillService] Error type: ${e.type}');
+      print('[SkillService] Response status: ${e.response?.statusCode}');
+      print('[SkillService] Response data: ${e.response?.data}');
+
       return ApiResponse(
         success: false,
         message: e.response?.data['message'] ?? 'Network error',
       );
     } catch (e) {
+      print('[SkillService] General exception: $e');
       return ApiResponse(success: false, message: e.toString());
     }
   }

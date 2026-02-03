@@ -15,7 +15,7 @@ class SkillListScreen extends StatefulWidget {
 }
 
 class _SkillListScreenState extends State<SkillListScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -44,30 +44,129 @@ class _SkillListScreenState extends State<SkillListScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Keahlian Saya'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Dikuasai'),
-            Tab(text: 'Dicari'),
-          ],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              size: 18,
+              color: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
+        title: const Text(
+          'Keahlian Saya',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
-      body: Consumer<SkillProvider>(
-        builder: (context, skillProvider, _) {
-          if (skillProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Stack(
+        children: [
+          // Animated Background Header
+          Align(
+            alignment: Alignment.topCenter,
+            child: ClipPath(
+              clipper: _HeaderClipper(),
+              child: const _AnimatedHeader(),
+            ),
+          ),
 
-          return TabBarView(
-            controller: _tabController,
+          // Content
+          Column(
             children: [
-              _buildSkillList(skillProvider.dikuasaiSkills, 'dikuasai'),
-              _buildSkillList(skillProvider.dicariSkills, 'dicari'),
+              SizedBox(
+                height:
+                    kToolbarHeight + MediaQuery.of(context).padding.top + 10,
+              ), // Spacing for AppBar
+              // Custom Tab Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  height: 50,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    dividerColor: Colors.transparent,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicator: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(26),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    labelColor: Theme.of(context).primaryColor,
+                    unselectedLabelColor: Colors.white,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                    tabs: const [
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.workspace_premium_rounded, size: 20),
+                            SizedBox(width: 8),
+                            Text('Dikuasai'),
+                          ],
+                        ),
+                      ),
+                      Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.search_rounded, size: 20),
+                            SizedBox(width: 8),
+                            Text('Dicari'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Tab View List
+              Expanded(
+                child: Consumer<SkillProvider>(
+                  builder: (context, skillProvider, _) {
+                    if (skillProvider.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    return TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildSkillList(
+                          skillProvider.dikuasaiSkills,
+                          'dikuasai',
+                        ),
+                        _buildSkillList(skillProvider.dicariSkills, 'dicari'),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ],
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -80,7 +179,8 @@ class _SkillListScreenState extends State<SkillListScreen>
             _loadSkills();
           }
         },
-        child: const Icon(Icons.add),
+        backgroundColor: Theme.of(context).primaryColor,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -91,20 +191,38 @@ class _SkillListScreenState extends State<SkillListScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              tipe == 'dikuasai' ? Icons.workspace_premium : Icons.search,
-              size: 64,
-              color: Colors.grey[400],
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Icon(
+                tipe == 'dikuasai' ? Icons.workspace_premium : Icons.search,
+                size: 64,
+                color: Colors.grey[300],
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
               tipe == 'dikuasai'
                   ? 'Belum ada skill yang dikuasai'
                   : 'Belum ada skill yang dicari',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            const SizedBox(height: 8),
-            TextButton.icon(
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
@@ -119,6 +237,15 @@ class _SkillListScreenState extends State<SkillListScreen>
               },
               icon: const Icon(Icons.add),
               label: const Text('Tambah Skill'),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
             ),
           ],
         ),
@@ -128,7 +255,7 @@ class _SkillListScreenState extends State<SkillListScreen>
     return RefreshIndicator(
       onRefresh: _loadSkills,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
         itemCount: skills.length,
         itemBuilder: (context, index) {
           final skill = skills[index];
@@ -139,171 +266,200 @@ class _SkillListScreenState extends State<SkillListScreen>
   }
 
   Widget _buildSkillCard(SkillModel skill) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SkillDetailScreen(skillId: skill.id),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  // Category Icon
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      _getCategoryIcon(skill.kategoriIkon),
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Skill Name & Category
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          skill.namaKeahlian,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          skill.namaKategori ?? '',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Verified Badge
-                  if (skill.statusVerifikasi)
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SkillDetailScreen(skillId: skill.id),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category Icon
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.green[100],
-                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).primaryColor.withOpacity(0.1),
+                            Theme.of(context).primaryColor.withOpacity(0.05),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Icon(
+                        _getCategoryIcon(skill.kategoriIkon),
+                        color: Theme.of(context).primaryColor,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Skill Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.verified,
-                            size: 14,
-                            color: Colors.green[700],
-                          ),
-                          const SizedBox(width: 4),
                           Text(
-                            'Verified',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.green[700],
+                            skill.namaKeahlian,
+                            style: const TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            skill.namaKategori ?? 'Uncategorized',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 12),
 
-              // Tingkat & Harga
-              Row(
-                children: [
-                  _buildChip(
-                    _getTingkatLabel(skill.tingkat),
-                    _getTingkatColor(skill.tingkat),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildChip('${skill.hargaPerJam} SC/jam', Colors.amber),
-                ],
-              ),
+                    // Menu / Actions
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, color: Colors.grey[400]),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EditSkillScreen(skill: skill),
+                            ),
+                          ).then((val) {
+                            if (val == true) _loadSkills();
+                          });
+                        } else if (value == 'delete') {
+                          _confirmDelete(skill);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit, size: 20, color: Colors.blue),
+                              SizedBox(width: 12),
+                              Text('Edit'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, size: 20, color: Colors.red),
+                              SizedBox(width: 12),
+                              Text('Hapus'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
 
-              // Deskripsi
-              if (skill.deskripsi != null && skill.deskripsi!.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(
-                  skill.deskripsi!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                const SizedBox(height: 20),
+
+                // Tags Row
+                Row(
+                  children: [
+                    _buildModernChip(
+                      _getTingkatLabel(skill.tingkat),
+                      _getTingkatColor(skill.tingkat),
+                      Icons.equalizer_rounded,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildModernChip(
+                      '${skill.hargaPerJam} SC/jam',
+                      Colors.amber,
+                      Icons.monetization_on_rounded,
+                    ),
+                    if (skill.statusVerifikasi) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.verified,
+                          size: 16,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
-
-              // Actions
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    onPressed: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditSkillScreen(skill: skill),
-                        ),
-                      );
-
-                      if (result == true) {
-                        _loadSkills();
-                      }
-                    },
-                    icon: const Icon(Icons.edit, size: 18),
-                    label: const Text('Edit'),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _confirmDelete(skill),
-                    icon: const Icon(Icons.delete, size: 18),
-                    label: const Text('Hapus'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildChip(String label, Color color) {
+  Widget _buildModernChip(String label, Color color, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.1)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: color.withOpacity(0.8),
-          fontWeight: FontWeight.w500,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: color.withOpacity(0.9),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -356,22 +512,97 @@ class _SkillListScreenState extends State<SkillListScreen>
   Future<void> _confirmDelete(SkillModel skill) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hapus Skill'),
-        content: Text(
-          'Apakah Anda yakin ingin menghapus "${skill.namaKeahlian}"?',
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.delete_outline_rounded,
+                  size: 32,
+                  color: Colors.red.shade400,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Hapus Skill',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Apakah Anda yakin ingin menghapus "${skill.namaKeahlian}"?\nTindakan ini tidak dapat dibatalkan.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600], height: 1.5),
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      child: Text(
+                        'Batal',
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Hapus',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hapus'),
-          ),
-        ],
       ),
     );
 
@@ -391,4 +622,116 @@ class _SkillListScreenState extends State<SkillListScreen>
       }
     }
   }
+}
+
+// HEADER ANIMATION WIDGET (REUSED)
+class _AnimatedHeader extends StatefulWidget {
+  const _AnimatedHeader();
+
+  @override
+  State<_AnimatedHeader> createState() => _AnimatedHeaderState();
+}
+
+class _AnimatedHeaderState extends State<_AnimatedHeader>
+    with TickerProviderStateMixin {
+  late AnimationController _controller1;
+  late AnimationController _controller2;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller1 = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+    _controller2 = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller1.dispose();
+    _controller2.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 250,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).primaryColor,
+            const Color(0xFF1E88E5), // Lighter blue
+            const Color(0xFF1565C0), // Darker blue
+          ],
+        ),
+      ),
+      child: Stack(
+        children: [
+          AnimatedBuilder(
+            animation: _controller1,
+            builder: (context, child) {
+              return Positioned(
+                top: -30 + (_controller1.value * 20),
+                left: -30 + (_controller1.value * 30),
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.05),
+                  ),
+                ),
+              );
+            },
+          ),
+          AnimatedBuilder(
+            animation: _controller2,
+            builder: (context, child) {
+              return Positioned(
+                bottom: 20 + (_controller2.value * 30),
+                right: -20 + (_controller2.value * 20),
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.05),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+    path.lineTo(0, size.height - 40);
+    var firstControlPoint = Offset(size.width / 2, size.height + 20);
+    var firstEndPoint = Offset(size.width, size.height - 40);
+    path.quadraticBezierTo(
+      firstControlPoint.dx,
+      firstControlPoint.dy,
+      firstEndPoint.dx,
+      firstEndPoint.dy,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

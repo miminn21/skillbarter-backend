@@ -238,7 +238,15 @@ exports.uploadPortfolio = async (req, res) => {
     const { id } = req.params;
     const { nik } = req.user;
     
+    console.log('[uploadPortfolio] Request received');
+    console.log('[uploadPortfolio] Skill ID:', id);
+    console.log('[uploadPortfolio] User NIK:', nik);
+    console.log('[uploadPortfolio] req.file:', req.file);
+    console.log('[uploadPortfolio] req.body:', req.body);
+    console.log('[uploadPortfolio] Content-Type:', req.headers['content-type']);
+    
     if (!req.file) {
+      console.log('[uploadPortfolio] ERROR: File tidak ditemukan');
       return error(res, 'File tidak ditemukan', 400);
     }
     

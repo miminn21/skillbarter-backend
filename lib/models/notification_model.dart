@@ -21,14 +21,23 @@ class NotificationModel {
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
-      idNotifikasi: json['id_notifikasi'],
+      // Handle both 'id' (from UNION query) and 'id_notifikasi' (old format)
+      idNotifikasi: json['id'] ?? json['id_notifikasi'],
       nik: json['nik'],
       tipe: json['tipe'],
       judul: json['judul'],
-      pesan: json['pesan'],
+      // Handle both 'pesan' (from UNION query) and old format
+      pesan: json['pesan'] ?? json['isi_pesan'],
       data: json['data'],
-      isRead: json['is_read'] == 1 || json['is_read'] == true,
-      createdAt: DateTime.parse(json['created_at']),
+      // Handle both 'dibaca' (from UNION query) and 'is_read' (old format)
+      // dibaca can be int (0/1) or boolean
+      isRead:
+          json['dibaca'] == 1 ||
+          json['dibaca'] == true ||
+          json['is_read'] == 1 ||
+          json['is_read'] == true,
+      // Handle both 'dibuat_pada' (from UNION query) and 'created_at' (old format)
+      createdAt: DateTime.parse(json['dibuat_pada'] ?? json['created_at']),
     );
   }
 

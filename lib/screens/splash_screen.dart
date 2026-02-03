@@ -9,6 +9,10 @@ import '../screens/auth/login_screen.dart';
 // import '../services/fcm_service.dart';
 // import '../providers/notification_provider.dart';
 
+import 'dart:math' as math;
+
+// ... imports remain the same
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,8 +21,9 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _rotationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
 
@@ -26,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // Set system status bar style
+    // Set system status bar style to match dark background
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -34,10 +39,17 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
+    // Main entrance animation
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
+
+    // Continuous rotation for outer ring
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -60,35 +72,19 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
-    // Artificial minimum delay to show animation (2 seconds)
-    final minDelay = Future.delayed(const Duration(seconds: 2));
-
-    // Initialize API service (load token)
+    // Artificial delay to show the beautiful logo animation (3 seconds)
+    final minDelay = Future.delayed(const Duration(seconds: 3));
     final apiInit = ApiService().initialize();
 
     await Future.wait([minDelay, apiInit]);
 
     if (!mounted) return;
 
-    // Check auth status
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
-    // final notificationProvider = Provider.of<NotificationProvider>(
-    //   context,
-    //   listen: false,
-    // );
-
     final isAuthenticated = await authProvider.tryAutoLogin();
-
-    if (isAuthenticated && mounted) {
-      // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
-      // Initialize FCM Service
-      // await FCMService().initialize(notificationProvider, context);
-    }
 
     if (!mounted) return;
 
-    // Navigate with fade transition
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => isAuthenticated
@@ -97,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 800),
       ),
     );
   }
@@ -105,106 +101,165 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _controller.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Background Color based on the image (Dark Navy)
+    const backgroundColor = Color(0xFF050B14);
+
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.blue.shade800,
-              Colors.blue.shade600,
-              Colors.blue.shade400,
-            ],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Animated Logo
-              ScaleTransition(
-                scale: _scaleAnimation,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.compare_arrows_rounded,
-                      size: 64,
-                      color: Colors.blue.shade700,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // App Name
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  children: [
-                    const Text(
-                      'SkillBarter',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Tukar Keahlian, Perluas Koneksi',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue.shade100,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Loading Indicator
-              const SizedBox(height: 60),
-              FadeTransition(
+      backgroundColor: backgroundColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // LOGO SECTION
+            ScaleTransition(
+              scale: _scaleAnimation,
+              child: FadeTransition(
                 opacity: _fadeAnimation,
                 child: SizedBox(
-                  width: 30,
-                  height: 30,
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Colors.blue.shade100,
-                    ),
-                    strokeWidth: 3,
+                  width: 160,
+                  height: 160,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // 1. Rotating Outer Ring
+                      AnimatedBuilder(
+                        animation: _rotationController,
+                        builder: (context, child) {
+                          return Transform.rotate(
+                            angle: _rotationController.value * 2 * math.pi,
+                            child: CustomPaint(
+                              size: const Size(160, 160),
+                              painter: RingPainter(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // 2. Center Circle with Gradient and Icon
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFFFF00CC), // Magenta/Pink
+                              Color(0xFF333399), // Deep Blue/Purple
+                              Color(0xFF00CCFF), // Cyan/Blue
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFE91E63).withOpacity(0.4),
+                              blurRadius: 30,
+                              offset: const Offset(0, 0),
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.swap_horiz_rounded, // The requested icon
+                            size: 56,
+                            color: Colors.white, // White icon
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 100), // Spacing to match the image
+            // TEXT SECTION
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  Text(
+                    'SKILLBARTER',
+                    style: TextStyle(
+                      fontFamily: 'Roboto', // Clean geometric font
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900, // Extra Bold
+                      color: Colors.white,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'TUKAR KEAHLIAN PERLUAS KONEKSI',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(
+                        0.9,
+                      ), // Slightly dimmer white
+                      letterSpacing: 3.0, // Wide spacing as seen in image
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Subtle Loading Star at bottom right (optional polish)
+          ],
         ),
       ),
     );
   }
+}
+
+// Custom Painter for the segmented gradient ring
+class RingPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width / 2) - 10; // Slightly smaller than container
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6
+      ..strokeCap = StrokeCap.round;
+
+    // Define the gradient shader
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    final gradient = const SweepGradient(
+      colors: [
+        Color(0xFFFF00CC), // Pink
+        Color(0xFF00CCFF), // Cyan
+        Color(0xFFFF00CC), // Pink
+      ],
+      stops: [0.0, 0.5, 1.0],
+    ).createShader(rect);
+
+    paint.shader = gradient;
+
+    // Draw 3 segments (Arc)
+    // 360 degrees = 2*pi
+    // We want 3 gaps.
+
+    // Segment 1
+    canvas.drawArc(rect, 0.0, 1.5, false, paint);
+
+    // Segment 2
+    canvas.drawArc(rect, 2.1, 1.5, false, paint);
+
+    // Segment 3
+    canvas.drawArc(rect, 4.2, 1.5, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // Wrappers to allow lazy loading of screens

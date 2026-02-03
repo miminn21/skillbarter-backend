@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:math';
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import '../../providers/auth_provider.dart';
 import '../profile/profile_screen.dart';
@@ -121,7 +122,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -129,6 +130,8 @@ class _DashboardPageState extends State<DashboardPage>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this); // Add lifecycle observer
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -152,8 +155,18 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this); // Remove observer
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh when app resumes from background
+    if (state == AppLifecycleState.resumed) {
+      _refreshUserData();
+    }
   }
 
   Future<void> _refreshUserData() async {
@@ -220,125 +233,119 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildHeader(BuildContext context, dynamic user) {
-    return Container(
-      padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 30),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            const Color(0xFF3949AB), // Deep Indigo for futuristic feel
-          ],
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Stack(
+      children: [
+        // Animated Background
+        const _AnimatedHeaderBackground(),
+
+        // Content
+        Container(
+          height: 220,
+          padding: const EdgeInsets.fromLTRB(24, 60, 24, 30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Halo, ${user?.namaPanggilan ?? "User"}! 👋',
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Mau tukar skill apa hari ini?',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Consumer<NotificationProvider>(
-                builder: (context, notificationProvider, child) {
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      _ScaleButton(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const NotificationScreen(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.notifications_outlined,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Halo, ${user?.namaPanggilan ?? "User"}! 👋',
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Mau tukar skill apa hari ini?',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ),
-                      if (notificationProvider.unreadCount > 0)
-                        Positioned(
-                          right: -2,
-                          top: -2,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 20,
-                              minHeight: 20,
-                            ),
-                            child: Text(
-                              '${notificationProvider.unreadCount}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                      ],
+                    ),
+                  ),
+                  Consumer<NotificationProvider>(
+                    builder: (context, notificationProvider, child) {
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          _ScaleButton(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const NotificationScreen(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                  width: 1.5,
+                                ),
                               ),
-                              textAlign: TextAlign.center,
+                              child: const Icon(
+                                Icons.notifications_outlined,
+                                color: Colors.white,
+                                size: 26,
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  );
-                },
+                          if (notificationProvider.unreadCount > 0)
+                            Positioned(
+                              right: -4,
+                              top: -4,
+                              child: Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 22,
+                                  minHeight: 22,
+                                ),
+                                child: Text(
+                                  '${notificationProvider.unreadCount}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -353,22 +360,22 @@ class _DashboardPageState extends State<DashboardPage>
                 icon: Icons.monetization_on_rounded,
                 title: 'SkillCoin',
                 value: '${user?.saldoSkillcoin ?? 0}',
-                color: Colors.amber,
+                color: const Color(0xFFFFB300), // Richer Amber
                 delay: 0,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               _buildStatCard(
                 context,
-                icon: Icons.swap_horiz_rounded,
+                icon: Icons.swap_vertical_circle_rounded, // Better icon
                 title: 'Transaksi',
                 value: '${user?.jumlahTransaksi ?? 0}',
-                color: Colors.blue,
+                color: const Color(0xFF1E88E5), // Richer Blue
                 delay: 100,
               ),
             ],
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
             children: [
@@ -377,16 +384,16 @@ class _DashboardPageState extends State<DashboardPage>
                 icon: Icons.star_rounded,
                 title: 'Rating',
                 value: '${user?.ratingRataRata.toStringAsFixed(1) ?? "0.0"}',
-                color: Colors.orange,
+                color: const Color(0xFFFF7043), // Deep Orange
                 delay: 200,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               _buildStatCard(
                 context,
-                icon: Icons.access_time_rounded,
+                icon: Icons.timer_rounded, // Better icon
                 title: 'Jam Kontribusi',
                 value: '${user?.totalJamBerkontribusi ?? 0}',
-                color: Colors.green,
+                color: const Color(0xFF43A047), // Richer Green
                 delay: 300,
               ),
             ],
@@ -413,15 +420,13 @@ class _DashboardPageState extends State<DashboardPage>
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(
-                0.08,
-              ), // Colored shadow for Futuristic feel
+              color: Colors.black.withOpacity(0.04), // Cleaner shadow
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -431,31 +436,29 @@ class _DashboardPageState extends State<DashboardPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color.withOpacity(0.2), color.withOpacity(0.1)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: color, size: 28),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: 26,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF2D3142),
+                height: 1.2,
               ),
             ),
+            const SizedBox(height: 4),
             Text(
               title,
               style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[500],
+                fontSize: 13,
+                color: Colors.grey[600],
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -470,16 +473,16 @@ class _DashboardPageState extends State<DashboardPage>
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      mainAxisSpacing: 15,
-      crossAxisSpacing: 15,
-      childAspectRatio: 1.3, // Reduced from 1.4 to allow more height
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      childAspectRatio: 1.4,
       children: [
         _buildActionCard(
           context,
           'Tambah Skill',
           'Mulai berbagi',
           Icons.add_circle_outline_rounded,
-          Theme.of(context).colorScheme.primary,
+          const Color(0xFF5E35B1), // Deep Purple
           () => Navigator.pushNamed(context, '/skills'),
           0,
         ),
@@ -488,7 +491,7 @@ class _DashboardPageState extends State<DashboardPage>
           'Cari Skill',
           'Temukan mentor',
           Icons.search_rounded,
-          const Color(0xFF9C27B0),
+          const Color(0xFFE91E63), // Pink
           () => Navigator.pushNamed(context, '/explore'),
           100,
         ),
@@ -496,8 +499,8 @@ class _DashboardPageState extends State<DashboardPage>
           context,
           'Leaderboard',
           'Top pengguna',
-          Icons.emoji_events_outlined,
-          const Color(0xFFFF9800),
+          Icons.emoji_events_rounded, // Rounded variant
+          const Color(0xFFFF8F00), // Amber Dark
           () => Navigator.pushNamed(context, '/leaderboard'),
           200,
         ),
@@ -505,8 +508,8 @@ class _DashboardPageState extends State<DashboardPage>
           context,
           'Riwayat',
           'Log aktivitas',
-          Icons.history_rounded,
-          const Color(0xFF009688),
+          Icons.history_edu_rounded, // More specific icon
+          const Color(0xFF00897B), // Teal
           () {
             // TODO: Navigate to history
           },
@@ -544,29 +547,41 @@ class _DashboardPageState extends State<DashboardPage>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+                color: Colors.black.withOpacity(0.04), // Consistent soft shadow
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: color.withOpacity(0.05), // Subtle tint of brand color
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          padding: const EdgeInsets.all(
-            12,
-          ), // Reduced from 16 to prevent overflow
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 26),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: color, size: 24),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 12,
+                    color: Colors.grey[300],
+                  ),
+                ],
               ),
               const Spacer(),
               Text(
@@ -577,10 +592,14 @@ class _DashboardPageState extends State<DashboardPage>
                   color: Color(0xFF2D3142),
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                  fontWeight: FontWeight.w500,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -642,3 +661,166 @@ class _ScaleButtonState extends State<_ScaleButton>
 // Explore Page (Placeholder)
 
 // Transactions Page - Now using TransactionListScreen from barter module
+
+// Animated Header Background Widget
+class _AnimatedHeaderBackground extends StatefulWidget {
+  const _AnimatedHeaderBackground();
+
+  @override
+  State<_AnimatedHeaderBackground> createState() =>
+      _AnimatedHeaderBackgroundState();
+}
+
+class _AnimatedHeaderBackgroundState extends State<_AnimatedHeaderBackground>
+    with TickerProviderStateMixin {
+  late AnimationController _controller1;
+  late AnimationController _controller2;
+  late AnimationController _controller3;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller1 = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat(reverse: true);
+    _controller2 = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 7),
+    )..repeat(reverse: true);
+    _controller3 = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller1.dispose();
+    _controller2.dispose();
+    _controller3.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(32),
+        bottomRight: Radius.circular(32),
+      ),
+      child: Container(
+        height: 220,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).primaryColor,
+              const Color(0xFF1E88E5), // Lighter blue
+              const Color(0xFF1565C0), // Darker blue
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).primaryColor.withOpacity(0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Blob 1: Top Left (Cyan/Blue)
+            AnimatedBuilder(
+              animation: _controller1,
+              builder: (context, child) {
+                return Positioned(
+                  top: -50 + (_controller1.value * 20),
+                  left: -50 + (_controller1.value * 30),
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.cyanAccent.withOpacity(0.2),
+                          Colors.blueAccent.withOpacity(0.2),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blueAccent.withOpacity(0.2),
+                          blurRadius: 60,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // Blob 2: Bottom Right (Indigo/Primary)
+            AnimatedBuilder(
+              animation: _controller2,
+              builder: (context, child) {
+                return Positioned(
+                  bottom: -60 + (_controller2.value * 30),
+                  right: -40 + (_controller2.value * 20),
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF3949AB).withOpacity(0.3), // Indigo
+                          Theme.of(context).primaryColor.withOpacity(0.3),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3949AB).withOpacity(0.3),
+                          blurRadius: 60,
+                          spreadRadius: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // Blob 3: Center (Soft Light Blue overlap)
+            AnimatedBuilder(
+              animation: _controller3,
+              builder: (context, child) {
+                return Positioned(
+                  top: 50 + (_controller3.value * 20),
+                  left: 100 + (_controller3.value * -30),
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.05),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.05),
+                          blurRadius: 50,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
