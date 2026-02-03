@@ -5,12 +5,85 @@ import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/profile_service.dart';
 import '../../widgets/custom_notification.dart';
+import 'package:intl/intl.dart';
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
 import 'help_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _entryAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _entryAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000), // Smooth 1s entrance
+    );
+    _entryAnimationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _entryAnimationController.dispose();
+    super.dispose();
+  }
+
+  String _formatDate(String dateString) {
+    if (dateString.isEmpty) return '-';
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('dd MMMM yyyy').format(date);
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  /// Helper to animate widgets with stagger
+  Widget _buildAnimatedItem({
+    required Widget child,
+    required int index, // 0-based index for stagger
+    double slideOffset = 0.2, // vertical offset
+  }) {
+    // 0.0 -> 0.4
+    // 0.1 -> 0.5
+    // Each item starts 100ms after the previous (roughly)
+    final double startTime = index * 0.1;
+    final double endTime = startTime + 0.4; // 400ms duration per item
+
+    // Clamp to 0.0 - 1.0
+    final safeStart = startTime > 1.0 ? 1.0 : startTime;
+    final safeEnd = endTime > 1.0 ? 1.0 : endTime;
+
+    final Animation<double> fadeAnimation = Tween<double>(begin: 0.0, end: 1.0)
+        .animate(
+          CurvedAnimation(
+            parent: _entryAnimationController,
+            curve: Interval(safeStart, safeEnd, curve: Curves.easeOut),
+          ),
+        );
+
+    final Animation<Offset> slideAnimation =
+        Tween<Offset>(begin: Offset(0, slideOffset), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entryAnimationController,
+            curve: Interval(safeStart, safeEnd, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    return FadeTransition(
+      opacity: fadeAnimation,
+      child: SlideTransition(position: slideAnimation, child: child),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,135 +127,322 @@ class ProfileScreen extends StatelessWidget {
           return SingleChildScrollView(
             child: Column(
               children: [
-                // 1. Creative Header with Curve
-                Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.bottomCenter,
-                  children: [
-                    // Gradient Background with Shapes
-                    ClipPath(
-                      clipper: _HeaderClipper(),
-                      child: const _AnimatedProfileHeader(),
-                    ),
+                // 1. Creative Header with Curve (Fade In First)
+                _buildAnimatedItem(
+                  index: 0,
+                  slideOffset: 0.0, // No slide for header background
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      // Gradient Background with Shapes
+                      ClipPath(
+                        clipper: _HeaderClipper(),
+                        child: const _AnimatedProfileHeader(),
+                      ),
 
-                    // Floating Avatar
-                    Positioned(
-                      bottom: -50,
-                      child: Stack(
-                        alignment: Alignment.bottomRight,
-                        children: [
-                          GestureDetector(
-                            onTap: () => _handleUploadPhoto(context),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 4,
+                      // Floating Avatar (Pop In Animation would be cool, but slide up for now)
+                      Positioned(
+                        bottom: -50,
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            GestureDetector(
+                              onTap: () => _handleUploadPhoto(context),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 4,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.15),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
                                 ),
+                                child: CircleAvatar(
+                                  radius: 60,
+                                  backgroundColor: Colors.grey.shade100,
+                                  backgroundImage: user.fotoProfil != null
+                                      ? MemoryImage(
+                                          base64Decode(user.fotoProfil!),
+                                        )
+                                      : null,
+                                  child: user.fotoProfil == null
+                                      ? Text(
+                                          user.namaPanggilan[0].toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: 48,
+                                            color: Theme.of(
+                                              context,
+                                            ).primaryColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
+                                    color: Colors.black12,
+                                    blurRadius: 4,
                                   ),
                                 ],
                               ),
-                              child: CircleAvatar(
-                                radius: 60,
-                                backgroundColor: Colors.grey.shade100,
-                                backgroundImage: user.fotoProfil != null
-                                    ? MemoryImage(
-                                        base64Decode(user.fotoProfil!),
-                                      )
-                                    : null,
-                                child: user.fotoProfil == null
-                                    ? Text(
-                                        user.namaPanggilan[0].toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 48,
-                                          color: Theme.of(context).primaryColor,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )
-                                    : null,
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.camera_alt_rounded,
+                                  size: 20,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                onPressed: () => _handleUploadPhoto(context),
+                                padding: const EdgeInsets.all(8),
+                                constraints: const BoxConstraints(),
                               ),
                             ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 60),
+
+                // 2. User Identity (Stagger Index 1)
+                _buildAnimatedItem(
+                  index: 1,
+                  child: Column(
+                    children: [
+                      Text(
+                        user.namaLengkap,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3142),
+                          letterSpacing: 0.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '@${user.namaPanggilan}',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.amber.withOpacity(0.3),
                           ),
-                          Container(
-                            margin: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(color: Colors.black12, blurRadius: 4),
-                              ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Colors.amber,
+                              size: 18,
                             ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.camera_alt_rounded,
-                                size: 20,
-                                color: Theme.of(context).primaryColor,
+                            const SizedBox(width: 4),
+                            Text(
+                              user.ratingRataRata.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFB45309), // Dark amber
                               ),
-                              onPressed: () => _handleUploadPhoto(context),
-                              padding: const EdgeInsets.all(8),
-                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // 3. Stats Row (Stagger Index 2)
+                _buildAnimatedItem(
+                  index: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            icon: Icons.monetization_on_rounded,
+                            label: 'SkillCoin',
+                            value: '${user.saldoSkillcoin}',
+                            color: Colors.amber,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildStatCard(
+                            icon: Icons.swap_horiz_rounded,
+                            label: 'Transaksi',
+                            value: '${user.jumlahTransaksi}',
+                            color: Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildStatCard(
+                            icon: Icons.access_time_filled_rounded,
+                            label: 'Jam',
+                            value: '${user.totalJamBerkontribusi}',
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // 4. Bio (Stagger Index 3)
+                if (user.bio != null && user.bio!.isNotEmpty)
+                  _buildAnimatedItem(
+                    index: 3,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.format_quote_rounded,
+                            color: Colors.grey[300],
+                            size: 32,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            user.bio!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.grey[700],
+                              height: 1.6,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
 
-                const SizedBox(height: 60),
+                const SizedBox(height: 24),
 
-                // 2. User Identity
-                Text(
-                  user.namaLengkap,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3142),
-                    letterSpacing: 0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '@${user.namaPanggilan}',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.grey[500],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                // 5. Personal Info (Stagger Index 4)
+                _buildAnimatedItem(
+                  index: 4,
+                  child: Column(
                     children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        color: Colors.amber,
-                        size: 18,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Informasi Pribadi',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        user.ratingRataRata.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFB45309), // Dark amber
+                      const SizedBox(height: 12),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            _buildInfoTile(
+                              icon: Icons.badge_rounded,
+                              title: 'NIK',
+                              value: user.nik,
+                              isFirst: true,
+                              color: Colors.blue,
+                            ),
+                            _buildInfoTile(
+                              icon: Icons.wc_rounded,
+                              title: 'Jenis Kelamin',
+                              value: user.jenisKelamin == 'L'
+                                  ? 'Laki-laki'
+                                  : 'Perempuan',
+                              color: Colors.purple,
+                            ),
+                            _buildInfoTile(
+                              icon: Icons.cake_rounded,
+                              title: 'Tanggal Lahir',
+                              value: _formatDate(user.tanggalLahir),
+                              color: Colors.pink,
+                            ),
+                            _buildInfoTile(
+                              icon: Icons.location_city_rounded,
+                              title: 'Kota',
+                              value: user.kota,
+                              color: Colors.orange,
+                            ),
+                            if (user.pekerjaan != null)
+                              _buildInfoTile(
+                                icon: Icons.work_rounded,
+                                title: 'Pekerjaan',
+                                value: user.pekerjaan!,
+                                color: Colors.brown,
+                              ),
+                            if (user.pendidikanTerakhir != null)
+                              _buildInfoTile(
+                                icon: Icons.school_rounded,
+                                title: 'Pendidikan',
+                                value: user.pendidikanTerakhir!,
+                                color: Colors.teal,
+                                isLast: true,
+                              ),
+                          ],
                         ),
                       ),
                     ],
@@ -191,54 +451,17 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
-                // 3. Stats Row
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.monetization_on_rounded,
-                          label: 'SkillCoin',
-                          value: '${user.saldoSkillcoin}',
-                          color: Colors.amber,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.swap_horiz_rounded,
-                          label: 'Transaksi',
-                          value: '${user.jumlahTransaksi}',
-                          color: Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.access_time_filled_rounded,
-                          label: 'Jam',
-                          value: '${user.totalJamBerkontribusi}',
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // 4. Bio
-                if (user.bio != null && user.bio!.isNotEmpty)
-                  Container(
+                // 6. Menu Section (Stagger Index 5)
+                _buildAnimatedItem(
+                  index: 5,
+                  child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
-                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: Colors.black.withOpacity(0.04),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -246,161 +469,45 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.format_quote_rounded,
-                          color: Colors.grey[300],
-                          size: 32,
+                        _buildMenuTile(
+                          icon: Icons.lock_outline_rounded,
+                          title: 'Ubah Password',
+                          color: Colors.deepOrange,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ChangePasswordScreen(),
+                              ),
+                            );
+                          },
+                          isFirst: true,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          user.bio!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.grey[700],
-                            height: 1.6,
-                            fontStyle: FontStyle.italic,
-                          ),
+                        _buildMenuTile(
+                          icon: Icons.settings_outlined,
+                          title: 'Pengaturan',
+                          color: Colors.indigo,
+                          onTap: () {
+                            // TODO: Navigate to settings
+                          },
+                        ),
+                        _buildMenuTile(
+                          icon: Icons.help_outline_rounded,
+                          title: 'Bantuan',
+                          color: Colors.cyan,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const HelpScreen(),
+                              ),
+                            );
+                          },
+                          isLast: true,
                         ),
                       ],
                     ),
-                  ),
-
-                const SizedBox(height: 24),
-
-                // 5. Personal Info
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Informasi Pribadi',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildInfoTile(
-                        icon: Icons.badge_rounded,
-                        title: 'NIK',
-                        value: user.nik,
-                        isFirst: true,
-                        color: Colors.blue,
-                      ),
-                      _buildInfoTile(
-                        icon: Icons.wc_rounded,
-                        title: 'Jenis Kelamin',
-                        value: user.jenisKelamin == 'L'
-                            ? 'Laki-laki'
-                            : 'Perempuan',
-                        color: Colors.purple,
-                      ),
-                      _buildInfoTile(
-                        icon: Icons.cake_rounded,
-                        title: 'Tanggal Lahir',
-                        value: user.tanggalLahir,
-                        color: Colors.pink,
-                      ),
-                      _buildInfoTile(
-                        icon: Icons.location_city_rounded,
-                        title: 'Kota',
-                        value: user.kota,
-                        color: Colors.orange,
-                      ),
-                      if (user.pekerjaan != null)
-                        _buildInfoTile(
-                          icon: Icons.work_rounded,
-                          title: 'Pekerjaan',
-                          value: user.pekerjaan!,
-                          color: Colors.brown,
-                        ),
-                      if (user.pendidikanTerakhir != null)
-                        _buildInfoTile(
-                          icon: Icons.school_rounded,
-                          title: 'Pendidikan',
-                          value: user.pendidikanTerakhir!,
-                          color: Colors.teal,
-                          isLast: true,
-                        ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // 6. Menu Section
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildMenuTile(
-                        icon: Icons.lock_outline_rounded,
-                        title: 'Ubah Password',
-                        color: Colors.deepOrange,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const ChangePasswordScreen(),
-                            ),
-                          );
-                        },
-                        isFirst: true,
-                      ),
-                      _buildMenuTile(
-                        icon: Icons.settings_outlined,
-                        title: 'Pengaturan',
-                        color: Colors.indigo,
-                        onTap: () {
-                          // TODO: Navigate to settings
-                        },
-                      ),
-                      _buildMenuTile(
-                        icon: Icons.help_outline_rounded,
-                        title: 'Bantuan',
-                        color: Colors.cyan,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HelpScreen(),
-                            ),
-                          );
-                        },
-                        isLast: true,
-                      ),
-                    ],
                   ),
                 ),
 

@@ -14,10 +14,15 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   late TabController _tabController;
+  late AnimationController _headerController;
+  late Animation<Offset> _headerSlideAnimation;
+  late Animation<double> _headerFadeAnimation;
+  late Animation<Offset> _searchSlideAnimation;
+  late Animation<double> _searchFadeAnimation;
   bool _isGridView = true;
 
   @override
@@ -26,6 +31,46 @@ class _ExploreScreenState extends State<ExploreScreen>
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
     _scrollController.addListener(_onScroll);
+
+    // Initialize Header Animation
+    _headerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    // Header: Slide from Top (-1.0)
+    _headerSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1.0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _headerController,
+            curve: const Interval(0.0, 0.8, curve: Curves.easeOutQuart),
+          ),
+        );
+
+    _headerFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _headerController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+
+    // Search Bar: Slide from Bottom (slightly)
+    _searchSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _headerController,
+            curve: const Interval(0.4, 1.0, curve: Curves.easeOutQuart),
+          ),
+        );
+
+    _searchFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _headerController,
+        curve: const Interval(0.4, 0.8, curve: Curves.easeIn),
+      ),
+    );
+
+    _headerController.forward();
 
     // Load data after build completes to avoid setState during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -36,6 +81,7 @@ class _ExploreScreenState extends State<ExploreScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _headerController.dispose();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -94,214 +140,226 @@ class _ExploreScreenState extends State<ExploreScreen>
       backgroundColor: const Color(0xFFF8F9FD),
       body: Column(
         children: [
-          // Custom Gradient Header
-          Container(
-            padding: const EdgeInsets.only(
-              top: 50,
-              left: 24,
-              right: 24,
-              bottom: 20,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).primaryColor,
-                  const Color(0xFF1E88E5),
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+          // Custom Gradient Header with Animation
+          SlideTransition(
+            position: _headerSlideAnimation,
+            child: FadeTransition(
+              opacity: _headerFadeAnimation,
+              child: Container(
+                padding: const EdgeInsets.only(
+                  top: 50,
+                  left: 24,
+                  right: 24,
+                  bottom: 20,
                 ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Jelajah Skill',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).primaryColor,
+                      const Color(0xFF1E88E5),
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          _isGridView
-                              ? Icons.view_list_rounded
-                              : Icons.grid_view_rounded,
-                          color: Colors.white,
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Jelajah Skill',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _isGridView = !_isGridView;
-                          });
-                        },
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              _isGridView
+                                  ? Icons.view_list_rounded
+                                  : Icons.grid_view_rounded,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isGridView = !_isGridView;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // Custom Tab Bar
+                    Container(
+                      height: 50,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: TabBar(
+                        controller: _tabController,
+                        indicator: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        labelColor: Theme.of(context).primaryColor,
+                        unselectedLabelColor: Colors.white.withOpacity(0.9),
+                        labelStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        dividerColor: Colors.transparent,
+                        tabs: const [
+                          Tab(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.workspace_premium_rounded, size: 18),
+                                SizedBox(width: 8),
+                                Text('Dikuasai'),
+                              ],
+                            ),
+                          ),
+                          Tab(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.search_rounded, size: 18),
+                                SizedBox(width: 8),
+                                Text('Dicari'),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                // Custom Tab Bar
-                Container(
-                  height: 50,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    labelColor: Theme.of(context).primaryColor,
-                    unselectedLabelColor: Colors.white.withOpacity(0.9),
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                    ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerColor: Colors.transparent,
-                    tabs: const [
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.workspace_premium_rounded, size: 18),
-                            SizedBox(width: 8),
-                            Text('Dikuasai'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.search_rounded, size: 18),
-                            SizedBox(width: 8),
-                            Text('Dicari'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
 
           // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+          SlideTransition(
+            position: _searchSlideAnimation,
+            child: FadeTransition(
+              opacity: _searchFadeAnimation,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Cari skill...',
-                        hintStyle: TextStyle(color: Colors.grey[400]),
-                        prefixIcon: const Icon(
-                          Icons.search_rounded,
-                          color: Colors.grey,
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(
-                                  Icons.clear_rounded,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  context.read<ExploreProvider>().searchSkills(
-                                    '',
-                                  );
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 15,
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Cari skill...',
+                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            prefixIcon: const Icon(
+                              Icons.search_rounded,
+                              color: Colors.grey,
+                            ),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(
+                                      Icons.clear_rounded,
+                                      color: Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      context
+                                          .read<ExploreProvider>()
+                                          .searchSkills('');
+                                    },
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 15,
+                            ),
+                          ),
+                          onSubmitted: (value) {
+                            context.read<ExploreProvider>().searchSkills(value);
+                          },
                         ),
                       ),
-                      onSubmitted: (value) {
-                        context.read<ExploreProvider>().searchSkills(value);
-                      },
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.filter_list_rounded,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    onPressed: _showFilterSheet,
-                    padding: const EdgeInsets.all(12),
-                    constraints: const BoxConstraints(),
-                    style: IconButton.styleFrom(
-                      shape: RoundedRectangleBorder(
+                    const SizedBox(width: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.filter_list_rounded,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        onPressed: _showFilterSheet,
+                        padding: const EdgeInsets.all(12),
+                        constraints: const BoxConstraints(),
+                        style: IconButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
 

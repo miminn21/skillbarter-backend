@@ -156,38 +156,44 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FD),
       appBar: AppBar(
-        title: const Text('Notifikasi'),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Theme.of(context).primaryColor, const Color(0xFF1E88E5)],
+            ),
+          ),
+        ),
+        title: const Text(
+          'Notifikasi',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
         actions: [
           Consumer<NotificationProvider>(
             builder: (context, provider, _) {
-              // Show button if unread count > 0 (matches badge logic)
               if (provider.unreadCount > 0) {
-                return TextButton.icon(
+                return IconButton(
+                  icon: const Icon(Icons.done_all_rounded, color: Colors.white),
+                  tooltip: 'Tandai semua dibaca',
                   onPressed: () async {
-                    // Show confirmation dialog (Custom Beautified Dialog)
+                    // Show confirmation
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (context) => Dialog(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        elevation: 0,
-                        backgroundColor: Colors.transparent,
+                        elevation: 10,
+                        backgroundColor: Colors.white,
                         child: Container(
                           padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.rectangle,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -199,29 +205,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 ),
                                 child: Icon(
                                   Icons.checklist_rounded,
-                                  size: 48,
+                                  size: 40,
                                   color: Theme.of(context).primaryColor,
                                 ),
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 16),
                               const Text(
                                 'Tandai Semua Dibaca?',
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 8),
                               Text(
                                 'Semua ${provider.unreadCount} notifikasi akan ditandai sudah dibaca.',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                  height: 1.5,
-                                ),
                                 textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.grey[600]),
                               ),
                               const SizedBox(height: 24),
                               Row(
@@ -234,37 +234,37 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 12,
                                         ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        foregroundColor: Colors.grey[600],
                                       ),
-                                      child: const Text('Batal'),
+                                      child: Text(
+                                        'Batal',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: ElevatedButton(
                                       onPressed: () =>
                                           Navigator.pop(context, true),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Theme.of(
-                                          context,
-                                        ).primaryColor,
-                                        foregroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 12,
                                         ),
-                                        elevation: 0,
+                                        backgroundColor: Theme.of(
+                                          context,
+                                        ).primaryColor,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
                                         ),
                                       ),
-                                      child: const Text('Ya, Tandai'),
+                                      child: const Text(
+                                        'Ya, Tandai',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -281,23 +281,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         StatusDialog.show(
                           context,
                           success: true,
-                          title: 'Berhasil!',
-                          message: 'Semua notifikasi telah ditandai dibaca',
+                          title: 'Berhasil',
+                          message: 'Semua notifikasi ditandai dibaca',
                         );
                       }
                     }
                   },
-                  icon: const Icon(Icons.done_all_rounded, size: 20),
-                  label: const Text('Baca Semua'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).primaryColor,
-                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
                 );
               }
               return const SizedBox.shrink();
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Consumer<NotificationProvider>(
@@ -311,10 +306,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 64,
+                    color: Colors.redAccent,
+                  ),
                   const SizedBox(height: 16),
-                  Text(provider.error!),
-                  TextButton(
+                  Text(
+                    provider.error!,
+                    style: TextStyle(color: Colors.grey[700]),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
                     onPressed: () => provider.fetchNotifications(refresh: true),
                     child: const Text('Coba Lagi'),
                   ),
@@ -328,15 +331,38 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.notifications_off_outlined,
-                    size: 64,
-                    color: Colors.grey[300],
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.notifications_off_outlined,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   Text(
                     'Belum ada notifikasi',
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Aktivitas terbaru akan muncul di sini',
+                    style: TextStyle(color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -345,123 +371,164 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
           return RefreshIndicator(
             onRefresh: () => provider.fetchNotifications(refresh: true),
-            child: ListView.builder(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(20),
               itemCount: provider.notifications.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final notification = provider.notifications[index];
                 return Dismissible(
                   key: Key('notif_${notification.idNotifikasi}'),
                   background: Container(
-                    color: Colors.red,
+                    decoration: BoxDecoration(
+                      color: Colors.red[400],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
+                    padding: const EdgeInsets.only(right: 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: const [
+                        Text(
+                          'Hapus',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.delete_outline_rounded, color: Colors.white),
+                      ],
+                    ),
                   ),
                   direction: DismissDirection.endToStart,
                   onDismissed: (direction) {
                     provider.deleteNotification(notification.idNotifikasi);
                   },
-                  child: Card(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    elevation: notification.isRead ? 0 : 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: notification.isRead
+                          ? Colors.white
+                          : Colors.blue.shade50.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
                         color: notification.isRead
-                            ? Colors.grey.withOpacity(0.2)
-                            : _getColor(
-                                notification.tipe,
-                                notification.judul,
-                              ).withOpacity(0.3),
-                        width: notification.isRead ? 0.5 : 1.5,
+                            ? Colors.transparent
+                            : Colors.blue.withOpacity(0.2),
+                        width: 1,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: _getColor(
-                            notification.tipe,
-                            notification.judul,
-                          ).withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          _getIcon(notification.tipe, notification.judul),
-                          color: _getColor(
-                            notification.tipe,
-                            notification.judul,
-                          ),
-                          size: 24,
-                        ),
-                      ),
-                      title: Text(
-                        notification.judul,
-                        style: TextStyle(
-                          fontWeight: notification.isRead
-                              ? FontWeight.w500
-                              : FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 6),
-                          Text(
-                            notification.pesan,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[700],
-                              height: 1.3,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => _handleNotificationTap(notification),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.access_time,
-                                size: 12,
-                                color: Colors.grey[500],
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                notification.timeAgo,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[500],
-                                  fontWeight: FontWeight.w400,
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: _getColor(
+                                    notification.tipe,
+                                    notification.judul,
+                                  ).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                              ),
-                              if (!notification.isRead) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: _getColor(
-                                      notification.tipe,
-                                      notification.judul,
-                                    ),
-                                    shape: BoxShape.circle,
+                                child: Icon(
+                                  _getIcon(
+                                    notification.tipe,
+                                    notification.judul,
                                   ),
+                                  color: _getColor(
+                                    notification.tipe,
+                                    notification.judul,
+                                  ),
+                                  size: 24,
                                 ),
-                              ],
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            notification.judul,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                              color: const Color(0xFF2D3142),
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          notification.timeAgo,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey[400],
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      notification.pesan,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[600],
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                    if (!notification.isRead)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 2,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.withOpacity(
+                                                  0.1,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                              child: const Text(
+                                                'Baru',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.blue,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
-                      onTap: () => _handleNotificationTap(notification),
                     ),
                   ),
                 );

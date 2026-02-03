@@ -13,8 +13,11 @@ class TransactionListScreen extends StatefulWidget {
 }
 
 class _TransactionListScreenState extends State<TransactionListScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
+  late AnimationController _headerController;
+  late Animation<Offset> _headerSlideAnimation;
+  late Animation<double> _headerFadeAnimation;
   String? _selectedStatus;
 
   @override
@@ -22,6 +25,31 @@ class _TransactionListScreenState extends State<TransactionListScreen>
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(_onTabChanged);
+
+    // Initialize Header Animation
+    _headerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    // Header Slide (Top Down)
+    _headerSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1.0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _headerController,
+            curve: const Interval(0.0, 0.8, curve: Curves.easeOutQuart),
+          ),
+        );
+
+    // Header Fade
+    _headerFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _headerController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+
+    _headerController.forward();
 
     // Load data after build completes
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -32,6 +60,7 @@ class _TransactionListScreenState extends State<TransactionListScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _headerController.dispose();
     super.dispose();
   }
 
@@ -72,143 +101,149 @@ class _TransactionListScreenState extends State<TransactionListScreen>
       backgroundColor: const Color(0xFFF8F9FD), // Soft premium background
       body: Column(
         children: [
-          // Custom Gradient Header
-          Container(
-            padding: const EdgeInsets.only(
-              top: 50,
-              left: 24,
-              right: 24,
-              bottom: 24,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).primaryColor,
-                  const Color(0xFF1E88E5), // Lighter blue
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+          // Custom Gradient Header with Animation
+          SlideTransition(
+            position: _headerSlideAnimation,
+            child: FadeTransition(
+              opacity: _headerFadeAnimation,
+              child: Container(
+                padding: const EdgeInsets.only(
+                  top: 50,
+                  left: 24,
+                  right: 24,
+                  bottom: 24,
                 ),
-              ],
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
-            ),
-            child: Column(
-              children: [
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Transaksi Barter',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).primaryColor,
+                      const Color(0xFF1E88E5), // Lighter blue
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
+                  ],
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Transaksi Barter',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.swap_horiz_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    // Custom Tab Bar
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      height: 55, // Increased slightly for better spacing
+                      padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(30),
                       ),
-                      child: const Icon(
-                        Icons.swap_horiz_rounded,
-                        color: Colors.white,
-                        size: 24,
+                      child: TabBar(
+                        controller: _tabController,
+                        indicator: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        labelColor: Theme.of(context).primaryColor,
+                        unselectedLabelColor: Colors.white.withOpacity(0.9),
+                        labelStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                        ),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        dividerColor: Colors.transparent,
+                        tabs: const [
+                          Tab(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.send_rounded, size: 18),
+                                SizedBox(width: 6),
+                                Text('Terkirim'),
+                              ],
+                            ),
+                          ),
+                          Tab(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.inbox_rounded, size: 18),
+                                SizedBox(width: 6),
+                                Text('Diterima'),
+                              ],
+                            ),
+                          ),
+                          Tab(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.cancel_rounded, size: 18),
+                                SizedBox(width: 6),
+                                Text('Ditolak'),
+                              ],
+                            ),
+                          ),
+                          Tab(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.history_rounded, size: 18),
+                                SizedBox(width: 6),
+                                Text('Riwayat'),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                // Custom Tab Bar
-                Container(
-                  height: 55, // Increased slightly for better spacing
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    labelColor: Theme.of(context).primaryColor,
-                    unselectedLabelColor: Colors.white.withOpacity(0.9),
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                    ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerColor: Colors.transparent,
-                    tabs: const [
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.send_rounded, size: 18),
-                            SizedBox(width: 6),
-                            Text('Terkirim'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.inbox_rounded, size: 18),
-                            SizedBox(width: 6),
-                            Text('Diterima'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.cancel_rounded, size: 18),
-                            SizedBox(width: 6),
-                            Text('Ditolak'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.history_rounded, size: 18),
-                            SizedBox(width: 6),
-                            Text('Riwayat'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
 

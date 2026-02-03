@@ -1069,7 +1069,100 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     }
 
     if (offer.status == 'selesai' || offer.status == 'terkonfirmasi') {
-      return _buildChatButton(offer);
+      return Column(
+        children: [
+          _buildChatButton(offer),
+          const SizedBox(height: 16),
+          // Transaction Completed Indicator (Green)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green),
+                const SizedBox(width: 8),
+                const Text(
+                  'Transaksi Selesai',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Rating Button (Yellow)
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _hasRated
+                  ? null // Disable if already rated
+                  : () {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => RatingDialog(
+                          partnerName: offer.namaPartner ?? 'Partner',
+                          onSubmit: (rating, comment, anonymous) async {
+                            final ratingService = RatingService();
+                            await ratingService.submitRating(
+                              barterId: offer.id!,
+                              rating: rating,
+                              comment: comment,
+                              anonymous: anonymous,
+                            );
+                            if (mounted) {
+                              await Provider.of<AuthProvider>(
+                                context,
+                                listen: false,
+                              ).refreshUserData();
+                              await _loadData();
+                              setState(() {
+                                _hasRated = true;
+                              });
+                            }
+                          },
+                        ),
+                      );
+                    },
+              icon: Icon(
+                _hasRated ? Icons.star : Icons.star_half_rounded,
+                color: _hasRated ? Colors.amber : Colors.white,
+              ),
+              label: Text(
+                _hasRated ? 'Anda sudah memberi rating' : 'Beri Penilaian',
+                style: TextStyle(
+                  color: _hasRated ? Colors.amber[800] : Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: _hasRated
+                    ? Colors.amber.shade50
+                    : Colors.amber,
+                disabledBackgroundColor: Colors.amber.shade50,
+                disabledForegroundColor: Colors.amber[800],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: _hasRated ? Colors.amber : Colors.transparent,
+                  ),
+                ),
+                elevation: _hasRated ? 0 : 2,
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     return const SizedBox.shrink();

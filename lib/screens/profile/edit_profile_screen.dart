@@ -142,192 +142,257 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FD),
-      extendBodyBehindAppBar: true,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header
-            Stack(
-              children: [
-                ClipPath(
-                  clipper: _HeaderClipper(),
-                  child: const _AnimatedHeader(),
+      body: Stack(
+        children: [
+          // 1. Fixed Background (Does not scroll)
+          const Positioned(top: 0, left: 0, right: 0, child: _AnimatedHeader()),
+
+          // 2. Scrollable Content
+          Positioned.fill(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  top: 140, // Space for the fixed header title
+                  left: 20,
+                  right: 20,
+                  bottom: 30,
                 ),
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.arrow_back_ios_new_rounded,
-                              color: Colors.white,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Form(
+                    key: _formKey,
+                    child: Card(
+                      elevation: 10,
+                      shadowColor: Colors.black.withOpacity(0.05),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionTitle('Informasi Dasar'),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _namaPanggilanController,
+                              label: 'Nama Panggilan',
+                              icon: Icons.person_rounded, // Premium Icon
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Wajib diisi' : null,
                             ),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Text(
-                          'Edit Profil',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _bioController,
+                              label: 'Bio Singkat',
+                              icon: Icons.edit_note_rounded,
+                              maxLines: 3,
+                              hint: 'Ceritakan sedikit tentang dirimu...',
+                            ),
 
-            // Form
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Form(
-                  key: _formKey,
-                  child: Card(
-                    elevation: 10,
-                    shadowColor: Colors.black.withOpacity(0.05),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSectionTitle('Informasi Dasar'),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            controller: _namaPanggilanController,
-                            label: 'Nama Panggilan',
-                            icon: Icons.person_outline_rounded,
-                            validator: (v) =>
-                                v?.isEmpty == true ? 'Wajib diisi' : null,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            controller: _bioController,
-                            label: 'Bio Singkat',
-                            icon: Icons.edit_note_rounded,
-                            maxLines: 3,
-                            hint: 'Ceritakan sedikit tentang dirimu...',
-                          ),
+                            const SizedBox(height: 32),
+                            _buildSectionTitle('Pekerjaan & Pendidikan'),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _pekerjaanController,
+                              label: 'Pekerjaan',
+                              icon: Icons.work_rounded, // Premium Icon
+                              hint: 'Contoh: Freelance Desainer',
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _instansiController,
+                              label: 'Nama Instansi / Sekolah',
+                              icon: Icons.business_rounded,
+                              hint: 'Nama tempat kerja atau sekolah',
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _pendidikanController,
+                              label: 'Pendidikan Terakhir',
+                              icon: Icons.school_rounded,
+                              hint: 'Contoh: S1 Teknik Informatika',
+                            ),
 
-                          const SizedBox(height: 32),
-                          _buildSectionTitle('Pekerjaan & Pendidikan'),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            controller: _pekerjaanController,
-                            label: 'Pekerjaan',
-                            icon: Icons.work_outline_rounded,
-                            hint: 'Contoh: Freelance Desainer',
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            controller: _instansiController,
-                            label: 'Nama Instansi / Sekolah',
-                            icon: Icons.business_rounded,
-                            hint: 'Nama tempat kerja atau sekolah',
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            controller: _pendidikanController,
-                            label: 'Pendidikan Terakhir',
-                            icon: Icons.school_outlined,
-                            hint: 'Contoh: S1 Teknik Informatika',
-                          ),
+                            const SizedBox(height: 32),
+                            _buildSectionTitle('Preferensi & Lainnya'),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _bahasaController,
+                              label: 'Bahasa yang Dikuasai',
+                              icon: Icons.translate_rounded, // Premium Icon
+                              hint: 'Contoh: Indonesia, Inggris',
+                            ),
+                            const SizedBox(height: 16),
+                            _buildDropdown(
+                              value: _selectedLokasi,
+                              label: 'Preferensi Lokasi',
+                              icon: Icons.location_on_rounded, // Premium Icon
+                              items: [
+                                {'label': 'Online', 'value': 'online'},
+                                {
+                                  'label': 'Offline (Bertemu Langsung)',
+                                  'value': 'offline',
+                                },
+                                {
+                                  'label': 'Keduanya (Fleksibel)',
+                                  'value': 'keduanya',
+                                },
+                              ],
+                              onChanged: (v) =>
+                                  setState(() => _selectedLokasi = v),
+                            ),
 
-                          const SizedBox(height: 32),
-                          _buildSectionTitle('Preferensi & Lainnya'),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            controller: _bahasaController,
-                            label: 'Bahasa yang Dikuasai',
-                            icon: Icons.language_rounded,
-                            hint: 'Contoh: Indonesia, Inggris',
-                          ),
-                          const SizedBox(height: 16),
-                          _buildDropdown(
-                            value: _selectedLokasi,
-                            label: 'Preferensi Lokasi',
-                            icon: Icons.place_outlined,
-                            items: [
-                              {'label': 'Online', 'value': 'online'},
-                              {
-                                'label': 'Offline (Bertemu Langsung)',
-                                'value': 'offline',
-                              },
-                              {
-                                'label': 'Keduanya (Fleksibel)',
-                                'value': 'keduanya',
-                              },
-                            ],
-                            onChanged: (v) =>
-                                setState(() => _selectedLokasi = v),
-                          ),
-
-                          const SizedBox(height: 40),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 54,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleSave,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).primaryColor,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                            const SizedBox(height: 40),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _handleSave,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).primaryColor,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 8,
+                                  shadowColor: Theme.of(
+                                    context,
+                                  ).primaryColor.withOpacity(0.4),
                                 ),
-                                elevation: 8,
-                                shadowColor: Theme.of(
-                                  context,
-                                ).primaryColor.withOpacity(0.4),
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(Icons.save_rounded),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          'Simpan Perubahan',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
                                         ),
-                                      ],
-                                    ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(Icons.check_circle_rounded),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Simpan Perubahan',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+
+          // 3. Custom Fixed Header (Title & Back Button) - Lowered Position
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Theme.of(context).primaryColor,
+                    Theme.of(context).primaryColor.withOpacity(0.95),
+                    Theme.of(context).primaryColor.withOpacity(0.0),
+                  ],
+                  stops: const [0.0, 0.6, 1.0],
+                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    top: 20,
+                    left: 20,
+                    right: 20,
+                  ), // More top padding
+                  child: Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(
+                            0.25,
+                          ), // More visible glass
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Edit Profil',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black26,
+                                  offset: Offset(0, 2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            'Perbarui informasi data diri Anda',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 12,
+                              shadows: const [
+                                Shadow(
+                                  color: Colors.black26,
+                                  offset: Offset(0, 1),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -364,33 +429,35 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     String? hint,
     String? Function(String?)? validator,
   }) {
-    // Adapted Registration Style for Light Theme
+    // Premium Field Style
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
-      style: const TextStyle(fontWeight: FontWeight.w500),
+      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         alignLabelWithHint: maxLines > 1,
-        labelStyle: TextStyle(color: Colors.grey.withOpacity(0.8)),
-        hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
-        prefixIcon: Icon(icon, color: Colors.grey.withOpacity(0.7)),
-        filled: true,
-        fillColor: Colors.grey.withOpacity(0.08), // Light grey fill
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+        labelStyle: TextStyle(
+          color: Colors.grey[600],
+          fontWeight: FontWeight.normal,
         ),
+        hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).primaryColor.withOpacity(0.7),
+        ), // Colored Icon
+        filled: true,
+        fillColor: Colors.white, // White fill for crisp look in Card
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
             color: Theme.of(context).primaryColor,
-            width: 1.5,
+            width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
@@ -428,21 +495,25 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       onChanged: onChanged,
       style: const TextStyle(
         fontSize: 15,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         color: Colors.black87,
       ),
+      dropdownColor: Colors.white,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
           color: Colors.grey[600],
           fontWeight: FontWeight.normal,
         ),
-        prefixIcon: Icon(icon, color: Colors.grey[400]),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).primaryColor.withOpacity(0.7),
+        ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: Colors.white,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -464,9 +535,9 @@ class _HeaderClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     var path = Path();
-    path.lineTo(0, size.height - 50);
+    path.lineTo(0, size.height - 80); // Deeper curve
     var firstControlPoint = Offset(size.width / 2, size.height + 20);
-    var firstEndPoint = Offset(size.width, size.height - 50);
+    var firstEndPoint = Offset(size.width, size.height - 80);
     path.quadraticBezierTo(
       firstControlPoint.dx,
       firstControlPoint.dy,
@@ -493,10 +564,12 @@ class _AnimatedHeaderState extends State<_AnimatedHeader>
     with TickerProviderStateMixin {
   late AnimationController _controller1;
   late AnimationController _controller2;
+  late AnimationController _controller3;
 
   @override
   void initState() {
     super.initState();
+    // Faster, smoother animations
     _controller1 = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -505,44 +578,62 @@ class _AnimatedHeaderState extends State<_AnimatedHeader>
       vsync: this,
       duration: const Duration(seconds: 5),
     )..repeat(reverse: true);
+    _controller3 = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _controller1.dispose();
     _controller2.dispose();
+    _controller3.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 200,
+      height: 340, // Expanded height requested
       decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor, // Fallback
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Theme.of(context).primaryColor,
-            const Color(0xFF1E88E5), // Lighter blue
-            const Color(0xFF1565C0), // Darker blue
+            const Color(0xFF1565C0), // Deep Blue
+            Theme.of(context).primaryColor, // Primary
+            const Color(0xFF42A5F5), // Light Blue
           ],
         ),
       ),
       child: Stack(
         children: [
+          // Decorative Blobs
           AnimatedBuilder(
             animation: _controller1,
             builder: (_, __) {
               return Positioned(
-                top: -50 + (_controller1.value * 20),
-                left: -30 + (_controller1.value * 30),
+                top: -60 + (_controller1.value * 20),
+                left: -60 + (_controller1.value * 30),
                 child: Container(
-                  width: 150,
-                  height: 150,
+                  width: 250,
+                  height: 250,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.1),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.1),
+                        Colors.blueAccent.withOpacity(0.0),
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blueAccent.withOpacity(0.1),
+                        blurRadius: 40,
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -552,11 +643,11 @@ class _AnimatedHeaderState extends State<_AnimatedHeader>
             animation: _controller2,
             builder: (_, __) {
               return Positioned(
-                bottom: -20 + (_controller2.value * 30),
-                right: -40 + (_controller2.value * 20),
+                bottom: 50 + (_controller2.value * 30),
+                right: -80 + (_controller2.value * 40),
                 child: Container(
-                  width: 180,
-                  height: 180,
+                  width: 300,
+                  height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white.withOpacity(0.05),
@@ -565,6 +656,40 @@ class _AnimatedHeaderState extends State<_AnimatedHeader>
               );
             },
           ),
+          AnimatedBuilder(
+            animation: _controller3,
+            builder: (_, __) {
+              return Positioned(
+                top: 80 + (_controller3.value * 10),
+                right: 50 + (_controller2.value * -20),
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.03),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.05),
+                        blurRadius: 30,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // Clip applied to the container itself if needed, but we use Full Bleed here
+          // and let the Clipper in parent handle the bottom edge if we used ClipPath there.
+          // Wait, the parent uses ClipPath.
+          // Since we moved ClipPath to be a child of Positioned in parent?
+          // No, logic was: Stack -> Positioned -> _AnimatedHeader.
+          // If we want the CURVE at the bottom, we need ClipPath wrapping this Container content or applied in parent.
+
+          // Let's modify the parent usage in `build`:
+          // Previous: ClipPath(clipper: _HeaderClipper(), child: const _AnimatedHeader())
+          // New: We should keep that wrap!
         ],
       ),
     );

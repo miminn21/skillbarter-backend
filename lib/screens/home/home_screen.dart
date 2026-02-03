@@ -9,6 +9,7 @@ import '../explore/explore_screen.dart';
 import '../explore/radar_screen.dart'; // Import RadarScreen
 import '../notifications/notification_screen.dart';
 import '../../providers/notification_provider.dart';
+import '../profile/activity_log_screen.dart'; // Import ActivityLogScreen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -125,7 +126,9 @@ class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  late Animation<Offset> _contentSlideAnimation;
+  late Animation<Offset> _headerSlideAnimation;
+  late Animation<double> _headerFadeAnimation;
 
   @override
   void initState() {
@@ -134,18 +137,40 @@ class _DashboardPageState extends State<DashboardPage>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1500),
     );
 
+    // Header Slide (Top Down)
+    _headerSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1.0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.0, 0.8, curve: Curves.easeOutQuart),
+          ),
+        );
+
+    // Header Fade
+    _headerFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+
+    // Content Fade
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOut,
+      curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuart));
+    // Content Slide (Bottom Up - Subtle)
+    _contentSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.2, 1.0, curve: Curves.easeOutQuart),
+          ),
+        );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshUserData();
@@ -184,8 +209,14 @@ class _DashboardPageState extends State<DashboardPage>
 
           return Column(
             children: [
-              // Fixed Header
-              _buildHeader(context, user),
+              // Fixed Header with Animation
+              SlideTransition(
+                position: _headerSlideAnimation,
+                child: FadeTransition(
+                  opacity: _headerFadeAnimation,
+                  child: _buildHeader(context, user),
+                ),
+              ),
 
               // Scrollable Content
               Expanded(
@@ -200,7 +231,7 @@ class _DashboardPageState extends State<DashboardPage>
                     child: FadeTransition(
                       opacity: _fadeAnimation,
                       child: SlideTransition(
-                        position: _slideAnimation,
+                        position: _contentSlideAnimation,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -511,7 +542,12 @@ class _DashboardPageState extends State<DashboardPage>
           Icons.history_edu_rounded, // More specific icon
           const Color(0xFF00897B), // Teal
           () {
-            // TODO: Navigate to history
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ActivityLogScreen(),
+              ),
+            );
           },
           300,
         ),
