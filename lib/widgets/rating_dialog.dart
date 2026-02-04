@@ -65,7 +65,7 @@ class _RatingDialogState extends State<RatingDialog> {
           context,
           success: false,
           title: 'Gagal Mengirim',
-          message: 'Terjadi kesalahan saat mengirim rating',
+          message: e.toString().replaceAll('Exception:', ''),
         );
       }
     } finally {
