@@ -20,6 +20,15 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   XFile? _image;
   bool _isSubmitting = false;
 
+  // Entrance Animations
+  late AnimationController _entranceController;
+  late Animation<Offset> _headerSlideAnimation;
+  late Animation<Offset> _contentSlideAnimation;
+
+  // Form Specific Animation
+  late AnimationController _formController;
+  late Animation<Offset> _formSlideAnimation;
+
   final List<Map<String, dynamic>> _faqs = [
     {
       'question': 'Apa itu SkillCoin?',
@@ -55,12 +64,74 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+
+    // Listen to tab changes to trigger form animation
+    _tabController.addListener(() {
+      if (_tabController.index == 1 && !_tabController.indexIsChanging) {
+        _formController.forward(from: 0.0);
+      }
+    });
+
+    // Initialize Entrance Animations
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _headerSlideAnimation =
+        Tween<Offset>(
+          begin: const Offset(0, -0.5), // Reduced distance
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: Curves.easeOutQuart,
+          ),
+        );
+
+    _contentSlideAnimation =
+        Tween<Offset>(
+          begin: const Offset(0, 0.15), // Reduced distance
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: Curves.easeOutQuart,
+          ),
+        );
+
+    // Initialize Form Animation
+    _formController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _formSlideAnimation =
+        Tween<Offset>(
+          begin: const Offset(0, 0.2), // Reduced distance
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _formController,
+            curve: Curves.easeOutQuart, // No bounce
+          ),
+        );
+
+    // Start Main Animation
+    _entranceController.forward();
+
+    // Start Form Animation with delay
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _formController.forward();
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     _messageController.dispose();
+    _entranceController.dispose();
+    _formController.dispose();
     super.dispose();
   }
 
@@ -173,87 +244,95 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
       ),
       body: Stack(
         children: [
-          // 1. Background Gradient Header with Animation
-          Align(
-            alignment: Alignment.topCenter,
-            child: ClipPath(
-              clipper: _HeaderClipper(),
-              child: const _AnimatedHeader(),
+          // 1. Background Gradient Header with Entrance Animation
+          SlideTransition(
+            position: _headerSlideAnimation,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ClipPath(
+                clipper: _HeaderClipper(),
+                child: const _AnimatedHeader(),
+              ),
             ),
           ),
 
-          // 2. Main Content
-          Column(
-            children: [
-              SizedBox(
-                height:
-                    kToolbarHeight + MediaQuery.of(context).padding.top + 10,
-              ),
+          // 2. Main Content with Entrance Animation
+          SlideTransition(
+            position: _contentSlideAnimation,
+            child: Column(
+              children: [
+                SizedBox(
+                  height:
+                      kToolbarHeight +
+                      MediaQuery.of(context).padding.top +
+                      80, // Moved down significantly
+                ),
 
-              // Tab Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  height: 50,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    dividerColor: Colors.transparent,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicator: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(26),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                // Tab Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    height: 50,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      dividerColor: Colors.transparent,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicator: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(26),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      labelColor: Theme.of(context).primaryColor,
+                      unselectedLabelColor: Colors.white,
+                      labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                      tabs: const [
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.quiz_rounded, size: 20),
+                              SizedBox(width: 8),
+                              Text('FAQ'),
+                            ],
+                          ),
+                        ),
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.support_agent_rounded, size: 20),
+                              SizedBox(width: 8),
+                              Text('Hubungi Kami'),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    labelColor: Theme.of(context).primaryColor,
-                    unselectedLabelColor: Colors.white,
-                    labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                    tabs: const [
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.quiz_rounded, size: 20),
-                            SizedBox(width: 8),
-                            Text('FAQ'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.support_agent_rounded, size: 20),
-                            SizedBox(width: 8),
-                            Text('Hubungi Kami'),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Scrollable Content
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [_buildFAQList(), _buildContactForm()],
+                // Scrollable Content
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [_buildFAQList(), _buildContactForm()],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -314,252 +393,255 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   Widget _buildContactForm() {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      Icons.headset_mic_rounded,
-                      color: Theme.of(context).primaryColor,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Butuh Bantuan?',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Ceritakan masalah Anda, tim kami akan segera membantu.',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+      child: SlideTransition(
+        position: _formSlideAnimation,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-
-              const SizedBox(height: 24),
-
-              // Text Field
-              TextFormField(
-                controller: _messageController,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  labelText: 'Deskripsi Masalah',
-                  alignLabelWithHint: true,
-                  hintText: 'Jelaskan kendala Anda...',
-                  floatingLabelBehavior: FloatingLabelBehavior.always,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                  contentPadding: const EdgeInsets.all(20),
+            ],
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        Icons.headset_mic_rounded,
+                        color: Theme.of(context).primaryColor,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Butuh Bantuan?',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ceritakan masalah Anda, tim kami akan segera membantu.',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                validator: (v) =>
-                    v!.isEmpty ? 'Mohon jelaskan kendala Anda' : null,
-              ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
-              // Image Picker
-              InkWell(
-                onTap: _pickImage,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  height: 150,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.grey[200]!,
-                      style: BorderStyle.solid,
+                // Text Field
+                TextFormField(
+                  controller: _messageController,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    labelText: 'Deskripsi Masalah',
+                    alignLabelWithHint: true,
+                    hintText: 'Jelaskan kendala Anda...',
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
                     ),
-                    image: _image != null
-                        ? DecorationImage(
-                            image: kIsWeb
-                                ? NetworkImage(_image!.path)
-                                : FileImage(File(_image!.path))
-                                      as ImageProvider,
-                            fit: BoxFit.cover,
-                          )
-                        : null,
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                    contentPadding: const EdgeInsets.all(20),
                   ),
-                  child: _image == null
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.add_photo_alternate_rounded,
-                              size: 40,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Upload Screenshot (Opsional)',
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontWeight: FontWeight.w500,
+                  validator: (v) =>
+                      v!.isEmpty ? 'Mohon jelaskan kendala Anda' : null,
+                ),
+
+                const SizedBox(height: 20),
+
+                // Image Picker
+                InkWell(
+                  onTap: _pickImage,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.grey[200]!,
+                        style: BorderStyle.solid,
+                      ),
+                      image: _image != null
+                          ? DecorationImage(
+                              image: kIsWeb
+                                  ? NetworkImage(_image!.path)
+                                  : FileImage(File(_image!.path))
+                                        as ImageProvider,
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: _image == null
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_photo_alternate_rounded,
+                                size: 40,
+                                color: Colors.grey[400],
                               ),
-                            ),
-                          ],
-                        )
-                      : Stack(
-                          children: [
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: GestureDetector(
-                                onTap: () => setState(() => _image = null),
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 16,
+                              const SizedBox(height: 8),
+                              Text(
+                                'Upload Screenshot (Opsional)',
+                                style: TextStyle(
+                                  color: Colors.grey[500],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Stack(
+                            children: [
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _image = null),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // ANIMATED BUTTON
-              GestureDetector(
-                onTap: (_isSubmitting || _isAnimating || _isSent)
-                    ? null
-                    : _animateAndSubmit,
-                child: Container(
-                  width: double.infinity,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: _isSent
-                          ? [Colors.green, Colors.green.shade700]
-                          : [
-                              Theme.of(context).primaryColor,
-                              const Color(0xFF1565C0),
                             ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            (_isSent
-                                    ? Colors.green
-                                    : Theme.of(context).primaryColor)
-                                .withOpacity(0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      if (!_isSubmitting && !_isAnimating && !_isSent)
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.send_rounded, color: Colors.white),
-                            SizedBox(width: 12),
-                            Text(
-                              'Kirim Laporan',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      if (_isSubmitting)
-                        const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
                           ),
-                        ),
-                      if (_isAnimating)
-                        Transform.translate(
-                          offset: Offset(_planePosition, 0),
-                          child: const Icon(
-                            Icons.send_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      if (_isSent)
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.check_circle_rounded,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 12),
-                            Text(
-                              'Terkirim',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
                   ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 32),
+
+                // ANIMATED BUTTON
+                GestureDetector(
+                  onTap: (_isSubmitting || _isAnimating || _isSent)
+                      ? null
+                      : _animateAndSubmit,
+                  child: Container(
+                    width: double.infinity,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: _isSent
+                            ? [Colors.green, Colors.green.shade700]
+                            : [
+                                Theme.of(context).primaryColor,
+                                const Color(0xFF1565C0),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              (_isSent
+                                      ? Colors.green
+                                      : Theme.of(context).primaryColor)
+                                  .withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (!_isSubmitting && !_isAnimating && !_isSent)
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.send_rounded, color: Colors.white),
+                              SizedBox(width: 12),
+                              Text(
+                                'Kirim Laporan',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        if (_isSubmitting)
+                          const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          ),
+                        if (_isAnimating)
+                          Transform.translate(
+                            offset: Offset(_planePosition, 0),
+                            child: const Icon(
+                              Icons.send_rounded,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                        if (_isSent)
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                'Terkirim',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

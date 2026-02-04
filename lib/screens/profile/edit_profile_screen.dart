@@ -17,6 +17,8 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   final _formKey = GlobalKey<FormState>();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  late Animation<Offset> _headerSlideAnimation;
+  late Animation<Offset> _contentSlideAnimation;
 
   // Controllers
   late TextEditingController _namaPanggilanController;
@@ -37,12 +39,30 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1000), // Smoother duration
     );
+
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeOut,
     );
+
+    _headerSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, -0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutQuart,
+          ),
+        );
+
+    _contentSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutQuart,
+          ),
+        );
+
     _animationController.forward();
 
     final user = context.read<AuthProvider>().user!;
@@ -145,151 +165,162 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       body: Stack(
         children: [
           // 1. Fixed Background (Does not scroll)
-          const Positioned(top: 0, left: 0, right: 0, child: _AnimatedHeader()),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SlideTransition(
+              position: _headerSlideAnimation,
+              child: const _AnimatedHeader(),
+            ),
+          ),
 
           // 2. Scrollable Content
           Positioned.fill(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  top: 140, // Space for the fixed header title
-                  left: 20,
-                  right: 20,
-                  bottom: 30,
-                ),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Form(
-                    key: _formKey,
-                    child: Card(
-                      elevation: 10,
-                      shadowColor: Colors.black.withOpacity(0.05),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionTitle('Informasi Dasar'),
-                            const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _namaPanggilanController,
-                              label: 'Nama Panggilan',
-                              icon: Icons.person_rounded, // Premium Icon
-                              validator: (v) =>
-                                  v?.isEmpty == true ? 'Wajib diisi' : null,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _bioController,
-                              label: 'Bio Singkat',
-                              icon: Icons.edit_note_rounded,
-                              maxLines: 3,
-                              hint: 'Ceritakan sedikit tentang dirimu...',
-                            ),
-
-                            const SizedBox(height: 32),
-                            _buildSectionTitle('Pekerjaan & Pendidikan'),
-                            const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _pekerjaanController,
-                              label: 'Pekerjaan',
-                              icon: Icons.work_rounded, // Premium Icon
-                              hint: 'Contoh: Freelance Desainer',
-                            ),
-                            const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _instansiController,
-                              label: 'Nama Instansi / Sekolah',
-                              icon: Icons.business_rounded,
-                              hint: 'Nama tempat kerja atau sekolah',
-                            ),
-                            const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _pendidikanController,
-                              label: 'Pendidikan Terakhir',
-                              icon: Icons.school_rounded,
-                              hint: 'Contoh: S1 Teknik Informatika',
-                            ),
-
-                            const SizedBox(height: 32),
-                            _buildSectionTitle('Preferensi & Lainnya'),
-                            const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _bahasaController,
-                              label: 'Bahasa yang Dikuasai',
-                              icon: Icons.translate_rounded, // Premium Icon
-                              hint: 'Contoh: Indonesia, Inggris',
-                            ),
-                            const SizedBox(height: 16),
-                            _buildDropdown(
-                              value: _selectedLokasi,
-                              label: 'Preferensi Lokasi',
-                              icon: Icons.location_on_rounded, // Premium Icon
-                              items: [
-                                {'label': 'Online', 'value': 'online'},
-                                {
-                                  'label': 'Offline (Bertemu Langsung)',
-                                  'value': 'offline',
-                                },
-                                {
-                                  'label': 'Keduanya (Fleksibel)',
-                                  'value': 'keduanya',
-                                },
-                              ],
-                              onChanged: (v) =>
-                                  setState(() => _selectedLokasi = v),
-                            ),
-
-                            const SizedBox(height: 40),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 54,
-                              child: ElevatedButton(
-                                onPressed: _isLoading ? null : _handleSave,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).primaryColor,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  elevation: 8,
-                                  shadowColor: Theme.of(
-                                    context,
-                                  ).primaryColor.withOpacity(0.4),
-                                ),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: const [
-                                          Icon(Icons.check_circle_rounded),
-                                          SizedBox(width: 8),
-                                          Text(
-                                            'Simpan Perubahan',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+              child: SlideTransition(
+                position: _contentSlideAnimation,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    top: 140, // Space for the fixed header title
+                    left: 20,
+                    right: 20,
+                    bottom: 30,
+                  ),
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: Form(
+                      key: _formKey,
+                      child: Card(
+                        elevation: 10,
+                        shadowColor: Colors.black.withOpacity(0.05),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionTitle('Informasi Dasar'),
+                              const SizedBox(height: 16),
+                              _buildTextField(
+                                controller: _namaPanggilanController,
+                                label: 'Nama Panggilan',
+                                icon: Icons.person_rounded, // Premium Icon
+                                validator: (v) =>
+                                    v?.isEmpty == true ? 'Wajib diisi' : null,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              _buildTextField(
+                                controller: _bioController,
+                                label: 'Bio Singkat',
+                                icon: Icons.edit_note_rounded,
+                                maxLines: 3,
+                                hint: 'Ceritakan sedikit tentang dirimu...',
+                              ),
+
+                              const SizedBox(height: 32),
+                              _buildSectionTitle('Pekerjaan & Pendidikan'),
+                              const SizedBox(height: 16),
+                              _buildTextField(
+                                controller: _pekerjaanController,
+                                label: 'Pekerjaan',
+                                icon: Icons.work_rounded, // Premium Icon
+                                hint: 'Contoh: Freelance Desainer',
+                              ),
+                              const SizedBox(height: 16),
+                              _buildTextField(
+                                controller: _instansiController,
+                                label: 'Nama Instansi / Sekolah',
+                                icon: Icons.business_rounded,
+                                hint: 'Nama tempat kerja atau sekolah',
+                              ),
+                              const SizedBox(height: 16),
+                              _buildTextField(
+                                controller: _pendidikanController,
+                                label: 'Pendidikan Terakhir',
+                                icon: Icons.school_rounded,
+                                hint: 'Contoh: S1 Teknik Informatika',
+                              ),
+
+                              const SizedBox(height: 32),
+                              _buildSectionTitle('Preferensi & Lainnya'),
+                              const SizedBox(height: 16),
+                              _buildTextField(
+                                controller: _bahasaController,
+                                label: 'Bahasa yang Dikuasai',
+                                icon: Icons.translate_rounded, // Premium Icon
+                                hint: 'Contoh: Indonesia, Inggris',
+                              ),
+                              const SizedBox(height: 16),
+                              _buildDropdown(
+                                value: _selectedLokasi,
+                                label: 'Preferensi Lokasi',
+                                icon: Icons.location_on_rounded, // Premium Icon
+                                items: [
+                                  {'label': 'Online', 'value': 'online'},
+                                  {
+                                    'label': 'Offline (Bertemu Langsung)',
+                                    'value': 'offline',
+                                  },
+                                  {
+                                    'label': 'Keduanya (Fleksibel)',
+                                    'value': 'keduanya',
+                                  },
+                                ],
+                                onChanged: (v) =>
+                                    setState(() => _selectedLokasi = v),
+                              ),
+
+                              const SizedBox(height: 40),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 54,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _handleSave,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).primaryColor,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 8,
+                                    shadowColor: Theme.of(
+                                      context,
+                                    ).primaryColor.withOpacity(0.4),
+                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: const [
+                                            Icon(Icons.check_circle_rounded),
+                                            SizedBox(width: 8),
+                                            Text(
+                                              'Simpan Perubahan',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -304,89 +335,92 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             top: 0,
             left: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withOpacity(0.95),
-                    Theme.of(context).primaryColor.withOpacity(0.0),
-                  ],
-                  stops: const [0.0, 0.6, 1.0],
+            child: SlideTransition(
+              position: _headerSlideAnimation,
+              child: Container(
+                padding: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Theme.of(context).primaryColor,
+                      Theme.of(context).primaryColor.withOpacity(0.95),
+                      Theme.of(context).primaryColor.withOpacity(0.0),
+                    ],
+                    stops: const [0.0, 0.6, 1.0],
+                  ),
                 ),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    top: 20,
-                    left: 20,
-                    right: 20,
-                  ), // More top padding
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(
-                            0.25,
-                          ), // More visible glass
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: 20,
+                      left: 20,
+                      right: 20,
+                    ), // More top padding
+                    child: Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(
+                              0.25,
+                            ), // More visible glass
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Edit Profil',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black26,
+                                    offset: Offset(0, 2),
+                                    blurRadius: 4,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              'Perbarui informasi data diri Anda',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 12,
+                                shadows: const [
+                                  Shadow(
+                                    color: Colors.black26,
+                                    offset: Offset(0, 1),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Edit Profil',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black26,
-                                  offset: Offset(0, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            'Perbarui informasi data diri Anda',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 12,
-                              shadows: const [
-                                Shadow(
-                                  color: Colors.black26,
-                                  offset: Offset(0, 1),
-                                  blurRadius: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

@@ -336,20 +336,6 @@ class _RadarScreenState extends State<RadarScreen> {
     }
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-          ),
-          child: const BackButton(color: Colors.black),
-        ),
-      ),
       body: Stack(
         children: [
           FlutterMap(
