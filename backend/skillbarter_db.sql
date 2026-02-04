@@ -499,6 +499,8 @@ BEGIN
     );
     
     -- Notifikasi
+    -- (Transaksi removed to allow trigger call)
+    
     INSERT INTO notifikasi (
         nik_pengguna, judul, isi_pesan, tipe
     ) VALUES (
@@ -507,8 +509,6 @@ BEGIN
         CONCAT('Anda mendapatkan ', p_jumlah, ' skillcoin: ', p_keterangan),
         'skillcoin'
     );
-    
-    COMMIT;
 END$$
 
 -- Prosedur kurangi skillcoin
@@ -539,7 +539,7 @@ BEGIN
     
     SET v_saldo_sesudah = v_saldo_sebelum - p_jumlah;
     
-    START TRANSACTION;
+    -- (Transaction removed to allow trigger call)
     
     -- Update saldo
     UPDATE pengguna 
