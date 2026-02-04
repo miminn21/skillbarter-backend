@@ -23,15 +23,54 @@ class OfferDetailScreen extends StatefulWidget {
   State<OfferDetailScreen> createState() => _OfferDetailScreenState();
 }
 
-class _OfferDetailScreenState extends State<OfferDetailScreen> {
+class _OfferDetailScreenState extends State<OfferDetailScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _headerSlideAnimation;
+  late Animation<Offset> _contentSlideAnimation;
+
   // Track if user has rated this barter
   bool _hasRated = false;
   @override
   void initState() {
     super.initState();
+
+    // Initialize Animation Controller
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1), // "Aga lama" (1 second)
+    );
+
+    // Header Slide: From Top (-1.0) to Center (0.0)
+    _headerSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1.0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.fastOutSlowIn, // Smooth "cantik" curve
+          ),
+        );
+
+    // Content Slide: From Bottom (1.0) to Center (0.0)
+    _contentSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 1.0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutQuart, // Very smooth deceleration
+          ),
+        );
+
+    // Start Animation
+    _animationController.forward();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -276,275 +315,286 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
               // Background Gradient Header
               Align(
                 alignment: Alignment.topCenter,
-                child: ClipPath(
-                  clipper: _HeaderClipper(),
-                  child: _AnimatedDetailHeader(),
+                child: SlideTransition(
+                  position: _headerSlideAnimation,
+                  child: ClipPath(
+                    clipper: _HeaderClipper(),
+                    child: _AnimatedDetailHeader(),
+                  ),
                 ),
               ),
 
               // Content
-              SafeArea(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-                  children: [
-                    // 1. STATUS CARD (Overlaying header slightly)
-                    const SizedBox(height: 10),
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+              SlideTransition(
+                position: _contentSlideAnimation,
+                child: SafeArea(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                    children: [
+                      // 1. STATUS CARD (Overlaying header slightly)
+                      const SizedBox(height: 10),
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Kode: ${offer.kodeTransaksi ?? "-"}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Main Info Card
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Column(
                           children: [
-                            Text(
-                              'Kode: ${offer.kodeTransaksi ?? "-"}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'monospace',
+                            // Status Banner
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(
+                                  offer.status,
+                                ).withOpacity(0.1),
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(24),
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  StatusBadge(
+                                    status: offer.status,
+                                    fontSize: 14,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    offer.isHelpRequest &&
+                                            offer.status == 'menunggu'
+                                        ? 'Menunggu partner...'
+                                        : 'Status: ${offer.status.toUpperCase()}',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: _getStatusColor(offer.status),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Partner & Skill Exchange Info
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                children: [
+                                  // Partner Info
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                        child: CircleAvatar(
+                                          radius: 24,
+                                          backgroundImage:
+                                              offer.fotoPartner != null
+                                              ? MemoryImage(
+                                                  base64Decode(
+                                                    offer.fotoPartner!,
+                                                  ),
+                                                )
+                                              : null,
+                                          child: offer.fotoPartner == null
+                                              ? Text(
+                                                  offer.namaPartner?[0]
+                                                          .toUpperCase() ??
+                                                      'U',
+                                                )
+                                              : null,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              offer.namaPartner ?? 'Unknown',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              offer.role == 'sent'
+                                                  ? (offer.kotaDitawar ?? '-')
+                                                  : (offer.kotaPenawar ?? '-'),
+                                              style: TextStyle(
+                                                color: Colors.grey[500],
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.star,
+                                              color: Colors.amber,
+                                              size: 14,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${offer.role == 'sent' ? (offer.ratingDitawar ?? 0.0) : (offer.ratingPenawar ?? 0.0)}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
+                                                color: Colors.amber,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Divider(height: 32),
+
+                                  // Exchange View
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildCompactSkillInfo(
+                                          'Anda Beri',
+                                          offer.skillOwn ?? '-',
+                                          Theme.of(context).primaryColor,
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                        ),
+                                        child: Icon(
+                                          Icons.swap_horiz_rounded,
+                                          color: Colors.grey[300],
+                                          size: 28,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: _buildCompactSkillInfo(
+                                          'Anda Terima',
+                                          offer.skillPartner ?? '-',
+                                          Colors.orange,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
 
-                    // Main Info Card
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          // Status Banner
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(
-                                offer.status,
-                              ).withOpacity(0.1),
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(24),
-                              ),
+                      const SizedBox(height: 20),
+
+                      // Skillcoin Calc
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
-                            child: Column(
-                              children: [
-                                StatusBadge(status: offer.status, fontSize: 14),
-                                const SizedBox(height: 8),
-                                Text(
-                                  offer.isHelpRequest &&
-                                          offer.status == 'menunggu'
-                                      ? 'Menunggu partner...'
-                                      : 'Status: ${offer.status.toUpperCase()}',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: _getStatusColor(offer.status),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Partner & Skill Exchange Info
-                          Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              children: [
-                                // Partner Info
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(3),
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.grey.shade200,
-                                        ),
-                                      ),
-                                      child: CircleAvatar(
-                                        radius: 24,
-                                        backgroundImage:
-                                            offer.fotoPartner != null
-                                            ? MemoryImage(
-                                                base64Decode(
-                                                  offer.fotoPartner!,
-                                                ),
-                                              )
-                                            : null,
-                                        child: offer.fotoPartner == null
-                                            ? Text(
-                                                offer.namaPartner?[0]
-                                                        .toUpperCase() ??
-                                                    'U',
-                                              )
-                                            : null,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            offer.namaPartner ?? 'Unknown',
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(
-                                            offer.role == 'sent'
-                                                ? (offer.kotaDitawar ?? '-')
-                                                : (offer.kotaPenawar ?? '-'),
-                                            style: TextStyle(
-                                              color: Colors.grey[500],
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.amber.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.star,
-                                            color: Colors.amber,
-                                            size: 14,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${offer.role == 'sent' ? (offer.ratingDitawar ?? 0.0) : (offer.ratingPenawar ?? 0.0)}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                              color: Colors.amber,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Divider(height: 32),
-
-                                // Exchange View
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildCompactSkillInfo(
-                                        'Anda Beri',
-                                        offer.skillOwn ?? '-',
-                                        Theme.of(context).primaryColor,
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                      ),
-                                      child: Icon(
-                                        Icons.swap_horiz_rounded,
-                                        color: Colors.grey[300],
-                                        size: 28,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: _buildCompactSkillInfo(
-                                        'Anda Terima',
-                                        offer.skillPartner ?? '-',
-                                        Colors.orange,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: SkillcoinCalculator(
+                          durasiJam: offer.durasiJam ?? 0,
+                          hargaPerJamAnda:
+                              (offer.role == 'sent'
+                                  ? offer.hargaPenawar
+                                  : offer.hargaDiminta) ??
+                              0,
+                          hargaPerJamPartner:
+                              (offer.role == 'sent'
+                                  ? offer.hargaDiminta
+                                  : offer.hargaPenawar) ??
+                              0,
+                          skillAnda: offer.skillOwn ?? '-',
+                          skillPartner: offer.skillPartner ?? '-',
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    // Skillcoin Calc
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: SkillcoinCalculator(
-                        durasiJam: offer.durasiJam ?? 0,
-                        hargaPerJamAnda:
-                            (offer.role == 'sent'
-                                ? offer.hargaPenawar
-                                : offer.hargaDiminta) ??
-                            0,
-                        hargaPerJamPartner:
-                            (offer.role == 'sent'
-                                ? offer.hargaDiminta
-                                : offer.hargaPenawar) ??
-                            0,
-                        skillAnda: offer.skillOwn ?? '-',
-                        skillPartner: offer.skillPartner ?? '-',
-                      ),
-                    ),
+                      // Transaction Details
+                      _buildSectionHeader('Detail Transaksi'),
+                      const SizedBox(height: 12),
+                      _buildModernTransactionDetails(offer),
 
-                    const SizedBox(height: 20),
-
-                    // Transaction Details
-                    _buildSectionHeader('Detail Transaksi'),
-                    const SizedBox(height: 12),
-                    _buildModernTransactionDetails(offer),
-
-                    const SizedBox(height: 24),
-
-                    // Confirmation Status (if active)
-                    if (offer.status == 'berlangsung') ...[
-                      _buildConfirmationStatus(provider),
                       const SizedBox(height: 24),
-                    ],
 
-                    // Action Buttons
-                    _buildActionButtons(context, provider, offer),
-                    const SizedBox(height: 32),
-                  ],
+                      // Confirmation Status (if active)
+                      if (offer.status == 'berlangsung') ...[
+                        _buildConfirmationStatus(provider),
+                        const SizedBox(height: 24),
+                      ],
+
+                      // Action Buttons
+                      _buildActionButtons(context, provider, offer),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
             ],
