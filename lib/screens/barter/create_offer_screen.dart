@@ -392,43 +392,114 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
             ],
             const SizedBox(height: 32),
 
-            // Submit button
+            // Submit button with Animation
             Consumer<BarterProvider>(
               builder: (context, provider, child) {
-                return SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: provider.isLoading ? null : _submitOffer,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                return GestureDetector(
+                  onTap: (provider.isLoading || _isAnimating || _isSent)
+                      ? null
+                      : _animateAndSubmit, // Use updated method
+                  child: Container(
+                    width: double.infinity,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: _isSent
+                            ? [Colors.green, Colors.green.shade700]
+                            : [
+                                Theme.of(context).primaryColor,
+                                const Color(0xFF1565C0),
+                              ],
                       ),
-                      elevation: 8,
-                      shadowColor: Theme.of(
-                        context,
-                      ).primaryColor.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              (_isSent
+                                      ? Colors.green
+                                      : Theme.of(context).primaryColor)
+                                  .withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-                    child: provider.isLoading
-                        ? const SizedBox(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Default State
+                        if (!provider.isLoading && !_isAnimating && !_isSent)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                isHelpRequest
+                                    ? Icons
+                                          .send_rounded // Paper plane
+                                    : Icons
+                                          .handshake_rounded, // Handshake for Barter
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                isHelpRequest
+                                    ? 'Kirim Permintaan'
+                                    : 'Kirim Penawaran',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                        // Loading State (Provider)
+                        if (provider.isLoading)
+                          const SizedBox(
                             height: 24,
                             width: 24,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            isHelpRequest
-                                ? 'Kirim Permintaan'
-                                : 'Kirim Penawaran',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                              strokeWidth: 2.5,
                               color: Colors.white,
                             ),
                           ),
+
+                        // Animation State (Paper Plane Flying)
+                        if (_isAnimating)
+                          Transform.translate(
+                            offset: Offset(_planePosition, 0),
+                            child: Icon(
+                              isHelpRequest
+                                  ? Icons.send_rounded
+                                  : Icons.handshake_rounded,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+
+                        // Success State
+                        if (_isSent)
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                'Berhasil Dikirim',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -720,7 +791,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     }
   }
 
-  Future<void> _submitOffer() async {
+  // Animation State
+  bool _isAnimating = false;
+  bool _isSent = false;
+  double _planePosition = 0.0;
+
+  Future<void> _animateAndSubmit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -823,21 +899,42 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
 
     final provider = Provider.of<BarterProvider>(context, listen: false);
 
-    // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
+    // Call Provider (Provider handles loading state but doesn't show dialog)
+    // Note: If the provider logic inside 'createOffer' sets isLoading=true,
+    // the button will show the spinner automatically because it listens to provider.
 
     final success = await provider.createOffer(offer);
-
-    // Close loading
-    if (mounted) Navigator.of(context).pop();
 
     if (!mounted) return;
 
     if (success) {
+      // 1. Start Fly Animation
+      setState(() {
+        _isAnimating = true;
+      });
+
+      // 2. Fly plane to right (Animation Loop)
+      for (int i = 0; i < 20; i++) {
+        await Future.delayed(const Duration(milliseconds: 20));
+        if (!mounted) return;
+        setState(() {
+          _planePosition += 20.0;
+        });
+      }
+
+      // 3. Show Success Text
+      setState(() {
+        _isAnimating = false;
+        _isSent = true;
+      });
+
+      // 4. Wait a bit then close screen
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      if (!mounted) return;
+
+      Navigator.pop(context); // Close screen
+
       BeautifulNotification.show(
         context,
         title: 'Berhasil!',
@@ -846,11 +943,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
             : 'Penawaran barter berhasil dikirim!',
         type: NotificationType.success,
       );
-
-      // Delay to show notification before closing screen
-      await Future.delayed(const Duration(milliseconds: 1500));
-
-      if (mounted) Navigator.pop(context);
     } else {
       BeautifulNotification.show(
         context,

@@ -304,38 +304,69 @@ exports.verifySkill = async (req, res) => {
     const { id } = req.params;
     const { nik } = req.user;
     
+    // 1. Get Skill and Check Ownership
     const skill = await Skill.findById(id);
-    
     if (!skill) {
       return notFound(res, 'Skill tidak ditemukan');
     }
-    
-    // Cannot verify own skill
     if (skill.nik_pengguna === nik) {
       return error(res, 'Tidak bisa memverifikasi skill sendiri', 400);
     }
-    
-    // Already verified
     if (skill.status_verifikasi) {
       return error(res, 'Skill sudah terverifikasi', 400);
     }
     
-    // Call stored procedure (will handle skillcoin deduction)
-    const query = 'CALL verifikasi_keahlian(?, ?)';
-    await db.execute(query, [id, nik]);
+    // 2. Execute Stored Procedure (Robustly)
+    // The SP handles: Balance Check, Coin Deduction, Skill Update, and Transaction Logging.
+    try {
+        const query = 'CALL verifikasi_keahlian(?, ?)';
+        await db.execute(query, [id, nik]);
+    } catch (spError) {
+        console.error('[VerifySkill] SP Failed:', spError.message);
+
+        // Check for specific SP errors
+        if (spError.message.includes('Saldo skillcoin tidak cukup')) {
+             return error(res, 'Saldo skillcoin tidak cukup untuk verifikasi (butuh 10 skillcoin)', 400);
+        }
+        
+        // Check for Missing Column Error (from the SP logic)
+        if (spError.message.includes("Unknown column 'diperbarui_pada'")) {
+             console.log('[VerifySkill] Missing column detected in SP. Attempting to add column...');
+             try {
+                 // Add the missing column
+                 await db.execute("ALTER TABLE keahlian ADD COLUMN diperbarui_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+                 console.log('[VerifySkill] Column added. Retrying Stored Procedure...');
+                 
+                 // Retry SP
+                 await db.execute('CALL verifikasi_keahlian(?, ?)', [id, nik]);
+             } catch (retryErr) {
+                 console.error('[VerifySkill] Retry failed:', retryErr);
+                 if (retryErr.message.includes('Saldo skillcoin tidak cukup')) {
+                     return error(res, 'Saldo skillcoin tidak cukup untuk verifikasi (butuh 10 skillcoin)', 400);
+                 }
+                 throw retryErr; // Throw to outer catch
+             }
+        } else {
+            throw spError; // Throw other errors
+        }
+    }
     
-    // Get updated skill
+    // 3. Get updated skill
     const updatedSkill = await Skill.findById(id);
+    
+    // Convert BLOB to base64 if needed
+    if (updatedSkill) {
+        if (updatedSkill.portofolio_gambar) {
+            updatedSkill.portofolio_gambar = updatedSkill.portofolio_gambar.toString('base64');
+        }
+        if (updatedSkill.gambar_skill) {
+            updatedSkill.gambar_skill = updatedSkill.gambar_skill.toString('base64');
+        }
+    }
     
     return success(res, 'Skill berhasil diverifikasi', updatedSkill);
   } catch (err) {
     console.error('Verify skill error:', err);
-    
-    // Check if error is from stored procedure
-    if (err.message.includes('Saldo skillcoin tidak cukup')) {
-      return error(res, 'Saldo skillcoin tidak cukup untuk verifikasi (butuh 10 skillcoin)', 400);
-    }
-    
     return error(res, 'Gagal memverifikasi skill: ' + err.message);
   }
 };

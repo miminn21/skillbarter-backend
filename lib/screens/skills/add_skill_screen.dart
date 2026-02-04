@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'dart:math' as math;
 import '../../providers/skill_provider.dart';
 import '../../models/category_model.dart';
 import '../../widgets/custom_notification.dart';
@@ -17,13 +18,19 @@ class AddSkillScreen extends StatefulWidget {
   State<AddSkillScreen> createState() => _AddSkillScreenState();
 }
 
-class _AddSkillScreenState extends State<AddSkillScreen> {
+class _AddSkillScreenState extends State<AddSkillScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+
+  // Controllers
   final _namaController = TextEditingController();
   final _pengalamanController = TextEditingController();
   final _deskripsiController = TextEditingController();
   final _hargaController = TextEditingController();
   final _linkController = TextEditingController();
+
+  // Animation
+  late AnimationController _entranceController;
 
   XFile? _skillImage;
   CategoryModel? _selectedCategory;
@@ -34,6 +41,13 @@ class _AddSkillScreenState extends State<AddSkillScreen> {
   @override
   void initState() {
     super.initState();
+    // Entrance Animation Controller
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _entranceController.forward();
+
     if (widget.initialTipe != null) {
       _tipe = widget.initialTipe!;
     }
@@ -47,6 +61,7 @@ class _AddSkillScreenState extends State<AddSkillScreen> {
 
   @override
   void dispose() {
+    _entranceController.dispose();
     _namaController.dispose();
     _pengalamanController.dispose();
     _deskripsiController.dispose();
@@ -93,10 +108,6 @@ class _AddSkillScreenState extends State<AddSkillScreen> {
       }
     }
 
-    print('[AddSkill] Submitting skill data: $skillData');
-    print('[AddSkill] Tipe: $_tipe, Expiry Date: $_expiryDate');
-    print('[AddSkill] Image: ${_skillImage?.path}');
-
     final success = await skillProvider.addSkill(
       skillData,
       imageFile: _skillImage,
@@ -116,292 +127,614 @@ class _AddSkillScreenState extends State<AddSkillScreen> {
     }
   }
 
+  // Helper method for staggered animation
+  Widget _buildStaggeredItem({
+    required Widget child,
+    required double startInterval,
+    required double endInterval,
+  }) {
+    final animation = CurvedAnimation(
+      parent: _entranceController,
+      curve: Interval(startInterval, endInterval, curve: Curves.easeOutQuart),
+    );
+
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.2), // Slide up from slight bottom
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Skill')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Image Picker
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                  image: _skillImage != null
-                      ? DecorationImage(
-                          image: kIsWeb
-                              ? NetworkImage(_skillImage!.path)
-                              : FileImage(File(_skillImage!.path))
-                                    as ImageProvider,
-                          fit: BoxFit.contain,
-                          alignment: Alignment.center,
-                        )
-                      : null,
-                  border: Border.all(color: Colors.grey[400]!),
-                ),
-                child: _skillImage == null
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: const Color(0xFFF8F9FD),
+      body: Stack(
+        children: [
+          // 1. Fixed Wave Background Header
+          const Positioned(top: 0, left: 0, right: 0, child: _WaveHeader()),
+
+          // 2. Main Scrollable Content
+          Positioned.fill(
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Custom AppBar Title with Fade In
+                  FadeTransition(
+                    opacity: _entranceController,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
                         children: [
-                          Icon(
-                            Icons.add_photo_alternate,
-                            size: 50,
-                            color: Colors.grey[600],
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Upload Foto Keahlian',
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Tambah Skill Baru',
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: Colors.white,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
-                      )
-                    : Stack(
-                        children: [
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _skillImage = null;
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+
+                  // Scrollable Form
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 20,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 1. Image Picker (Staggered 0.1 - 0.5)
+                            _buildStaggeredItem(
+                              startInterval: 0.1,
+                              endInterval: 0.5,
+                              child: _buildImagePicker(),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // 2. Info Card (Staggered 0.2 - 0.6)
+                            _buildStaggeredItem(
+                              startInterval: 0.2,
+                              endInterval: 0.6,
+                              child: Card(
+                                elevation: 8,
+                                shadowColor: Colors.black.withOpacity(0.05),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 20,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _buildSectionTitle('Informasi Skill'),
+                                      const SizedBox(height: 16),
+                                      _buildTextField(
+                                        controller: _namaController,
+                                        label: 'Nama Keahlian',
+                                        icon: Icons.star_rounded,
+                                        validator: (v) => v?.isEmpty == true
+                                            ? 'Wajib diisi'
+                                            : null,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildCategoryDropdown(),
+                                      const SizedBox(height: 16),
+                                      _buildDropdown(
+                                        value: _tipe,
+                                        label: 'Tipe',
+                                        icon: Icons.swap_horiz_rounded,
+                                        items: const [
+                                          {
+                                            'label': 'Dikuasai (Saya bisa)',
+                                            'value': 'dikuasai',
+                                          },
+                                          {
+                                            'label': 'Dicari (Saya butuh)',
+                                            'value': 'dicari',
+                                          },
+                                        ],
+                                        onChanged: (v) =>
+                                            setState(() => _tipe = v),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildDropdown(
+                                        value: _tingkat,
+                                        label: 'Tingkat Keahlian',
+                                        icon: Icons.trending_up_rounded,
+                                        items: const [
+                                          {
+                                            'label': 'Pemula',
+                                            'value': 'pemula',
+                                          },
+                                          {
+                                            'label': 'Menengah',
+                                            'value': 'menengah',
+                                          },
+                                          {'label': 'Mahir', 'value': 'mahir'},
+                                          {'label': 'Ahli', 'value': 'ahli'},
+                                        ],
+                                        onChanged: (v) =>
+                                            setState(() => _tingkat = v),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 20),
+
+                            // 3. Detail Card (Staggered 0.3 - 0.7)
+                            _buildStaggeredItem(
+                              startInterval: 0.3,
+                              endInterval: 0.7,
+                              child: Card(
+                                elevation: 8,
+                                shadowColor: Colors.black.withOpacity(0.05),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _buildSectionTitle('Detail Tambahan'),
+                                      const SizedBox(height: 16),
+                                      _buildTextField(
+                                        controller: _hargaController,
+                                        label: 'Harga per Sesi (SkillCoin)',
+                                        icon: Icons.monetization_on_rounded,
+                                        keyboardType: TextInputType.number,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildTextField(
+                                        controller: _pengalamanController,
+                                        label: 'Pengalaman (Tahun/Proyek)',
+                                        icon: Icons.work_history_rounded,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildTextField(
+                                        controller: _deskripsiController,
+                                        label: 'Deskripsi Lengkap',
+                                        icon: Icons.description_rounded,
+                                        maxLines: 4,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildTextField(
+                                        controller: _linkController,
+                                        label: 'Link Portofolio (URL)',
+                                        icon: Icons.link_rounded,
+                                        keyboardType: TextInputType.url,
+                                      ),
+                                      if (_tipe == 'dicari') ...[
+                                        const SizedBox(height: 16),
+                                        _buildDatePicker(),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+
+                            // 4. Submit Button (Staggered 0.4 - 0.8)
+                            _buildStaggeredItem(
+                              startInterval: 0.4,
+                              endInterval: 0.8,
+                              child: Consumer<SkillProvider>(
+                                builder: (context, skillProvider, _) {
+                                  return SizedBox(
+                                    width: double.infinity,
+                                    height: 54,
+                                    child: ElevatedButton(
+                                      onPressed: skillProvider.isLoading
+                                          ? null
+                                          : _handleSubmit,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Theme.of(
+                                          context,
+                                        ).primaryColor,
+                                        foregroundColor: Colors.white,
+                                        elevation: 8,
+                                        shadowColor: Theme.of(
+                                          context,
+                                        ).primaryColor.withOpacity(0.5),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                        ),
+                                      ),
+                                      child: skillProvider.isLoading
+                                          ? const CircularProgressIndicator(
+                                              color: Colors.white,
+                                            )
+                                          : const Text(
+                                              'Simpan & Publikasikan',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+                          ],
+                        ),
                       ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Nama Keahlian
-            TextFormField(
-              controller: _namaController,
-              decoration: const InputDecoration(
-                labelText: 'Nama Keahlian *',
-                hintText: 'Contoh: Web Development',
-                prefixIcon: Icon(Icons.star),
-              ),
-              textCapitalization: TextCapitalization.words,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Nama keahlian wajib diisi';
-                }
-                if (value.length < 3) {
-                  return 'Nama minimal 3 karakter';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Kategori
-            Consumer<SkillProvider>(
-              builder: (context, skillProvider, _) {
-                return DropdownButtonFormField<CategoryModel>(
-                  value: _selectedCategory,
-                  decoration: const InputDecoration(
-                    labelText: 'Kategori *',
-                    prefixIcon: Icon(Icons.category),
-                  ),
-                  items: skillProvider.categories.map((category) {
-                    return DropdownMenuItem(
-                      value: category,
-                      child: Text(category.namaKategori),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCategory = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Kategori wajib dipilih';
-                    }
-                    return null;
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Tipe
-            DropdownButtonFormField<String>(
-              value: _tipe,
-              decoration: const InputDecoration(
-                labelText: 'Tipe *',
-                prefixIcon: Icon(Icons.swap_horiz),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'dikuasai', child: Text('Dikuasai')),
-                DropdownMenuItem(value: 'dicari', child: Text('Dicari')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _tipe = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Tingkat
-            DropdownButtonFormField<String>(
-              value: _tingkat,
-              decoration: const InputDecoration(
-                labelText: 'Tingkat',
-                prefixIcon: Icon(Icons.trending_up),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'pemula', child: Text('Pemula')),
-                DropdownMenuItem(value: 'menengah', child: Text('Menengah')),
-                DropdownMenuItem(value: 'mahir', child: Text('Mahir')),
-                DropdownMenuItem(value: 'ahli', child: Text('Ahli')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _tingkat = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Pengalaman
-            TextFormField(
-              controller: _pengalamanController,
-              decoration: const InputDecoration(
-                labelText: 'Pengalaman (Opsional)',
-                hintText: 'Contoh: 5 tahun',
-                prefixIcon: Icon(Icons.work),
-              ),
-              maxLength: 50,
-            ),
-            const SizedBox(height: 16),
-
-            // Deskripsi
-            TextFormField(
-              controller: _deskripsiController,
-              decoration: const InputDecoration(
-                labelText: 'Deskripsi (Opsional)',
-                hintText: 'Jelaskan tentang keahlian Anda...',
-                prefixIcon: Icon(Icons.description),
-              ),
-              maxLines: 4,
-              maxLength: 1000,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 16),
-
-            // Tanggal Berakhir (only for dicari)
-            if (_tipe == 'dicari') ...[
-              InkWell(
-                onTap: () => _selectExpiryDate(context),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Tanggal Berakhir (Opsional)',
-                    hintText: 'Pilih tanggal berakhir',
-                    prefixIcon: Icon(Icons.event),
-                    border: OutlineInputBorder(),
-                  ),
-                  child: Text(
-                    _expiryDate != null
-                        ? DateFormat('dd MMM yyyy').format(_expiryDate!)
-                        : 'Tidak ada batas waktu',
-                    style: TextStyle(
-                      color: _expiryDate != null ? null : Colors.grey[600],
                     ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 16),
-            ],
-
-            // Harga per Jam
-            TextFormField(
-              controller: _hargaController,
-              decoration: const InputDecoration(
-                labelText: 'Harga per Jam (SkillCoin)',
-                prefixIcon: Icon(Icons.monetization_on),
-                suffix: Text('SC'),
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Harga wajib diisi';
-                }
-                final harga = int.tryParse(value);
-                if (harga == null || harga < 1) {
-                  return 'Harga minimal 1 SkillCoin';
-                }
-                return null;
-              },
             ),
-            const SizedBox(height: 16),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // Link Portfolio
-            TextFormField(
-              controller: _linkController,
-              decoration: const InputDecoration(
-                labelText: 'Link Portfolio (Opsional)',
-                hintText: 'https://...',
-                prefixIcon: Icon(Icons.link),
-              ),
-              keyboardType: TextInputType.url,
-            ),
-            const SizedBox(height: 32),
-
-            // Submit Button
-            Consumer<SkillProvider>(
-              builder: (context, skillProvider, _) {
-                return ElevatedButton(
-                  onPressed: skillProvider.isLoading ? null : _handleSubmit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: skillProvider.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Tambah Skill',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                );
-              },
+  Widget _buildImagePicker() {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Container(
+        height: 200,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+          image: _skillImage != null
+              ? DecorationImage(
+                  image: kIsWeb
+                      ? NetworkImage(_skillImage!.path)
+                      : FileImage(File(_skillImage!.path)) as ImageProvider,
+                  fit: BoxFit.cover,
+                )
+              : null,
+        ),
+        child: _skillImage == null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.add_photo_alternate_rounded,
+                      size: 40,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Upload Foto Sampul',
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Tap untuk memilih gambar',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  ),
+                ],
+              )
+            : Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.0),
+                          Colors.black.withOpacity(0.4),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _skillImage = null;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 16,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.edit, color: Colors.white, size: 14),
+                            SizedBox(width: 4),
+                            Text(
+                              'Ganti Foto',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 40,
+          height: 3,
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: Colors.grey[600],
+          fontWeight: FontWeight.normal,
+        ),
+        alignLabelWithHint: maxLines > 1,
+        prefixIcon: Padding(
+          padding: EdgeInsets.only(bottom: maxLines > 1 ? 60 : 0),
+          child: Icon(
+            icon,
+            color: Theme.of(context).primaryColor.withOpacity(0.7),
+          ),
+        ),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: Theme.of(context).primaryColor,
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown() {
+    return Consumer<SkillProvider>(
+      builder: (context, skillProvider, _) {
+        return DropdownButtonFormField<CategoryModel>(
+          value: _selectedCategory,
+          decoration: InputDecoration(
+            labelText: 'Kategori Keahlian',
+            labelStyle: TextStyle(color: Colors.grey[600]),
+            prefixIcon: Icon(
+              Icons.category_rounded,
+              color: Theme.of(context).primaryColor.withOpacity(0.7),
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Theme.of(context).primaryColor,
+                width: 2,
+              ),
+            ),
+          ),
+          items: skillProvider.categories.map((category) {
+            return DropdownMenuItem(
+              value: category,
+              child: Text(category.namaKategori),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedCategory = value;
+            });
+          },
+          validator: (value) => value == null ? 'Kategori wajib dipilih' : null,
+        );
+      },
+    );
+  }
+
+  Widget _buildDropdown({
+    required dynamic value,
+    required String label,
+    required IconData icon,
+    required List<Map<String, dynamic>> items,
+    required Function(dynamic) onChanged,
+  }) {
+    return DropdownButtonFormField<dynamic>(
+      value: value,
+      items: items.map((item) {
+        return DropdownMenuItem(
+          value: item['value'],
+          child: Text(item['label']),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      dropdownColor: Colors.white,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey[600]),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).primaryColor.withOpacity(0.7),
+        ),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: Theme.of(context).primaryColor,
+            width: 2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatePicker() {
+    return InkWell(
+      onTap: () => _selectExpiryDate(context),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: 'Tanggal Berakhir (Opsional)',
+          labelStyle: TextStyle(color: Colors.grey[600]),
+          prefixIcon: Icon(
+            Icons.event_rounded,
+            color: Theme.of(context).primaryColor.withOpacity(0.7),
+          ),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          _expiryDate != null
+              ? DateFormat('dd MMMM yyyy', 'id_ID').format(_expiryDate!)
+              : 'Pilih Tanggal',
+          style: TextStyle(
+            color: _expiryDate != null ? Colors.black87 : Colors.grey[500],
+            fontSize: 16,
+          ),
         ),
       ),
     );
@@ -413,9 +746,6 @@ class _AddSkillScreenState extends State<AddSkillScreen> {
       initialDate: DateTime.now().add(const Duration(days: 30)),
       firstDate: DateTime.now().add(const Duration(days: 1)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      helpText: 'Pilih Tanggal Berakhir',
-      cancelText: 'Batal',
-      confirmText: 'Pilih',
     );
 
     if (picked != null) {
@@ -437,5 +767,155 @@ class _AddSkillScreenState extends State<AddSkillScreen> {
         _skillImage = pickedFile;
       });
     }
+  }
+}
+
+// === WAVE ANIMATION HEADER ===
+
+class _WaveHeader extends StatefulWidget {
+  const _WaveHeader();
+
+  @override
+  State<_WaveHeader> createState() => _WaveHeaderState();
+}
+
+class _WaveHeaderState extends State<_WaveHeader>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _waveController;
+
+  @override
+  void initState() {
+    super.initState();
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _waveController,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            // Background Gradient
+            Container(
+              height: 280,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF1565C0), // Deep Blue
+                    Theme.of(context).primaryColor, // Primary
+                    const Color(0xFF42A5F5), // Light Blue
+                  ],
+                ),
+              ),
+            ),
+
+            // Wave 1 (Behind, Slower, Smoother)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: ClipPath(
+                clipper: WaveClipper(
+                  animationValue: _waveController.value,
+                  waveHeight: 20,
+                  offset: 0,
+                ),
+                child: Container(
+                  height: 100,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+            ),
+
+            // Wave 2 (Front, Faster)
+            Positioned(
+              bottom: -10, // Slightly lower
+              left: 0,
+              right: 0,
+              child: ClipPath(
+                clipper: WaveClipper(
+                  animationValue: _waveController.value,
+                  waveHeight: 30, // Higher wave
+                  offset: 0.5, // Phase shift
+                ),
+                child: Container(
+                  height: 100,
+                  color: const Color(0xFFF8F9FD), // Matches scaffold background
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class WaveClipper extends CustomClipper<Path> {
+  final double animationValue;
+  final double waveHeight;
+  final double offset; // 0.0 to 1.0 (phase shift)
+
+  WaveClipper({
+    required this.animationValue,
+    this.waveHeight = 20,
+    this.offset = 0,
+  });
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height);
+
+    final width = size.width;
+    final height = size.height;
+
+    // Moving Wave Calculation
+    // y = A * sin(kx - wt + phi)
+    // animationValue moves from 0 to 1 repeatedly.
+    // We multiply it by 2*pi so it completes a full cycle.
+
+    final double phase = (animationValue + offset) * 2 * math.pi;
+
+    for (double x = 0; x <= width; x++) {
+      // kx: (x / width) * 2 * pi -> One full wave across the screen width
+      // You can multiply by 2 for two waves, etc.
+      double kx = (x / width) * 2 * math.pi;
+
+      // Calculate y
+      // We start from a base height (e.g. 50% or near bottom)
+      double y = height - waveHeight - (math.sin(kx + phase) * waveHeight);
+
+      // Draw point
+      if (x == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    // Close the path at the bottom
+    path.lineTo(width, height);
+    path.lineTo(0, height);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(WaveClipper oldClipper) {
+    return oldClipper.animationValue != animationValue;
   }
 }

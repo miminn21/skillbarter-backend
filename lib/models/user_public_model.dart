@@ -13,6 +13,14 @@ class UserPublicModel {
   final String? terakhirAktif;
   final List<SkillModel> skills;
 
+  // New Fields
+  final String? bio;
+  final String? kota;
+  final String? jenisKelamin;
+  final String? tanggalLahir;
+  final String? pekerjaan;
+  final String? pendidikanTerakhir;
+
   UserPublicModel({
     required this.nik,
     required this.namaLengkap,
@@ -25,6 +33,12 @@ class UserPublicModel {
     this.statusOnline,
     this.terakhirAktif,
     this.skills = const [],
+    this.bio,
+    this.kota,
+    this.jenisKelamin,
+    this.tanggalLahir,
+    this.pekerjaan,
+    this.pendidikanTerakhir,
   });
 
   factory UserPublicModel.fromJson(Map<String, dynamic> json) {
@@ -71,6 +85,12 @@ class UserPublicModel {
                 .map((skill) => SkillModel.fromJson(skill))
                 .toList()
           : [],
+      bio: toStringOrNull(json['bio']),
+      kota: toStringOrNull(json['kota']),
+      jenisKelamin: toStringOrNull(json['jenis_kelamin']),
+      tanggalLahir: toStringOrNull(json['tanggal_lahir']),
+      pekerjaan: toStringOrNull(json['pekerjaan']),
+      pendidikanTerakhir: toStringOrNull(json['pendidikan_terakhir']),
     );
   }
 
@@ -87,6 +107,12 @@ class UserPublicModel {
       'status_online': statusOnline,
       'terakhir_aktif': terakhirAktif,
       'skills': skills.map((s) => s.toJson()).toList(),
+      'bio': bio,
+      'kota': kota,
+      'jenis_kelamin': jenisKelamin,
+      'tanggal_lahir': tanggalLahir,
+      'pekerjaan': pekerjaan,
+      'pendidikan_terakhir': pendidikanTerakhir,
     };
   }
 }

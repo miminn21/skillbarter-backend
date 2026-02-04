@@ -18,36 +18,102 @@ class SkillDetailScreen extends StatefulWidget {
   State<SkillDetailScreen> createState() => _SkillDetailScreenState();
 }
 
-class _SkillDetailScreenState extends State<SkillDetailScreen> {
+class _SkillDetailScreenState extends State<SkillDetailScreen>
+    with SingleTickerProviderStateMixin {
   final SkillService _skillService = SkillService();
   SkillModel? _skill;
   bool _isLoading = true;
   String? _error;
 
+  // Animation Controllers
+  late AnimationController _animationController;
+  late Animation<Offset> _headerAnimation;
+  late Animation<Offset> _contentAnimation;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    // Initialize Animation
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000), // 1 second total
+    );
+
+    // Header Slides Down (Offset 0, -1 -> 0, 0)
+    _headerAnimation =
+        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+          ),
+        );
+
+    // Content Slides Up (Offset 0, 1 -> 0, 0)
+    _contentAnimation =
+        Tween<Offset>(
+          begin: const Offset(0, 1), // Start from bottom
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.3, 0.9, curve: Curves.easeOutQuart),
+          ),
+        );
+
+    // Content Fades In
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.4, 1.0, curve: Curves.easeIn),
+    );
+
+    // Don't start animation here yet, wait for data load
+    // _animationController.forward();
+
     _loadSkillDetail();
   }
 
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadSkillDetail() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    // Only show full loading spinner on initial load or if we want to hide everything
+    // For refresh, maybe we keep content? But for now let's stick to simple logic
+
+    // Note: If we are refreshing, we might not want to reset animation.
+    // But usually entrance animation is once.
+    // If the user wants to see it, we can reset it.
+
+    // setState(() {
+    //   _isLoading = true;
+    //   _error = null;
+    // });
+    // Don't reset loading to true if we already have data (optional optimization),
+    // but the original code did. Let's keep it but check if we need to reset animation.
+
+    // To fix the "no animation" issue:
+    // We want the animation to play ONLY when the content is actually revealed.
 
     final response = await _skillService.getSkillDetail(widget.skillId);
 
-    if (response.success && response.data != null) {
-      setState(() {
-        _skill = response.data;
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _error = response.message;
-        _isLoading = false;
-      });
+    if (mounted) {
+      if (response.success && response.data != null) {
+        setState(() {
+          _skill = response.data;
+          _isLoading = false;
+        });
+        // Start animation now that content is visible
+        _animationController.forward(from: 0.0);
+      } else {
+        setState(() {
+          _error = response.message;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -87,466 +153,518 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
     final isOwner =
         _skill!.nikPengguna == context.read<AuthProvider>().user?.nik;
 
+    // Initialize animations if not already done (in initState) or use a layout builder to run them
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FD),
       body: Column(
         children: [
-          // 1. Custom Gradient Header
-          Container(
-            padding: const EdgeInsets.only(
-              top: 50,
-              left: 24,
-              right: 24,
-              bottom: 20,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).primaryColor,
-                  const Color(0xFF1E88E5),
+          // 1. Custom Gradient Header (Slide Down Animation)
+          SlideTransition(
+            position: _headerAnimation,
+            child: Container(
+              padding: const EdgeInsets.only(
+                top: 50,
+                left: 24,
+                right: 24,
+                bottom: 20,
+              ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(context).primaryColor,
+                    const Color(0xFF1E88E5),
+                  ],
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
                 ],
               ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_rounded,
-                      color: Colors.white,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-                const Text(
-                  'Detail Skill',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                if (isOwner)
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.edit_rounded, color: Colors.white),
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                EditSkillScreen(skill: _skill!),
-                          ),
-                        );
-                        if (result == true) {
-                          _loadSkillDetail();
-                        }
-                      },
+                      icon: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
+                      ),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                  )
-                else
-                  const SizedBox(width: 48), // Spacer to balance center title
-              ],
+                  ),
+                  const Text(
+                    'Detail Skill',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  if (isOwner)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.edit_rounded,
+                          color: Colors.white,
+                        ),
+                        onPressed: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EditSkillScreen(skill: _skill!),
+                            ),
+                          );
+                          if (result == true) {
+                            _loadSkillDetail();
+                          }
+                        },
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 48), // Spacer
+                ],
+              ),
             ),
           ),
 
-          // 2. Scrollable Body
+          // 2. Scrollable Body (Slide Up + Fade Animation)
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: _loadSkillDetail,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Main Info Card
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          // Image / Gradient Header Area of the Card
-                          Container(
-                            height:
-                                280, // Increased from 180 to show more image
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(24),
+            child: SlideTransition(
+              position: _contentAnimation,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: RefreshIndicator(
+                  onRefresh: _loadSkillDetail,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Main Info Card
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
                               ),
-                              image: hasImage
-                                  ? DecorationImage(
-                                      image: MemoryImage(
-                                        base64Decode(_skill!.gambarSkill!),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              // Image / Gradient Header Area of the Card
+                              Container(
+                                height:
+                                    280, // Increased from 180 to show more image
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(24),
+                                  ),
+                                  image: hasImage
+                                      ? DecorationImage(
+                                          image: MemoryImage(
+                                            base64Decode(_skill!.gambarSkill!),
+                                          ),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                  gradient: hasImage
+                                      ? null
+                                      : LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Colors.blue.shade50,
+                                            Colors.blue.shade100,
+                                          ],
+                                        ),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    if (hasImage)
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              const BorderRadius.vertical(
+                                                top: Radius.circular(24),
+                                              ),
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.transparent,
+                                              Colors.black.withOpacity(0.5),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
-                              gradient: hasImage
-                                  ? null
-                                  : LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Colors.blue.shade50,
-                                        Colors.blue.shade100,
-                                      ],
-                                    ),
-                            ),
-                            child: Stack(
-                              children: [
-                                if (hasImage)
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(24),
+                                    if (!hasImage)
+                                      Center(
+                                        child: Icon(
+                                          _getCategoryIcon(
+                                            _skill!.kategoriIkon,
+                                          ),
+                                          size: 80,
+                                          color: Theme.of(
+                                            context,
+                                          ).primaryColor.withOpacity(0.2),
+                                        ),
                                       ),
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Colors.transparent,
-                                          Colors.black.withOpacity(0.5),
+                                    Positioned(
+                                      bottom: 16,
+                                      left: 16,
+                                      right: 16,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: hasImage
+                                                  ? Colors.black.withOpacity(
+                                                      0.5,
+                                                    )
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              _skill!.namaKategori ?? 'Umum',
+                                              style: TextStyle(
+                                                color: hasImage
+                                                    ? Colors.white
+                                                    : Colors.blue,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  _skill!.namaKeahlian,
+                                                  style: TextStyle(
+                                                    fontSize: 24,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: hasImage
+                                                        ? Colors.white
+                                                        : Colors.black87,
+                                                    shadows: hasImage
+                                                        ? [
+                                                            Shadow(
+                                                              color: Colors
+                                                                  .black
+                                                                  .withOpacity(
+                                                                    0.5,
+                                                                  ),
+                                                              blurRadius: 4,
+                                                              offset:
+                                                                  const Offset(
+                                                                    0,
+                                                                    2,
+                                                                  ),
+                                                            ),
+                                                          ]
+                                                        : null,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (_skill!.statusVerifikasi) ...[
+                                                const SizedBox(width: 8),
+                                                const Icon(
+                                                  Icons.verified,
+                                                  color: Colors.blue,
+                                                  size: 28,
+                                                ),
+                                              ],
+                                            ],
+                                          ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                if (!hasImage)
-                                  Center(
-                                    child: Icon(
-                                      _getCategoryIcon(_skill!.kategoriIkon),
-                                      size: 80,
-                                      color: Theme.of(
-                                        context,
-                                      ).primaryColor.withOpacity(0.2),
-                                    ),
-                                  ),
-                                Positioned(
-                                  bottom: 16,
-                                  left: 16,
-                                  right: 16,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: hasImage
-                                              ? Colors.black.withOpacity(0.5)
-                                              : Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          _skill!.namaKategori ?? 'Umum',
-                                          style: TextStyle(
-                                            color: hasImage
-                                                ? Colors.white
-                                                : Colors.blue,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        _skill!.namaKeahlian,
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: hasImage
-                                              ? Colors.white
-                                              : Colors.black87,
-                                          shadows: hasImage
-                                              ? [
-                                                  Shadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.5),
-                                                    blurRadius: 4,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                                ]
-                                              : null,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
-
-                          // Badges Row
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                _buildModernChip(
-                                  _skill!.tipe == 'dikuasai'
-                                      ? 'Dikuasai'
-                                      : 'Dicari',
-                                  _skill!.tipe == 'dikuasai'
-                                      ? Colors.blue
-                                      : Colors.orange,
-                                  icon: _skill!.tipe == 'dikuasai'
-                                      ? Icons.check_circle_rounded
-                                      : Icons.search_rounded,
-                                ),
-                                const SizedBox(width: 8),
-                                _buildModernChip(
-                                  _getTingkatLabel(_skill!.tingkat),
-                                  _getTingkatColor(_skill!.tingkat),
-                                ),
-                                const Spacer(),
-                                _buildModernChip(
-                                  '${_skill!.hargaPerJam} SC/jam',
-                                  Colors.amber,
-                                  icon: Icons.monetization_on_rounded,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Informasi Detail',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D3142),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Info Container
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          if (_skill!.pengalaman != null) ...[
-                            _buildModernInfoRow(
-                              Icons.history_edu_rounded,
-                              'Pengalaman',
-                              _skill!.pengalaman!,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Divider(color: Colors.grey.shade100),
-                            ),
-                          ],
-
-                          _buildModernInfoRow(
-                            Icons.description_rounded,
-                            'Deskripsi',
-                            (_skill!.deskripsi != null &&
-                                    _skill!.deskripsi!.isNotEmpty &&
-                                    _skill!.deskripsi != 'null')
-                                ? _skill!.deskripsi!
-                                : 'Belum ada deskripsi',
-                          ),
-
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(color: Colors.grey.shade100),
-                          ),
-
-                          if (_skill!.linkPortofolio != null &&
-                              _skill!.linkPortofolio!.isNotEmpty &&
-                              _skill!.linkPortofolio != 'null')
-                            InkWell(
-                              onTap: () async {
-                                final url = Uri.parse(_skill!.linkPortofolio!);
-                                if (await canLaunchUrl(url)) {
-                                  await launchUrl(
-                                    url,
-                                    mode: LaunchMode.externalApplication,
-                                  );
-                                } else {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'âŒ Tidak dapat membuka link',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              child: _buildModernInfoRow(
-                                Icons.link_rounded,
-                                'Link Portfolio',
-                                _skill!.linkPortofolio!,
-                                isLink: true,
                               ),
-                            )
-                          else
-                            _buildModernInfoRow(
-                              Icons.link_off_rounded,
-                              'Link Portfolio',
-                              'Belum ada link portfolio',
+
+                              // Badges Row
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    _buildModernChip(
+                                      _skill!.tipe == 'dikuasai'
+                                          ? 'Dikuasai'
+                                          : 'Dicari',
+                                      _skill!.tipe == 'dikuasai'
+                                          ? Colors.blue
+                                          : Colors.orange,
+                                      icon: _skill!.tipe == 'dikuasai'
+                                          ? Icons.check_circle_rounded
+                                          : Icons.search_rounded,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildModernChip(
+                                      _getTingkatLabel(_skill!.tingkat),
+                                      _getTingkatColor(_skill!.tingkat),
+                                    ),
+                                    const Spacer(),
+                                    _buildModernChip(
+                                      '${_skill!.hargaPerJam} SC/jam',
+                                      Colors.amber,
+                                      icon: Icons.monetization_on_rounded,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Informasi Detail',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2D3142),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Info Container
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              if (_skill!.pengalaman != null) ...[
+                                _buildModernInfoRow(
+                                  Icons.history_edu_rounded,
+                                  'Pengalaman',
+                                  _skill!.pengalaman!,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  child: Divider(color: Colors.grey.shade100),
+                                ),
+                              ],
+
+                              _buildModernInfoRow(
+                                Icons.description_rounded,
+                                'Deskripsi',
+                                (_skill!.deskripsi != null &&
+                                        _skill!.deskripsi!.isNotEmpty &&
+                                        _skill!.deskripsi != 'null')
+                                    ? _skill!.deskripsi!
+                                    : 'Belum ada deskripsi',
+                              ),
+
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                child: Divider(color: Colors.grey.shade100),
+                              ),
+
+                              if (_skill!.linkPortofolio != null &&
+                                  _skill!.linkPortofolio!.isNotEmpty &&
+                                  _skill!.linkPortofolio != 'null')
+                                InkWell(
+                                  onTap: () async {
+                                    final url = Uri.parse(
+                                      _skill!.linkPortofolio!,
+                                    );
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(
+                                        url,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } else {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'âŒ Tidak dapat membuka link',
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: _buildModernInfoRow(
+                                    Icons.link_rounded,
+                                    'Link Portfolio',
+                                    _skill!.linkPortofolio!,
+                                    isLink: true,
+                                  ),
+                                )
+                              else
+                                _buildModernInfoRow(
+                                  Icons.link_off_rounded,
+                                  'Link Portfolio',
+                                  'Belum ada link portfolio',
+                                ),
+
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                child: Divider(color: Colors.grey.shade100),
+                              ),
+
+                              _buildModernInfoRow(
+                                Icons.person_rounded,
+                                'Pemilik',
+                                _skill!.namaPemilik ?? 'Unknown',
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Portfolio Image Section
+                        if (_skill!.portofolioGambar != null) ...[
+                          const Text(
+                            'Galeri Portfolio',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2D3142),
                             ),
-
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(color: Colors.grey.shade100),
                           ),
-
-                          _buildModernInfoRow(
-                            Icons.person_rounded,
-                            'Pemilik',
-                            _skill!.namaPemilik ?? 'Unknown',
+                          const SizedBox(height: 12),
+                          Container(
+                            clipBehavior: Clip.antiAlias,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Image.memory(
+                              base64Decode(_skill!.portofolioGambar!),
+                              fit: BoxFit.cover,
+                            ),
                           ),
+                          const SizedBox(height: 24),
                         ],
-                      ),
+
+                        // Verify Button (if applicable)
+                        if (!isOwner && !_skill!.statusVerifikasi) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton.icon(
+                              onPressed: _confirmVerifySkill,
+                              icon: const Icon(Icons.verified_user_rounded),
+                              label: const Text(
+                                'Verifikasi Skill (10 SC)',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 4,
+                                shadowColor: Colors.green.withOpacity(0.4),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Delete Button (if owner)
+                        if (isOwner) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: OutlinedButton.icon(
+                              onPressed: _confirmDelete,
+                              icon: const Icon(Icons.delete_rounded),
+                              label: const Text(
+                                'Hapus Skill',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(
+                                  color: Colors.red,
+                                  width: 2,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        const SizedBox(
+                          height: 80,
+                        ), // Bottom padding for floating bar
+                      ],
                     ),
-
-                    const SizedBox(height: 24),
-
-                    // Portfolio Image Section
-                    if (_skill!.portofolioGambar != null) ...[
-                      const Text(
-                        'Galeri Portfolio',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3142),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        clipBehavior: Clip.antiAlias,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Image.memory(
-                          base64Decode(_skill!.portofolioGambar!),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // Verify Button (if applicable)
-                    if (!isOwner && !_skill!.statusVerifikasi) ...[
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton.icon(
-                          onPressed: _confirmVerifySkill,
-                          icon: const Icon(Icons.verified_user_rounded),
-                          label: const Text(
-                            'Verifikasi Skill (10 SC)',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 4,
-                            shadowColor: Colors.green.withOpacity(0.4),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Delete Button (if owner)
-                    if (isOwner) ...[
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: OutlinedButton.icon(
-                          onPressed: _confirmDelete,
-                          icon: const Icon(Icons.delete_rounded),
-                          label: const Text(
-                            'Hapus Skill',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red, width: 2),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    const SizedBox(
-                      height: 80,
-                    ), // Bottom padding for floating bar
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -1129,50 +1247,158 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
   Future<void> _confirmVerifySkill() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Verifikasi Skill'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Verifikasi skill "${_skill!.namaKeahlian}"?'),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.amber[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-              child: Row(
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.verified_user_rounded,
+                  size: 32,
+                  color: Colors.blue.shade600,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              const Text(
+                'Verifikasi Skill',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+
+              Text(
+                'Apakah Anda yakin ingin memverifikasi skill "${_skill!.namaKeahlian}"?',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600], height: 1.5),
+              ),
+              const SizedBox(height: 20),
+
+              // Cost Info with Premium Look
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E1), // Amber 50
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFFFC107).withOpacity(0.3),
+                  ), // Amber
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.monetization_on_rounded,
+                        color: Color(0xFFFFA000),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Biaya Verifikasi',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.amber[900],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '10 SkillCoin',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.amber[900],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Buttons
+              Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.amber[700]),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Biaya verifikasi: 10 SkillCoin',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      child: Text(
+                        'Batal',
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Verifikasi',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Verifikasi'),
-          ),
-        ],
       ),
     );
 
@@ -1185,72 +1411,69 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
 
       setState(() => _isLoading = false);
 
-      // Show beautiful dialog instead of SnackBar
       if (response.success) {
         await showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
             ),
-            child: Padding(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            child: Container(
               padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Success Icon
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.check_circle,
+                      Icons.check_rounded,
                       color: Colors.green.shade600,
-                      size: 64,
+                      size: 40,
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Title
                   const Text(
                     'Verifikasi Berhasil!',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Message
-                  Text(
-                    'Skill "${_skill!.namaKeahlian}" berhasil diverifikasi',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-
-                  // Skillcoin info
+                  Text(
+                    'Skill "${_skill!.namaKeahlian}" kini memiliki lencana terverifikasi.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.amber.shade50,
+                      color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.amber.shade200),
                     ),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.monetization_on,
-                          color: Colors.amber.shade700,
-                          size: 20,
+                          Icons.remove_circle_outline,
+                          size: 16,
+                          color: Colors.amber[700],
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '10 SkillCoin telah dipotong',
+                          '10 SkillCoin digunakan',
                           style: TextStyle(
-                            color: Colors.amber.shade900,
+                            color: Colors.grey[700],
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1258,8 +1481,6 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // OK Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -1273,11 +1494,8 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
                         ),
                       ),
                       child: const Text(
-                        'OK',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        'Selesai',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -1288,84 +1506,48 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
         );
         _loadSkillDetail();
       } else {
-        // Show error dialog
         await showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
             ),
-            child: Padding(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: Container(
               padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Error Icon
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.red.shade50,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.error_outline,
-                      color: Colors.red.shade600,
-                      size: 64,
+                      Icons.close_rounded,
+                      color: Colors.red.shade400,
+                      size: 40,
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Title
                   const Text(
                     'Verifikasi Gagal',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-
-                  // Error Message
                   Text(
                     response.message,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                     textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600]),
                   ),
-                  const SizedBox(height: 8),
-
-                  // Skillcoin info if insufficient balance
-                  if (response.message.contains('tidak cukup'))
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.shade200),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Colors.orange.shade700,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Anda memerlukan 10 SkillCoin untuk verifikasi',
-                              style: TextStyle(
-                                color: Colors.orange.shade900,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   const SizedBox(height: 24),
-
-                  // OK Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -1379,11 +1561,8 @@ class _SkillDetailScreenState extends State<SkillDetailScreen> {
                         ),
                       ),
                       child: const Text(
-                        'OK',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        'Tutup',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),

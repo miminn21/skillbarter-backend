@@ -58,6 +58,9 @@ class User {
         p.nama_panggilan,
         p.foto_profil,
         p.bio,
+        p.kota,
+        p.jenis_kelamin,
+        p.tanggal_lahir,
         CASE
           WHEN p.status_online = 'online' AND TIMESTAMPDIFF(SECOND, p.terakhir_aktif, NOW()) > 120 THEN 'offline'
           ELSE p.status_online
@@ -66,8 +69,11 @@ class User {
         COALESCE(p.rating_rata_rata, 0.0) as rating_rata_rata,
         COALESCE(p.jumlah_transaksi, 0) as jumlah_transaksi,
         COALESCE(p.saldo_skillcoin, 0) as saldo_skillcoin,
-        COALESCE(p.total_jam_berkontribusi, 0) as total_jam_berkontribusi
+        COALESCE(p.total_jam_berkontribusi, 0) as total_jam_berkontribusi,
+        d.pekerjaan,
+        d.pendidikan_terakhir
       FROM pengguna p
+      LEFT JOIN detail_pengguna d ON p.nik = d.nik
       WHERE p.nik = ?
     `;
     

@@ -326,13 +326,27 @@ class _SkillListScreenState extends State<SkillListScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            skill.namaKeahlian,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
-                            ),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  skill.namaKeahlian,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1.2,
+                                  ),
+                                ),
+                              ),
+                              if (skill.statusVerifikasi) ...[
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.verified,
+                                  color: Colors.blue,
+                                  size: 18,
+                                ),
+                              ],
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(
