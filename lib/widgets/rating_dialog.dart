@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:dio/dio.dart';
+import 'beautiful_notification.dart';
 import '../widgets/status_dialog.dart';
 
 class RatingDialog extends StatefulWidget {
@@ -61,11 +63,26 @@ class _RatingDialogState extends State<RatingDialog> {
       }
     } catch (e) {
       if (mounted) {
-        StatusDialog.show(
+        String errorMessage = 'Terjadi kesalahan saat mengirim rating';
+
+        if (e is DioException) {
+          final dioError = e as DioException;
+          if (dioError.response?.data != null &&
+              dioError.response?.data is Map &&
+              (dioError.response?.data as Map)['error'] != null) {
+            errorMessage = (dioError.response?.data as Map)['error'];
+          } else if (dioError.response?.data != null &&
+              dioError.response?.data is Map &&
+              (dioError.response?.data as Map)['message'] != null) {
+            errorMessage = (dioError.response?.data as Map)['message'];
+          }
+        }
+
+        BeautifulNotification.show(
           context,
-          success: false,
+          type: NotificationType.error,
           title: 'Gagal Mengirim',
-          message: e.toString().replaceAll('Exception:', ''),
+          message: errorMessage,
         );
       }
     } finally {
