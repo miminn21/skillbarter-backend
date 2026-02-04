@@ -15,16 +15,28 @@ class UserProfileScreen extends StatefulWidget {
   State<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _UserProfileScreenState extends State<UserProfileScreen> {
+class _UserProfileScreenState extends State<UserProfileScreen>
+    with SingleTickerProviderStateMixin {
   final ExploreService _exploreService = ExploreService();
   UserPublicModel? _user;
   bool _isLoading = true;
   String? _error;
+  late AnimationController _entryAnimController;
 
   @override
   void initState() {
     super.initState();
+    _entryAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
     _loadUserProfile();
+  }
+
+  @override
+  void dispose() {
+    _entryAnimController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserProfile() async {
@@ -36,15 +48,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final response = await _exploreService.getUserProfile(widget.nik);
 
     if (response.success && response.data != null) {
-      setState(() {
-        _user = response.data;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _user = response.data;
+          _isLoading = false;
+        });
+        _entryAnimController.forward();
+      }
     } else {
-      setState(() {
-        _error = response.message;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = response.message;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -123,56 +140,74 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   offset: const Offset(0, -kToolbarHeight),
                   child: Column(
                     children: [
-                      Stack(
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.bottomCenter,
-                        children: [
-                          // A. Animated Curved Background
-                          ClipPath(
-                            clipper: _HeaderClipper(),
-                            child: const _AnimatedProfileHeader(),
-                          ),
-
-                          // B. Floating Avatar
-                          Positioned(
-                            bottom: -50,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 4,
+                      SlideTransition(
+                        position:
+                            Tween<Offset>(
+                              begin: const Offset(0, -1.0),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: _entryAnimController,
+                                curve: const Interval(
+                                  0.0,
+                                  1.0,
+                                  curve: Curves.easeOutQuart,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: 60,
-                                backgroundColor: Colors.grey.shade100,
-                                backgroundImage: _user!.fotoProfil != null
-                                    ? MemoryImage(
-                                        base64Decode(_user!.fotoProfil!),
-                                      )
-                                    : null,
-                                child: _user!.fotoProfil == null
-                                    ? Text(
-                                        _user!.namaPanggilan[0].toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 48,
-                                          color: Theme.of(context).primaryColor,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )
-                                    : null,
                               ),
                             ),
-                          ),
-                        ],
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.bottomCenter,
+                          children: [
+                            // A. Animated Curved Background
+                            ClipPath(
+                              clipper: _HeaderClipper(),
+                              child: const _AnimatedProfileHeader(),
+                            ),
+
+                            // B. Floating Avatar
+                            Positioned(
+                              bottom: -50,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 4,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.15),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: CircleAvatar(
+                                  radius: 60,
+                                  backgroundColor: Colors.grey.shade100,
+                                  backgroundImage: _user!.fotoProfil != null
+                                      ? MemoryImage(
+                                          base64Decode(_user!.fotoProfil!),
+                                        )
+                                      : null,
+                                  child: _user!.fotoProfil == null
+                                      ? Text(
+                                          _user!.namaPanggilan[0].toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: 48,
+                                            color: Theme.of(
+                                              context,
+                                            ).primaryColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
 
                       const SizedBox(height: 60), // Spacer for Avatar

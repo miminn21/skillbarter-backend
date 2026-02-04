@@ -15,8 +15,20 @@ class LeaderboardScreen extends StatefulWidget {
   State<LeaderboardScreen> createState() => _LeaderboardScreenState();
 }
 
-class _LeaderboardScreenState extends State<LeaderboardScreen> {
+class _LeaderboardScreenState extends State<LeaderboardScreen>
+    with TickerProviderStateMixin {
   late VideoPlayerController _controller;
+  late AnimationController _animController;
+
+  // Podium Animations
+  late Animation<Offset> _podiumSlide;
+  late Animation<double> _podiumFade;
+
+  // List Animations
+  late Animation<Offset> _listSlide;
+  late Animation<double> _listFade;
+
+  bool _hasAnimated = false;
 
   @override
   void initState() {
@@ -32,6 +44,47 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             setState(() {});
           });
 
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+
+    // --- Podium (Top 3) Animations ---
+    // Slide from Top
+    _podiumSlide = Tween<Offset>(begin: const Offset(0, -3.0), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _animController,
+            curve: const Interval(0.0, 0.8, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    // Fade In
+    _podiumFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
+      ),
+    );
+
+    // --- List (Rankings) Animations ---
+    // Slide from Bottom
+    _listSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _animController,
+            curve: const Interval(0.4, 1.0, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    // Fade In
+    _listFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.4, 0.8, curve: Curves.easeIn),
+      ),
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadLeaderboard();
     });
@@ -40,6 +93,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
@@ -83,7 +137,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh, color: Colors.white),
-                onPressed: _loadLeaderboard,
+                onPressed: () {
+                  _animController.reset();
+                  _hasAnimated = false;
+                  _loadLeaderboard();
+                },
               ),
             ],
           ),
@@ -119,6 +177,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 return const Center(child: Text('Tidak ada data leaderboard'));
               }
 
+              // Trigger Animation once data is ready
+              if (!_hasAnimated) {
+                _animController.forward();
+                _hasAnimated = true;
+              }
+
               // Split top 3 and the rest
               final top3 = provider.leaderboard.take(3).toList();
 
@@ -126,154 +190,177 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 children: [
                   // Top 3 Podium Section (Static)
                   if (top3.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildPodium(top3),
+                    FadeTransition(
+                      opacity: _podiumFade,
+                      child: SlideTransition(
+                        position: _podiumSlide,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _buildPodium(top3),
+                        ),
+                      ),
                     ),
 
                   const SizedBox(height: 20),
 
                   // Scrollable List Section
                   Expanded(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(30),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 10,
-                            offset: Offset(0, -5),
+                    child: FadeTransition(
+                      opacity: _listFade,
+                      child: SlideTransition(
+                        position: _listSlide,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(30),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 10,
+                                offset: Offset(0, -5),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          // Static Header
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Peringkat',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[800],
+                          child: Column(
+                            children: [
+                              // Static Header
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  20,
+                                  20,
+                                  10,
+                                ),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Peringkat',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey[800],
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
 
-                          // Scrollable List
-                          Expanded(
-                            child: RefreshIndicator(
-                              onRefresh: () async => _loadLeaderboard(),
-                              child: SingleChildScrollView(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                child: Column(
-                                  children: [
-                                    const SizedBox(height: 10),
-                                    // Current User Rank (if not in top 3 and valid)
-                                    if (provider.currentUserRank != null &&
-                                        !top3.any(
-                                          (u) =>
-                                              u.nik ==
-                                              provider.currentUserRank!.nik,
-                                        )) ...[
-                                      Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          'Posisi Anda',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                          border: Border.all(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                                .withOpacity(0.5),
-                                            width: 1.5,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                                  .withOpacity(0.1),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
+                              // Scrollable List
+                              Expanded(
+                                // ... rest of list content logic
+                                child: RefreshIndicator(
+                                  onRefresh: () async {
+                                    _animController.reset();
+                                    _hasAnimated = false;
+                                    _loadLeaderboard();
+                                  },
+                                  child: SingleChildScrollView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const SizedBox(height: 10),
+                                        // Current User Rank (if not in top 3 and valid)
+                                        if (provider.currentUserRank != null &&
+                                            !top3.any(
+                                              (u) =>
+                                                  u.nik ==
+                                                  provider.currentUserRank!.nik,
+                                            )) ...[
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              'Posisi Anda',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                              ),
                                             ),
-                                          ],
-                                        ),
-                                        child: UserCard(
-                                          user: provider.currentUserRank!,
-                                          onTap: null,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      const Divider(),
-                                      const SizedBox(height: 10),
-                                    ],
-
-                                    // Full Leaderboard List
-                                    if (provider.leaderboard.isNotEmpty)
-                                      ListView.builder(
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        shrinkWrap: true,
-                                        itemCount: provider.leaderboard.length,
-                                        itemBuilder: (context, index) {
-                                          final user =
-                                              provider.leaderboard[index];
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 10,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withOpacity(0.5),
+                                                width: 1.5,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                      .withOpacity(0.1),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
                                             ),
                                             child: UserCard(
-                                              user: user,
-                                              rank: index + 1,
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        UserProfileScreen(
-                                                          nik: user.nik,
-                                                        ),
-                                                  ),
-                                                );
-                                              },
+                                              user: provider.currentUserRank!,
+                                              onTap: null,
                                             ),
-                                          );
-                                        },
-                                      ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          const Divider(),
+                                          const SizedBox(height: 10),
+                                        ],
 
-                                    const SizedBox(height: 20),
-                                  ],
+                                        // Full Leaderboard List
+                                        if (provider.leaderboard.isNotEmpty)
+                                          ListView.builder(
+                                            physics:
+                                                const NeverScrollableScrollPhysics(),
+                                            shrinkWrap: true,
+                                            itemCount:
+                                                provider.leaderboard.length,
+                                            itemBuilder: (context, index) {
+                                              final user =
+                                                  provider.leaderboard[index];
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                  bottom: 10,
+                                                ),
+                                                child: UserCard(
+                                                  user: user,
+                                                  rank: index + 1,
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            UserProfileScreen(
+                                                              nik: user.nik,
+                                                            ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              );
+                                            },
+                                          ),
+
+                                        const SizedBox(height: 20),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

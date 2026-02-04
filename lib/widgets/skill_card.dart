@@ -38,143 +38,176 @@ class SkillCard extends StatelessWidget {
                   ),
                 )
               : null,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with icon and verified badge
-                Row(
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: hasImage
-                            ? Colors.white.withOpacity(0.2)
-                            : Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        _getCategoryIcon(skill.kategoriIkon),
-                        size: 20,
-                        color: hasImage
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        skill.namaKeahlian,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
+                    // Header with icon and verified badge
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: hasImage
+                                ? Colors.white.withOpacity(0.2)
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            _getCategoryIcon(skill.kategoriIkon),
+                            size: 20,
+                            color: hasImage
+                                ? Colors.white
+                                : Theme.of(context).colorScheme.primary,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (skill.statusVerifikasi)
-                      const Icon(Icons.verified, size: 18, color: Colors.blue),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // Category name
-                Text(
-                  skill.namaKategori ?? '',
-                  style: TextStyle(fontSize: 11, color: subTextColor),
-                ),
-                const SizedBox(height: 8),
-
-                // Badges (Tingkat & Harga)
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    _buildBadge(
-                      _getTingkatLabel(skill.tingkat),
-                      _getTingkatColor(skill.tingkat),
-                      hasImage,
-                    ),
-                    _buildBadge(
-                      '${skill.hargaPerJam} SC',
-                      Colors.amber,
-                      hasImage,
-                    ),
-                  ],
-                ),
-
-                // Owner info (if showOwner)
-                if (showOwner && skill.namaPemilik != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.person, size: 14, color: iconColor),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          skill.namaPemilik!,
-                          style: TextStyle(fontSize: 11, color: subTextColor),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            skill.namaKeahlian,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                        // Only show inline badge if NO image (Text Card style)
+                        if (skill.statusVerifikasi && !hasImage)
+                          const Icon(
+                            Icons.verified,
+                            size: 18,
+                            color: Colors.blue,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Category name
+                    Text(
+                      skill.namaKategori ?? '',
+                      style: TextStyle(fontSize: 11, color: subTextColor),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Badges (Tingkat & Harga)
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        _buildBadge(
+                          _getTingkatLabel(skill.tingkat),
+                          _getTingkatColor(skill.tingkat),
+                          hasImage,
+                        ),
+                        _buildBadge(
+                          '${skill.hargaPerJam} SC',
+                          Colors.amber,
+                          hasImage,
+                        ),
+                      ],
+                    ),
+
+                    // Owner info (if showOwner)
+                    if (showOwner && skill.namaPemilik != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.person, size: 14, color: iconColor),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              skill.namaPemilik!,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: subTextColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
 
-                // Creation date
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 12, color: iconColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatDate(skill.dibuatPada),
-                      style: TextStyle(fontSize: 10, color: subTextColor),
+                    // Creation date
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today, size: 12, color: iconColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDate(skill.dibuatPada),
+                          style: TextStyle(fontSize: 10, color: subTextColor),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
 
-                // Expiry date (for dicari only)
-                if (skill.tipe == 'dicari' &&
-                    skill.tanggalBerakhir != null) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        skill.isExpired
-                            ? Icons.event_busy
-                            : Icons.event_available,
-                        size: 12,
-                        color: skill.isExpired
-                            ? Colors.red[600]
-                            : Colors.green[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          skill.isExpired
-                              ? 'Kadaluarsa ${_formatDate(skill.tanggalBerakhir!.toIso8601String())}'
-                              : 'Berlaku s/d ${_formatDate(skill.tanggalBerakhir!.toIso8601String())}',
-                          style: TextStyle(
-                            fontSize: 10,
+                    // Expiry date (for dicari only)
+                    if (skill.tipe == 'dicari' &&
+                        skill.tanggalBerakhir != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            skill.isExpired
+                                ? Icons.event_busy
+                                : Icons.event_available,
+                            size: 12,
                             color: skill.isExpired
                                 ? Colors.red[600]
                                 : Colors.green[600],
-                            fontWeight: FontWeight.w500,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              skill.isExpired
+                                  ? 'Kadaluarsa ${_formatDate(skill.tanggalBerakhir!.toIso8601String())}'
+                                  : 'Berlaku s/d ${_formatDate(skill.tanggalBerakhir!.toIso8601String())}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: skill.isExpired
+                                    ? Colors.red[600]
+                                    : Colors.green[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
+                  ],
+                ),
+              ),
+
+              // Floating Badge for Image Cards
+              if (skill.statusVerifikasi && hasImage)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.all(2), // White border effect
+                    decoration: const BoxDecoration(
+                      color: Colors.white, // Background behind check
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.verified,
+                      size: 20,
+                      color: Colors.blue,
+                    ),
                   ),
-                ],
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),

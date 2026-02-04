@@ -21,8 +21,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
   bool _obscureNew = true;
   bool _obscureConfirm = true;
 
+  late AnimationController _entryController;
+
+  @override
+  void initState() {
+    super.initState();
+    _entryController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..forward();
+  }
+
   @override
   void dispose() {
+    _entryController.dispose();
     _oldPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
@@ -73,12 +85,24 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
       backgroundColor: Colors.grey[50],
       body: Stack(
         children: [
-          // 1. Animated Header
-          Align(
-            alignment: Alignment.topCenter,
-            child: ClipPath(
-              clipper: _HeaderClipper(),
-              child: const _AnimatedHeader(),
+          // 1. Animated Header (Slide Down)
+          SlideTransition(
+            position:
+                Tween<Offset>(
+                  begin: const Offset(0, -1.0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _entryController,
+                    curve: const Interval(0.0, 1.0, curve: Curves.easeOutQuart),
+                  ),
+                ),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ClipPath(
+                clipper: _HeaderClipper(),
+                child: const _AnimatedHeader(),
+              ),
             ),
           ),
 
@@ -134,117 +158,135 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                     ),
                   ),
 
-                  // Form Card
-                  Card(
-                    elevation: 10,
-                    shadowColor: Colors.black.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            // Icon Header inside card
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).primaryColor.withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.lock_reset_rounded,
-                                size: 48,
-                                color: Theme.of(context).primaryColor,
-                              ),
+                  const SizedBox(height: 50), // Push card down
+                  // Form Card (Slide Up)
+                  SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 1.0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _entryController,
+                            curve: const Interval(
+                              0.0,
+                              1.0,
+                              curve: Curves.easeOutQuart,
                             ),
-                            const SizedBox(height: 32),
-
-                            _buildField(
-                              label: 'Password Lama',
-                              controller: _oldPasswordController,
-                              obscure: _obscureOld,
-                              icon: Icons.lock_outline_rounded,
-                              onToggle: () =>
-                                  setState(() => _obscureOld = !_obscureOld),
-                              validator: (v) => v!.isEmpty
-                                  ? 'Password lama wajib diisi'
-                                  : null,
-                            ),
-                            const SizedBox(height: 20),
-                            _buildField(
-                              label: 'Password Baru',
-                              controller: _newPasswordController,
-                              obscure: _obscureNew,
-                              icon: Icons.vpn_key_rounded,
-                              onToggle: () =>
-                                  setState(() => _obscureNew = !_obscureNew),
-                              validator: (v) {
-                                if (v!.isEmpty)
-                                  return 'Password baru wajib diisi';
-                                if (v.length < 6) return 'Minimal 6 karakter';
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 20),
-                            _buildField(
-                              label: 'Konfirmasi Password Baru',
-                              controller: _confirmPasswordController,
-                              obscure: _obscureConfirm,
-                              icon: Icons.verified_user_rounded,
-                              onToggle: () => setState(
-                                () => _obscureConfirm = !_obscureConfirm,
-                              ),
-                              validator: (v) {
-                                if (v!.isEmpty) return 'Konfirmasi wajib diisi';
-                                if (v != _newPasswordController.text) {
-                                  return 'Password tidak sama';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 40),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 56,
-                              child: ElevatedButton(
-                                onPressed: _isLoading ? null : _submit,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(
+                          ),
+                        ),
+                    child: Card(
+                      elevation: 10,
+                      shadowColor: Colors.black.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              // Icon Header inside card
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
                                     context,
-                                  ).primaryColor,
-                                  foregroundColor: Colors.white,
-                                  elevation: 8,
-                                  shadowColor: Theme.of(
-                                    context,
-                                  ).primaryColor.withOpacity(0.4),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
+                                  ).primaryColor.withOpacity(0.1),
+                                  shape: BoxShape.circle,
                                 ),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Simpan Password Baru',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                child: Icon(
+                                  Icons.lock_reset_rounded,
+                                  size: 48,
+                                  color: Theme.of(context).primaryColor,
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 32),
+
+                              _buildField(
+                                label: 'Password Lama',
+                                controller: _oldPasswordController,
+                                obscure: _obscureOld,
+                                icon: Icons.lock_outline_rounded,
+                                onToggle: () =>
+                                    setState(() => _obscureOld = !_obscureOld),
+                                validator: (v) => v!.isEmpty
+                                    ? 'Password lama wajib diisi'
+                                    : null,
+                              ),
+                              const SizedBox(height: 20),
+                              _buildField(
+                                label: 'Password Baru',
+                                controller: _newPasswordController,
+                                obscure: _obscureNew,
+                                icon: Icons.vpn_key_rounded,
+                                onToggle: () =>
+                                    setState(() => _obscureNew = !_obscureNew),
+                                validator: (v) {
+                                  if (v!.isEmpty)
+                                    return 'Password baru wajib diisi';
+                                  if (v.length < 6) return 'Minimal 6 karakter';
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              _buildField(
+                                label: 'Konfirmasi Password Baru',
+                                controller: _confirmPasswordController,
+                                obscure: _obscureConfirm,
+                                icon: Icons.verified_user_rounded,
+                                onToggle: () => setState(
+                                  () => _obscureConfirm = !_obscureConfirm,
+                                ),
+                                validator: (v) {
+                                  if (v!.isEmpty)
+                                    return 'Konfirmasi wajib diisi';
+                                  if (v != _newPasswordController.text) {
+                                    return 'Password tidak sama';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 40),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _submit,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).primaryColor,
+                                    foregroundColor: Colors.white,
+                                    elevation: 8,
+                                    shadowColor: Theme.of(
+                                      context,
+                                    ).primaryColor.withOpacity(0.4),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2.5,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Simpan Password Baru',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

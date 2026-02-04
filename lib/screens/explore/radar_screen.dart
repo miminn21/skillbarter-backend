@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:latlong2/latlong.dart' hide Path;
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../../services/api_service.dart';
@@ -22,11 +22,17 @@ class _RadarScreenState extends State<RadarScreen> {
   final MapController _mapController = MapController();
   LatLng? _currentLocation;
   List<dynamic> _nearbyUsers = [];
-  Timer? _locationTimer;
+  StreamSubscription<Position>? _positionStreamSubscription;
   bool _isLoading = true;
 
   // Cache addresses to avoid spamming API
   final Map<String, String> _addressCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _startListeningLocation();
+  }
 
   Future<String> _getAddress(double lat, double long) async {
     final key = "$lat,$long";
@@ -46,6 +52,7 @@ class _RadarScreenState extends State<RadarScreen> {
         final data = json.decode(response.body);
         final address = data['display_name'] ?? 'Alamat tidak ditemukan';
         _addressCache[key] = address;
+        if (mounted) setState(() {}); // Refresh UI if needed
         return address;
       }
     } catch (e) {
@@ -61,92 +68,137 @@ class _RadarScreenState extends State<RadarScreen> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Avatar
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.grey[200],
-                backgroundImage:
-                    (fotoProfil != null && fotoProfil.toString().isNotEmpty)
-                    ? MemoryImage(base64Decode(fotoProfil.toString()))
-                    : null,
-                child: (fotoProfil == null || fotoProfil.toString().isEmpty)
-                    ? const Icon(Icons.person, size: 40, color: Colors.grey)
-                    : null,
+              // Avatar with Ring
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(context).primaryColor.withOpacity(0.2),
+                    width: 3,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 45,
+                  backgroundColor: Colors.grey[100],
+                  backgroundImage:
+                      (fotoProfil != null && fotoProfil.toString().isNotEmpty)
+                      ? MemoryImage(base64Decode(fotoProfil.toString()))
+                      : null,
+                  child: (fotoProfil == null || fotoProfil.toString().isEmpty)
+                      ? Icon(Icons.person, size: 45, color: Colors.grey[400])
+                      : null,
+                ),
               ),
               const SizedBox(height: 16),
 
-              // Name
+              // Name & Handle
               Text(
                 user['nama_lengkap'] ?? 'User SkillBarter',
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
                 ),
+                textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 4),
               Text(
                 "@${user['nama_panggilan']}",
-                style: const TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 8),
 
-              // Address Loading
-              FutureBuilder<String>(
-                future: _getAddress(lat, long),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        SizedBox(width: 8),
-                        Text("Mencari alamat lengkap..."),
-                      ],
-                    );
-                  }
+              const SizedBox(height: 24),
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
+              // Location Info Box
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.location_on_rounded,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.map, color: Colors.blue),
-                          SizedBox(width: 8),
-                          Text(
-                            "Lokasi Terkini:",
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          const Text(
+                            "Lokasi Terkini",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          FutureBuilder<String>(
+                            future: _getAddress(lat, long),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Text(
+                                  "Memuat alamat...",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 13,
+                                  ),
+                                );
+                              }
+                              return Text(
+                                snapshot.data ?? "Alamat tidak tersedia",
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black54,
+                                  height: 1.4,
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        snapshot.data ?? "Alamat tidak tersedia",
-                        style: const TextStyle(fontSize: 14),
-                        textAlign: TextAlign.left,
-                      ),
-                    ],
-                  );
-                },
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
+
+              const SizedBox(height: 24),
 
               // Action Button
               SizedBox(
                 width: double.infinity,
+                height: 50,
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
@@ -158,11 +210,19 @@ class _RadarScreenState extends State<RadarScreen> {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.person),
-                  label: const Text("Lihat Profil User"),
+                  icon: const Icon(Icons.visibility_rounded),
+                  label: const Text("Lihat Profil Lengkap"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
@@ -173,24 +233,7 @@ class _RadarScreenState extends State<RadarScreen> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _initLocation();
-    // Poll every 30s
-    _locationTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      _initLocation();
-    });
-  }
-
-  @override
-  void dispose() {
-    _locationTimer?.cancel();
-    _mapController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _initLocation() async {
+  Future<void> _startListeningLocation() async {
     try {
       // 1. Check Permissions
       LocationPermission permission = await Geolocator.checkPermission();
@@ -202,24 +245,32 @@ class _RadarScreenState extends State<RadarScreen> {
         }
       }
 
-      // 2. Get Current Position
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+      // 2. Start Stream (~High accuracy)
+      const locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.best, // Highest accuracy
+        distanceFilter: 5, // Update every 5 meters moved
       );
 
-      setState(() {
-        _currentLocation = LatLng(position.latitude, position.longitude);
-      });
+      _positionStreamSubscription =
+          Geolocator.getPositionStream(
+            locationSettings: locationSettings,
+          ).listen((Position position) {
+            setState(() {
+              _currentLocation = LatLng(position.latitude, position.longitude);
+              _isLoading = false;
+            });
 
-      // 3. Update Backend
-      await _updateBackendLocation(position.latitude, position.longitude);
-
-      // 4. Fetch Nearby Users
-      await _fetchNearbyUsers(position.latitude, position.longitude);
-
-      setState(() => _isLoading = false);
+            // Background update (fire and forget)
+            _updateBackendLocation(position.latitude, position.longitude);
+            // Refresh nearby users when we move significantly?
+            // Optional, but good for accuracy. For now, let's pull nearby users on first load or manual refresh.
+            // Or we can fetch effectively.
+            if (_nearbyUsers.isEmpty) {
+              _fetchNearbyUsers(position.latitude, position.longitude);
+            }
+          });
     } catch (e) {
-      debugPrint("Error getting location: $e");
+      debugPrint("Error listening location: $e");
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -241,20 +292,25 @@ class _RadarScreenState extends State<RadarScreen> {
       final api = ApiService();
       final response = await api.get(
         '/location/nearby',
-        queryParameters: {
-          'latitude': lat,
-          'longitude': long,
-          'radius': 10000, // 10,000 km (Nation-wide)
-        },
+        queryParameters: {'latitude': lat, 'longitude': long, 'radius': 10000},
       );
       if (response.statusCode == 200) {
-        setState(() {
-          _nearbyUsers = response.data['data'] ?? [];
-        });
+        if (mounted) {
+          setState(() {
+            _nearbyUsers = response.data['data'] ?? [];
+          });
+        }
       }
     } catch (e) {
       debugPrint("Fetch nearby failed: $e");
     }
+  }
+
+  @override
+  void dispose() {
+    _positionStreamSubscription?.cancel();
+    _mapController.dispose();
+    super.dispose();
   }
 
   @override
@@ -263,45 +319,77 @@ class _RadarScreenState extends State<RadarScreen> {
       return Scaffold(
         body: Center(
           child: _isLoading
-              ? const CircularProgressIndicator()
-              : const Text("Izin Lokasi diperlukan untuk Radar"),
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Mengkalibrasi GPS...",
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                )
+              : const Text("Izin Lokasi diperlukan"),
         ),
       );
     }
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+          ),
+          child: const BackButton(color: Colors.black),
+        ),
+      ),
       body: Stack(
         children: [
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
               initialCenter: _currentLocation!,
-              initialZoom: 15.0,
+              initialZoom: 19.0, // Start very close
+              minZoom: 10.0,
+              maxZoom: 22.0, // Allow "digital zoom" deep into buildings
             ),
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.skillbarter',
-                subdomains: const ['a', 'b', 'c'],
+                maxNativeZoom: 19, // Max level supported by OSM server
               ),
               MarkerLayer(
                 markers: [
-                  // Me
+                  // --- My Location (Accurate Dot) ---
                   Marker(
                     point: _currentLocation!,
-                    width: 60,
-                    height: 60,
-                    child: const Column(
-                      children: [
-                        Icon(Icons.location_on, color: Colors.blue, size: 40),
-                        Text(
-                          "Saya",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                    width: 40,
+                    height: 40,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.5),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  // Others
+
+                  // --- Other Users ---
                   ..._nearbyUsers.map((user) {
                     final lat = double.parse(user['latitude'].toString());
                     final long = double.parse(user['longitude'].toString());
@@ -309,19 +397,19 @@ class _RadarScreenState extends State<RadarScreen> {
 
                     return Marker(
                       point: LatLng(lat, long),
-                      width: 80,
+                      width: 70,
                       height: 80,
                       child: GestureDetector(
                         onTap: () => _showUserDetail(context, user),
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
+                            // Avatar Pin
                             Container(
+                              padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
+                                color: Colors.white,
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.3),
@@ -331,7 +419,7 @@ class _RadarScreenState extends State<RadarScreen> {
                                 ],
                               ),
                               child: CircleAvatar(
-                                radius: 20,
+                                radius: 22,
                                 backgroundColor: Colors.grey[200],
                                 backgroundImage:
                                     (fotoProfil != null &&
@@ -345,28 +433,43 @@ class _RadarScreenState extends State<RadarScreen> {
                                         fotoProfil.toString().isEmpty)
                                     ? const Icon(
                                         Icons.person,
-                                        size: 20,
+                                        size: 22,
                                         color: Colors.grey,
                                       )
                                     : null,
                               ),
                             ),
+
+                            // Pointer
                             Container(
-                              margin: const EdgeInsets.only(top: 4),
+                              margin: const EdgeInsets.only(top: 2),
+                              width: 4,
+                              height: 4,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+
+                            // Label
+                            Container(
+                              margin: const EdgeInsets.only(top: 2),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
+                                horizontal: 6,
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.8),
-                                borderRadius: BorderRadius.circular(4),
+                                color: Colors.black.withOpacity(0.7),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 user['nama_panggilan'] ?? 'User',
                                 style: const TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 9,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -379,13 +482,30 @@ class _RadarScreenState extends State<RadarScreen> {
               ),
             ],
           ),
-          // Refresh Button
+
+          // --- Refresh/Recenter Button ---
           Positioned(
-            right: 16,
-            bottom: 16,
+            right: 20,
+            bottom: 30,
             child: FloatingActionButton(
-              onPressed: _initLocation,
-              child: const Icon(Icons.refresh),
+              onPressed: () {
+                if (_currentLocation != null) {
+                  _mapController.move(_currentLocation!, 17.5);
+                  _fetchNearbyUsers(
+                    _currentLocation!.latitude,
+                    _currentLocation!.longitude,
+                  );
+                }
+              },
+              backgroundColor: Colors.white,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.my_location,
+                color: Theme.of(context).primaryColor,
+              ),
             ),
           ),
         ],

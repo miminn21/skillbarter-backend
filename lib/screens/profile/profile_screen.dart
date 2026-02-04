@@ -127,10 +127,22 @@ class _ProfileScreenState extends State<ProfileScreen>
           return SingleChildScrollView(
             child: Column(
               children: [
-                // 1. Creative Header with Curve (Fade In First)
-                _buildAnimatedItem(
-                  index: 0,
-                  slideOffset: 0.0, // No slide for header background
+                // 1. Creative Header with Smooth Top-Down Slide
+                SlideTransition(
+                  position:
+                      Tween<Offset>(
+                        begin: const Offset(0, -1.0),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _entryAnimationController,
+                          curve: const Interval(
+                            0.0,
+                            1.0,
+                            curve: Curves.easeOutQuart,
+                          ),
+                        ),
+                      ),
                   child: Stack(
                     clipBehavior: Clip.none,
                     alignment: Alignment.bottomCenter,
@@ -142,75 +154,91 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
 
                       // Floating Avatar (Pop In Animation would be cool, but slide up for now)
+                      // We keep the avatar slide-up or static relative to header?
+                      // If we wrap the whole Stack, the avatar slides down WITH the header.
+                      // That is usually what is expected (the whole top block enters).
+                      // Let's check where the avatar is. It is inside the Stack.
+                      // Yes, sliding the whole stack is correct.
                       Positioned(
                         bottom: -50,
-                        child: Stack(
-                          alignment: Alignment.bottomRight,
-                          children: [
-                            GestureDetector(
-                              onTap: () => _handleUploadPhoto(context),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 4,
+                        child: _buildAnimatedItem(
+                          index: 1, // Delay avatar slightly
+                          slideOffset:
+                              0.5, // Slide up from bottom to meet the header?
+                          // Or if we want it to move WITH header, we shouldn't animate it separately opposite way.
+                          // But typical effect: Header drops, Avatar pops relative to it.
+                          // Let's keep avatar inside the slide logic implies it moves down.
+                          // But we apply _buildAnimatedItem (fade/slide UP) to it too?
+                          // That creates a complex motion (Down + Up cancel).
+                          // Let's remove _buildAnimatedItem for avatar or just make it FadeIn.
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              GestureDetector(
+                                onTap: () => _handleUploadPhoto(context),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 4,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.15),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
                                   ),
+                                  child: CircleAvatar(
+                                    radius: 60,
+                                    backgroundColor: Colors.grey.shade100,
+                                    backgroundImage: user.fotoProfil != null
+                                        ? MemoryImage(
+                                            base64Decode(user.fotoProfil!),
+                                          )
+                                        : null,
+                                    child: user.fotoProfil == null
+                                        ? Text(
+                                            user.namaPanggilan[0].toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: 48,
+                                              color: Theme.of(
+                                                context,
+                                              ).primaryColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.15),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 8),
+                                      color: Colors.black12,
+                                      blurRadius: 4,
                                     ),
                                   ],
                                 ),
-                                child: CircleAvatar(
-                                  radius: 60,
-                                  backgroundColor: Colors.grey.shade100,
-                                  backgroundImage: user.fotoProfil != null
-                                      ? MemoryImage(
-                                          base64Decode(user.fotoProfil!),
-                                        )
-                                      : null,
-                                  child: user.fotoProfil == null
-                                      ? Text(
-                                          user.namaPanggilan[0].toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 48,
-                                            color: Theme.of(
-                                              context,
-                                            ).primaryColor,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 4,
+                                child: IconButton(
+                                  icon: Icon(
+                                    Icons.camera_alt_rounded,
+                                    size: 20,
+                                    color: Theme.of(context).primaryColor,
                                   ),
-                                ],
-                              ),
-                              child: IconButton(
-                                icon: Icon(
-                                  Icons.camera_alt_rounded,
-                                  size: 20,
-                                  color: Theme.of(context).primaryColor,
+                                  onPressed: () => _handleUploadPhoto(context),
+                                  padding: const EdgeInsets.all(8),
+                                  constraints: const BoxConstraints(),
                                 ),
-                                onPressed: () => _handleUploadPhoto(context),
-                                padding: const EdgeInsets.all(8),
-                                constraints: const BoxConstraints(),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
