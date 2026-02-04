@@ -274,6 +274,20 @@ CREATE TABLE sanksi_pengguna (
 -- Aktifkan kembali foreign key check
 SET FOREIGN_KEY_CHECKS = 1;
 
+-- Tabel 13: notifications (New Notification System)
+CREATE TABLE notifications (
+    id_notifikasi INT PRIMARY KEY AUTO_INCREMENT,
+    nik VARCHAR(16) NOT NULL,
+    tipe VARCHAR(50) NOT NULL,
+    judul VARCHAR(100) NOT NULL,
+    pesan TEXT NOT NULL,
+    data JSON,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (nik) REFERENCES pengguna(nik) ON DELETE CASCADE,
+    INDEX idx_notifications_user (nik, is_read, created_at DESC)
+);
+
 -- ============================================
 -- INSERT DATA DEFAULT
 -- ============================================
