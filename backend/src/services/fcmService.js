@@ -78,7 +78,7 @@ async function sendPushNotification(fcmToken, notification) {
       priority: 'high',
       notification: {
         sound: 'default',
-        channelId: 'skillbarter_notifications',
+        channelId: 'skillbarter_urgent_v1',
         priority: 'high',
         defaultSound: true,
         defaultVibrateTimings: true
