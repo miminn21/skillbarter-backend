@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/app_localizations.dart';
 import '../../providers/skill_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/skill_service.dart';
@@ -121,26 +122,42 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8F9FD),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error != null || _skill == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8F9FD),
-        appBar: AppBar(title: const Text('Detail Skill')),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: Text(
+            AppLocalizations.of(context)!.translate('skill_detail_title'),
+          ),
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
-              Text(_error ?? 'Skill tidak ditemukan'),
+              Text(
+                _error ??
+                    AppLocalizations.of(
+                      context,
+                    )!.translate('error_skill_not_found'),
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
+                ),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Kembali'),
+                child: Text(
+                  AppLocalizations.of(context)!.translate('btn_back'),
+                ),
               ),
             ],
           ),
@@ -155,8 +172,11 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
 
     // Initialize animations if not already done (in initState) or use a layout builder to run them
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
           // 1. Custom Gradient Header (Slide Down Animation)
@@ -206,9 +226,11 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                  const Text(
-                    'Detail Skill',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(
+                      context,
+                    )!.translate('skill_detail_title'),
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -263,7 +285,7 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
@@ -352,12 +374,17 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                                   ? Colors.black.withOpacity(
                                                       0.5,
                                                     )
-                                                  : Colors.white,
+                                                  : theme.cardColor,
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                             ),
                                             child: Text(
-                                              _skill!.namaKategori ?? 'Umum',
+                                              _skill!.namaKategori ??
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.translate(
+                                                    'label_category_general',
+                                                  ),
                                               style: TextStyle(
                                                 color: hasImage
                                                     ? Colors.white
@@ -378,7 +405,9 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                                     fontWeight: FontWeight.bold,
                                                     color: hasImage
                                                         ? Colors.white
-                                                        : Colors.black87,
+                                                        : (isDark
+                                                              ? Colors.white
+                                                              : Colors.black87),
                                                     shadows: hasImage
                                                         ? [
                                                             Shadow(
@@ -423,8 +452,12 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                   children: [
                                     _buildModernChip(
                                       _skill!.tipe == 'dikuasai'
-                                          ? 'Dikuasai'
-                                          : 'Dicari',
+                                          ? AppLocalizations.of(
+                                              context,
+                                            )!.translate('tab_mastered')
+                                          : AppLocalizations.of(
+                                              context,
+                                            )!.translate('tab_wanted'),
                                       _skill!.tipe == 'dikuasai'
                                           ? Colors.blue
                                           : Colors.orange,
@@ -451,12 +484,16 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                         ),
 
                         const SizedBox(height: 24),
-                        const Text(
-                          'Informasi Detail',
+                        Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.translate('section_detail_info'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF2D3142),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF2D3142),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -465,7 +502,7 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
@@ -480,7 +517,9 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                               if (_skill!.pengalaman != null) ...[
                                 _buildModernInfoRow(
                                   Icons.history_edu_rounded,
-                                  'Pengalaman',
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('label_experience'),
                                   _skill!.pengalaman!,
                                 ),
                                 Padding(
@@ -493,12 +532,16 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
 
                               _buildModernInfoRow(
                                 Icons.description_rounded,
-                                'Deskripsi',
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('label_description'),
                                 (_skill!.deskripsi != null &&
                                         _skill!.deskripsi!.isNotEmpty &&
                                         _skill!.deskripsi != 'null')
                                     ? _skill!.deskripsi!
-                                    : 'Belum ada deskripsi',
+                                    : AppLocalizations.of(
+                                        context,
+                                      )!.translate('empty_description'),
                               ),
 
                               Padding(
@@ -538,7 +581,9 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                   },
                                   child: _buildModernInfoRow(
                                     Icons.link_rounded,
-                                    'Link Portfolio',
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.translate('label_portfolio'),
                                     _skill!.linkPortofolio!,
                                     isLink: true,
                                   ),
@@ -546,8 +591,12 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                               else
                                 _buildModernInfoRow(
                                   Icons.link_off_rounded,
-                                  'Link Portfolio',
-                                  'Belum ada link portfolio',
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('label_portfolio'),
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('empty_portfolio'),
                                 ),
 
                               Padding(
@@ -559,8 +608,13 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
 
                               _buildModernInfoRow(
                                 Icons.person_rounded,
-                                'Pemilik',
-                                _skill!.namaPemilik ?? 'Unknown',
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('label_owner'),
+                                _skill!.namaPemilik ??
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.translate('label_unknown'),
                               ),
                             ],
                           ),
@@ -570,12 +624,16 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
 
                         // Portfolio Image Section
                         if (_skill!.portofolioGambar != null) ...[
-                          const Text(
-                            'Galeri Portfolio',
+                          Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('section_portfolio_gallery'),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF2D3142),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF2D3142),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -608,9 +666,9 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                             child: ElevatedButton.icon(
                               onPressed: _confirmVerifySkill,
                               icon: const Icon(Icons.verified_user_rounded),
-                              label: const Text(
-                                'Verifikasi Skill (10 SC)',
-                                style: TextStyle(
+                              label: Text(
+                                '${AppLocalizations.of(context)!.translate('btn_verify_skill')} (10 SC)',
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -637,9 +695,11 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                             child: OutlinedButton.icon(
                               onPressed: _confirmDelete,
                               icon: const Icon(Icons.delete_rounded),
-                              label: const Text(
-                                'Hapus Skill',
-                                style: TextStyle(
+                              label: Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('dialog_delete_title'),
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -738,7 +798,11 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                 value,
                 style: TextStyle(
                   fontSize: 15,
-                  color: isLink ? Colors.blue : const Color(0xFF2D3142),
+                  color: isLink
+                      ? Colors.blue
+                      : (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : const Color(0xFF2D3142)),
                   fontWeight: FontWeight.w500,
                   decoration: isLink ? TextDecoration.underline : null,
                   decorationColor: Colors.blue,
@@ -762,7 +826,9 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: authProvider.user?.nik == _skill!.nikPengguna
+            ? Colors.transparent
+            : Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -785,7 +851,7 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                       borderRadius: BorderRadius.circular(24),
                     ),
                     elevation: 10,
-                    backgroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).cardColor,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -807,17 +873,19 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                               topRight: Radius.circular(24),
                             ),
                           ),
-                          child: const Column(
+                          child: Column(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.volunteer_activism_rounded,
                                 size: 48,
                                 color: Colors.white,
                               ),
-                              SizedBox(height: 16),
+                              const SizedBox(height: 16),
                               Text(
-                                'Konfirmasi Bantuan',
-                                style: TextStyle(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('dialog_help_title'),
+                                style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -836,10 +904,18 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF8F9FD),
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? const Color(0xFF2D3142)
+                                      : const Color(0xFFF8F9FD),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: Colors.grey.shade200,
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white10
+                                        : Colors.grey.shade200,
                                   ),
                                 ),
                                 child: Column(
@@ -863,9 +939,16 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                         Expanded(
                                           child: Text(
                                             _skill!.namaKeahlian,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
+                                              color:
+                                                  Theme.of(
+                                                        context,
+                                                      ).brightness ==
+                                                      Brightness.dark
+                                                  ? Colors.white
+                                                  : Colors.black87,
                                             ),
                                           ),
                                         ),
@@ -877,15 +960,26 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          'Harga',
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.translate('label_price'),
                                           style: TextStyle(
-                                            color: Colors.grey[600],
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
                                           ),
                                         ),
                                         Text(
                                           '${_skill!.hargaPerJam} SC/jam',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.white
+                                                : Colors.black87,
                                           ),
                                         ),
                                       ],
@@ -896,9 +990,13 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          'Estimasi (2 Jam)',
+                                          '${AppLocalizations.of(context)!.translate('label_estimate')} (2 Jam)',
                                           style: TextStyle(
-                                            color: Colors.grey[600],
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
                                           ),
                                         ),
                                         Container(
@@ -907,7 +1005,11 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                             vertical: 2,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.green.shade50,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.green.withOpacity(0.2)
+                                                : Colors.green.shade50,
                                             borderRadius: BorderRadius.circular(
                                               4,
                                             ),
@@ -939,11 +1041,17 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
-                                      'Anda akan menggunakan SkillCoin untuk meminta bantuan ini tanpa perlu menawarkan skill Anda.',
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.translate('msg_help_info'),
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: Colors.grey[600],
                                         height: 1.4,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
                                       ),
                                     ),
                                   ),
@@ -970,10 +1078,16 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                     ),
                                   ),
                                   child: Text(
-                                    'Batal',
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.translate('btn_cancel'),
                                     style: TextStyle(
-                                      color: Colors.grey[600],
                                       fontWeight: FontWeight.bold,
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
                                     ),
                                   ),
                                 ),
@@ -1010,9 +1124,11 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Lanjutkan',
-                                    style: TextStyle(
+                                  child: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.translate('btn_continue'),
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -1028,7 +1144,9 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                 );
               },
               icon: const Icon(Icons.help_outline),
-              label: const Text('Minta Bantuan'),
+              label: Text(
+                AppLocalizations.of(context)!.translate('btn_request_help'),
+              ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 side: BorderSide(color: Colors.grey.shade300),
@@ -1062,8 +1180,8 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text(
-                "Tukar Skill",
+              child: Text(
+                AppLocalizations.of(context)!.translate('btn_swap_skill'),
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -1132,7 +1250,7 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -1166,7 +1284,12 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
               Text(
                 'Apakah Anda yakin ingin menghapus "${_skill!.namaKeahlian}"?\nTindakan ini tidak dapat dibatalkan.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600], height: 1.5),
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.grey[600],
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 28),
               Row(
@@ -1254,7 +1377,7 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -1291,7 +1414,12 @@ class _SkillDetailScreenState extends State<SkillDetailScreen>
               Text(
                 'Apakah Anda yakin ingin memverifikasi skill "${_skill!.namaKeahlian}"?',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600], height: 1.5),
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.grey[600],
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 20),
 

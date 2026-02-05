@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 import '../../services/api_service.dart';
 import '../../widgets/custom_notification.dart';
+import '../../services/app_localizations.dart';
 
 class HelpScreen extends StatefulWidget {
   const HelpScreen({super.key});
@@ -28,37 +29,6 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   // Form Specific Animation
   late AnimationController _formController;
   late Animation<Offset> _formSlideAnimation;
-
-  final List<Map<String, dynamic>> _faqs = [
-    {
-      'question': 'Apa itu SkillCoin?',
-      'answer':
-          'SkillCoin adalah mata uang digital dalam aplikasi yang digunakan untuk membayar jasa atau memberikan apresiasi kepada partner barter.',
-      'icon': Icons.monetization_on_rounded,
-      'color': Colors.amber,
-    },
-    {
-      'question': 'Bagaimana cara mendapatkan SkillCoin?',
-      'answer':
-          'Anda akan mendapatkan SkillCoin saat pertama kali mendaftar (Bonus), atau dengan menyelesaikan misi dan membantu orang lain.',
-      'icon': Icons.account_balance_wallet_rounded,
-      'color': Colors.green,
-    },
-    {
-      'question': 'Apakah saya bisa membatalkan transaksi?',
-      'answer':
-          'Ya, selama status transaksi masih "Menunggu" atau "Berlangsung", Anda bisa membatalkannya. Namun koin mungkin akan dikembalikan atau hangus tergantung kondisi.',
-      'icon': Icons.cancel_rounded,
-      'color': Colors.redAccent,
-    },
-    {
-      'question': 'Bagaimana sistem rating bekerja?',
-      'answer':
-          'Rating diberikan setelah transaksi selesai. Rating mempengaruhi reputasi Anda agar lebih dipercaya oleh pengguna lain.',
-      'icon': Icons.star_rounded,
-      'color': Colors.orange,
-    },
-  ];
 
   @override
   void initState() {
@@ -219,9 +189,12 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
-          'Pusat Bantuan',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          AppLocalizations.of(context)!.translate('help_center_title'),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -296,14 +269,18 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                       labelColor: Theme.of(context).primaryColor,
                       unselectedLabelColor: Colors.white,
                       labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                      tabs: const [
+                      tabs: [
                         Tab(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.quiz_rounded, size: 20),
                               SizedBox(width: 8),
-                              Text('FAQ'),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('tab_faq'),
+                              ),
                             ],
                           ),
                         ),
@@ -313,7 +290,11 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                             children: [
                               Icon(Icons.support_agent_rounded, size: 20),
                               SizedBox(width: 8),
-                              Text('Hubungi Kami'),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('tab_contact_us'),
+                              ),
                             ],
                           ),
                         ),
@@ -340,15 +321,43 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildFAQList() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final List<Map<String, dynamic>> faqs = [
+      {
+        'question': AppLocalizations.of(context)!.translate('faq_q1'),
+        'answer': AppLocalizations.of(context)!.translate('faq_a1'),
+        'icon': Icons.monetization_on_rounded,
+        'color': Colors.amber,
+      },
+      {
+        'question': AppLocalizations.of(context)!.translate('faq_q2'),
+        'answer': AppLocalizations.of(context)!.translate('faq_a2'),
+        'icon': Icons.account_balance_wallet_rounded,
+        'color': Colors.green,
+      },
+      {
+        'question': AppLocalizations.of(context)!.translate('faq_q3'),
+        'answer': AppLocalizations.of(context)!.translate('faq_a3'),
+        'icon': Icons.cancel_rounded,
+        'color': Colors.redAccent,
+      },
+      {
+        'question': AppLocalizations.of(context)!.translate('faq_q4'),
+        'answer': AppLocalizations.of(context)!.translate('faq_a4'),
+        'icon': Icons.star_rounded,
+        'color': Colors.orange,
+      },
+    ];
+
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      itemCount: _faqs.length,
+      itemCount: faqs.length,
       itemBuilder: (context, index) {
-        final item = _faqs[index];
+        final item = faqs[index];
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? Theme.of(context).cardColor : Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -371,16 +380,20 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
               ),
               title: Text(
                 item['question'],
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
               childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               children: [
                 Text(
                   item['answer'],
-                  style: TextStyle(color: Colors.grey[600], height: 1.5),
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[300] : Colors.grey[600],
+                    height: 1.5,
+                  ),
                 ),
               ],
             ),
@@ -391,13 +404,14 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildContactForm() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
       child: SlideTransition(
         position: _formSlideAnimation,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? Theme.of(context).cardColor : Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -433,18 +447,25 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Butuh Bantuan?',
+                          Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('header_need_help'),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Ceritakan masalah Anda, tim kami akan segera membantu.',
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('sub_need_help'),
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                               fontSize: 13,
                             ),
                           ),
@@ -460,21 +481,39 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                 TextFormField(
                   controller: _messageController,
                   maxLines: 5,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                   decoration: InputDecoration(
-                    labelText: 'Deskripsi Masalah',
+                    labelText: AppLocalizations.of(
+                      context,
+                    )!.translate('label_desc_problem'),
                     alignLabelWithHint: true,
-                    hintText: 'Jelaskan kendala Anda...',
+                    hintText: AppLocalizations.of(
+                      context,
+                    )!.translate('hint_desc_problem'),
                     floatingLabelBehavior: FloatingLabelBehavior.always,
+                    labelStyle: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.grey[600] : Colors.grey[400],
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.grey[50],
+                    fillColor: isDark
+                        ? Theme.of(context).scaffoldBackgroundColor
+                        : Colors.grey[50],
                     contentPadding: const EdgeInsets.all(20),
                   ),
-                  validator: (v) =>
-                      v!.isEmpty ? 'Mohon jelaskan kendala Anda' : null,
+                  validator: (v) => v!.isEmpty
+                      ? AppLocalizations.of(
+                          context,
+                        )!.translate('error_desc_required')
+                      : null,
                 ),
 
                 const SizedBox(height: 20),
@@ -584,14 +623,16 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                       alignment: Alignment.center,
                       children: [
                         if (!_isSubmitting && !_isAnimating && !_isSent)
-                          const Row(
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.send_rounded, color: Colors.white),
                               SizedBox(width: 12),
                               Text(
-                                'Kirim Laporan',
-                                style: TextStyle(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('btn_send_report'),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -618,7 +659,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                             ),
                           ),
                         if (_isSent)
-                          const Row(
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
@@ -627,8 +668,10 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                               ),
                               SizedBox(width: 12),
                               Text(
-                                'Terkirim',
-                                style: TextStyle(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('msg_sent'),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

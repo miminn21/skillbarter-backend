@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/profile_service.dart';
-import '../../models/user_model.dart'; // Import UserModel
+import '../../models/user_model.dart';
 import '../../widgets/status_dialog.dart';
+import '../../services/app_localizations.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -130,17 +131,20 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         await context.read<AuthProvider>().loadProfile();
 
         if (!mounted) return;
+        if (!mounted) return;
         StatusDialog.show(
           context,
           success: true,
-          title: 'Berhasil',
-          message: 'Profil Berhasil Diperbarui',
+          title: AppLocalizations.of(context)!.translate('dialog_upload_title'),
+          message: AppLocalizations.of(
+            context,
+          )!.translate('msg_profile_updated'),
         );
       } else {
         StatusDialog.show(
           context,
           success: false,
-          title: 'Gagal',
+          title: AppLocalizations.of(context)!.translate('dialog_error_title'),
           message: response.message,
         );
       }
@@ -203,70 +207,114 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildSectionTitle('Informasi Dasar'),
+                              _buildSectionTitle(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('info_title'),
+                              ),
                               const SizedBox(height: 16),
                               _buildTextField(
                                 controller: _namaPanggilanController,
-                                label: 'Nama Panggilan',
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.translate('label_nickname'),
                                 icon: Icons.person_rounded, // Premium Icon
-                                validator: (v) =>
-                                    v?.isEmpty == true ? 'Wajib diisi' : null,
+                                validator: (v) => v?.isEmpty == true
+                                    ? AppLocalizations.of(
+                                        context,
+                                      )!.translate('error_required')
+                                    : null,
                               ),
                               const SizedBox(height: 16),
                               _buildTextField(
                                 controller: _bioController,
-                                label: 'Bio Singkat',
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.translate('label_bio_short'),
                                 icon: Icons.edit_note_rounded,
                                 maxLines: 3,
-                                hint: 'Ceritakan sedikit tentang dirimu...',
+                                hint: AppLocalizations.of(
+                                  context,
+                                )!.translate('hint_bio'),
                               ),
 
                               const SizedBox(height: 32),
-                              _buildSectionTitle('Pekerjaan & Pendidikan'),
+                              _buildSectionTitle(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('section_job_edu'),
+                              ),
                               const SizedBox(height: 16),
                               _buildTextField(
                                 controller: _pekerjaanController,
-                                label: 'Pekerjaan',
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.translate('label_job'),
                                 icon: Icons.work_rounded, // Premium Icon
                                 hint: 'Contoh: Freelance Desainer',
                               ),
                               const SizedBox(height: 16),
                               _buildTextField(
                                 controller: _instansiController,
-                                label: 'Nama Instansi / Sekolah',
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.translate('label_instance'),
                                 icon: Icons.business_rounded,
-                                hint: 'Nama tempat kerja atau sekolah',
+                                hint: AppLocalizations.of(
+                                  context,
+                                )!.translate('hint_instance'),
                               ),
                               const SizedBox(height: 16),
                               _buildTextField(
                                 controller: _pendidikanController,
-                                label: 'Pendidikan Terakhir',
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.translate('label_last_edu'),
                                 icon: Icons.school_rounded,
-                                hint: 'Contoh: S1 Teknik Informatika',
+                                hint: AppLocalizations.of(
+                                  context,
+                                )!.translate('hint_edu'),
                               ),
 
                               const SizedBox(height: 32),
-                              _buildSectionTitle('Preferensi & Lainnya'),
+                              _buildSectionTitle(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('section_pref_other'),
+                              ),
                               const SizedBox(height: 16),
                               _buildTextField(
                                 controller: _bahasaController,
-                                label: 'Bahasa yang Dikuasai',
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.translate('label_languages'),
                                 icon: Icons.translate_rounded, // Premium Icon
-                                hint: 'Contoh: Indonesia, Inggris',
+                                hint: AppLocalizations.of(
+                                  context,
+                                )!.translate('hint_languages'),
                               ),
                               const SizedBox(height: 16),
                               _buildDropdown(
                                 value: _selectedLokasi,
-                                label: 'Preferensi Lokasi',
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.translate('label_pref_loc'),
                                 icon: Icons.location_on_rounded, // Premium Icon
                                 items: [
-                                  {'label': 'Online', 'value': 'online'},
                                   {
-                                    'label': 'Offline (Bertemu Langsung)',
+                                    'label': 'Online',
+                                    'value': 'online',
+                                  }, // Static as value is logic related? No label should be localized.
+                                  {
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.translate('loc_meet'),
                                     'value': 'offline',
                                   },
                                   {
-                                    'label': 'Keduanya (Fleksibel)',
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.translate('loc_both'),
                                     'value': 'keduanya',
                                   },
                                 ],
@@ -305,12 +353,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                                       : Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
-                                          children: const [
+                                          children: [
                                             Icon(Icons.check_circle_rounded),
                                             SizedBox(width: 8),
                                             Text(
-                                              'Simpan Perubahan',
-                                              style: TextStyle(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.translate('btn_save_changes'),
+                                              style: const TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -387,9 +437,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
-                              'Edit Profil',
-                              style: TextStyle(
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.translate('edit_profile_title'),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -404,7 +456,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                               ),
                             ),
                             Text(
-                              'Perbarui informasi data diri Anda',
+                              AppLocalizations.of(
+                                context,
+                              )!.translate('edit_profile_subtitle'),
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.9),
                                 fontSize: 12,
@@ -432,6 +486,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   }
 
   Widget _buildSectionTitle(String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         Container(
@@ -448,7 +503,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+            color: isDark ? Colors.white : Colors.grey[800],
           ),
         ),
       ],
@@ -464,28 +519,42 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     String? Function(String?)? validator,
   }) {
     // Premium Field Style
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
-      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: 15,
+        color: isDark ? Colors.white : Colors.black87,
+      ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         alignLabelWithHint: maxLines > 1,
         labelStyle: TextStyle(
-          color: Colors.grey[600],
+          color: isDark ? Colors.grey[400] : Colors.grey[600],
           fontWeight: FontWeight.normal,
         ),
-        hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5)),
+        hintStyle: TextStyle(
+          color: isDark ? Colors.grey[600] : Colors.grey.withOpacity(0.5),
+        ),
         prefixIcon: Icon(
           icon,
-          color: Theme.of(context).primaryColor.withOpacity(0.7),
+          color: isDark
+              ? Colors.white
+              : Theme.of(context).primaryColor.withOpacity(0.7),
         ), // Colored Icon
         filled: true,
-        fillColor: Colors.white, // White fill for crisp look in Card
+        fillColor: isDark
+            ? Theme.of(context).cardColor
+            : Colors.white, // White fill for crisp look in Card
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -518,6 +587,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     required List<Map<String, String>> items,
     required ValueChanged<String?> onChanged,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return DropdownButtonFormField<String>(
       value: value,
       items: items.map((item) {
@@ -527,27 +597,32 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         );
       }).toList(),
       onChanged: onChanged,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 15,
         fontWeight: FontWeight.w600,
-        color: Colors.black87,
+        color: isDark ? Colors.white : Colors.black87,
       ),
-      dropdownColor: Colors.white,
+      dropdownColor: isDark ? Theme.of(context).cardColor : Colors.white,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
-          color: Colors.grey[600],
+          color: isDark ? Colors.grey[400] : Colors.grey[600],
           fontWeight: FontWeight.normal,
         ),
         prefixIcon: Icon(
           icon,
-          color: Theme.of(context).primaryColor.withOpacity(0.7),
+          color: isDark
+              ? Colors.white
+              : Theme.of(context).primaryColor.withOpacity(0.7),
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: isDark ? Theme.of(context).cardColor : Colors.white,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

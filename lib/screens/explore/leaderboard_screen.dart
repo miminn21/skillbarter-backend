@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 import '../../providers/explore_provider.dart';
 import '../../widgets/user_card.dart';
 import 'user_profile_screen.dart';
+import '../../services/app_localizations.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -127,9 +128,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             elevation: 0,
             backgroundColor: Colors.transparent,
             leading: const BackButton(color: Colors.white),
-            title: const Text(
-              'Leaderboard',
-              style: TextStyle(
+            title: Text(
+              AppLocalizations.of(context)!.translate('leaderboard_title'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -166,7 +167,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _loadLeaderboard,
-                        child: const Text('Coba Lagi'),
+                        child: Text(
+                          AppLocalizations.of(context)!.translate('btn_retry'),
+                        ),
                       ),
                     ],
                   ),
@@ -174,7 +177,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               }
 
               if (provider.leaderboard.isEmpty) {
-                return const Center(child: Text('Tidak ada data leaderboard'));
+                return Center(
+                  child: Text(
+                    AppLocalizations.of(
+                      context,
+                    )!.translate('empty_leaderboard'),
+                  ),
+                );
               }
 
               // Trigger Animation once data is ready
@@ -210,16 +219,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                       child: SlideTransition(
                         position: _listSlide,
                         child: Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.vertical(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(30),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black12,
+                                color: Colors.black.withOpacity(0.1),
                                 blurRadius: 10,
-                                offset: Offset(0, -5),
+                                offset: const Offset(0, -5),
                               ),
                             ],
                           ),
@@ -236,11 +245,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                                 child: Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    'Peringkat',
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.translate('header_rank'),
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.grey[800],
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.grey[800],
                                     ),
                                   ),
                                 ),
@@ -274,7 +289,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                                           Align(
                                             alignment: Alignment.centerLeft,
                                             child: Text(
-                                              'Posisi Anda',
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.translate('label_your_pos'),
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.bold,
@@ -287,7 +304,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                                           const SizedBox(height: 8),
                                           Container(
                                             decoration: BoxDecoration(
-                                              color: Colors.white,
+                                              color:
+                                                  Theme.of(
+                                                        context,
+                                                      ).brightness ==
+                                                      Brightness.dark
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).scaffoldBackgroundColor
+                                                  : Colors.white,
                                               borderRadius:
                                                   BorderRadius.circular(16),
                                               border: Border.all(
@@ -440,6 +465,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
     // Extract photo safely
     String? fotoProfil;
     if (user is LeaderboardModel) fotoProfil = user.fotoProfil;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () {
@@ -485,7 +511,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 ),
                 child: CircleAvatar(
                   radius: isWinner ? 32 : 26,
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
                   backgroundImage: (fotoProfil != null && fotoProfil.isNotEmpty)
                       ? MemoryImage(base64Decode(fotoProfil))
                       : null,
@@ -495,8 +521,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                           style: TextStyle(
                             fontSize: isWinner ? 24 : 18,
                             fontWeight: FontWeight.bold,
-                            color:
-                                Colors.white, // Changed to white for visibility
+                            color: isDark ? Colors.white : Colors.white,
                           ),
                         )
                       : null,
@@ -568,7 +593,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: isWinner ? 16 : 14,
-                      color: Colors.white,
+                      color: isDark
+                          ? Colors.white
+                          : Colors
+                                .white, // Keep white as it's over video/dark bg
                       shadows: [
                         Shadow(
                           offset: const Offset(0, 1),
@@ -589,7 +617,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.6),
+                    color: isDark
+                        ? Colors.black45
+                        : Colors.white.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -606,7 +636,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: isWinner ? 14 : 12,
-                          color: Colors.amber[900],
+                          color: isDark
+                              ? Colors.amberAccent
+                              : Colors.amber[900],
                         ),
                       ),
                     ],

@@ -10,6 +10,7 @@ import '../screens/auth/login_screen.dart';
 // import '../providers/notification_provider.dart';
 
 import 'dart:math' as math;
+import '../services/app_localizations.dart';
 
 // ... imports remain the same
 
@@ -186,7 +187,9 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 children: [
                   Text(
-                    'SKILLBARTER',
+                    AppLocalizations.of(
+                      context,
+                    )!.translate('auth_welcome_title').toUpperCase(),
                     style: TextStyle(
                       fontFamily: 'Roboto', // Clean geometric font
                       fontSize: 32,
@@ -197,7 +200,9 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'TUKAR KEAHLIAN PERLUAS KONEKSI',
+                    AppLocalizations.of(
+                      context,
+                    )!.translate('auth_welcome_sub').toUpperCase(),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

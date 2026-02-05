@@ -8,7 +8,9 @@ import '../../widgets/custom_notification.dart';
 import 'package:intl/intl.dart';
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
+import 'settings_screen.dart';
 import 'help_screen.dart';
+import '../../services/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -87,8 +89,11 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD), // Premium off-white
+      backgroundColor: theme.scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -154,23 +159,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
 
                       // Floating Avatar (Pop In Animation would be cool, but slide up for now)
-                      // We keep the avatar slide-up or static relative to header?
-                      // If we wrap the whole Stack, the avatar slides down WITH the header.
-                      // That is usually what is expected (the whole top block enters).
-                      // Let's check where the avatar is. It is inside the Stack.
-                      // Yes, sliding the whole stack is correct.
                       Positioned(
                         bottom: -50,
                         child: _buildAnimatedItem(
                           index: 1, // Delay avatar slightly
-                          slideOffset:
-                              0.5, // Slide up from bottom to meet the header?
-                          // Or if we want it to move WITH header, we shouldn't animate it separately opposite way.
-                          // But typical effect: Header drops, Avatar pops relative to it.
-                          // Let's keep avatar inside the slide logic implies it moves down.
-                          // But we apply _buildAnimatedItem (fade/slide UP) to it too?
-                          // That creates a complex motion (Down + Up cancel).
-                          // Let's remove _buildAnimatedItem for avatar or just make it FadeIn.
+                          slideOffset: 0.5,
                           child: Stack(
                             alignment: Alignment.bottomRight,
                             children: [
@@ -180,7 +173,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white,
+                                      color: theme
+                                          .scaffoldBackgroundColor, // Match scaffold
                                       width: 4,
                                     ),
                                     boxShadow: [
@@ -204,9 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                             user.namaPanggilan[0].toUpperCase(),
                                             style: TextStyle(
                                               fontSize: 48,
-                                              color: Theme.of(
-                                                context,
-                                              ).primaryColor,
+                                              color: theme.primaryColor,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           )
@@ -216,12 +208,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                               Container(
                                 margin: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
+                                decoration: BoxDecoration(
+                                  color: theme.cardColor,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black12,
+                                      color: Colors.black.withOpacity(0.1),
                                       blurRadius: 4,
                                     ),
                                   ],
@@ -230,7 +222,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   icon: Icon(
                                     Icons.camera_alt_rounded,
                                     size: 20,
-                                    color: Theme.of(context).primaryColor,
+                                    color: isDark
+                                        ? Colors.white
+                                        : theme.primaryColor,
                                   ),
                                   onPressed: () => _handleUploadPhoto(context),
                                   padding: const EdgeInsets.all(8),
@@ -254,10 +248,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                     children: [
                       Text(
                         user.namaLengkap,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3142),
+                          color:
+                              theme.textTheme.headlineMedium?.color ??
+                              (isDark ? Colors.white : const Color(0xFF2D3142)),
                           letterSpacing: 0.5,
                         ),
                         textAlign: TextAlign.center,
@@ -267,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         '@${user.namaPanggilan}',
                         style: TextStyle(
                           fontSize: 15,
-                          color: Colors.grey[500],
+                          color: isDark ? Colors.grey[400] : Colors.grey[500],
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -320,7 +316,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                         Expanded(
                           child: _buildStatCard(
                             icon: Icons.monetization_on_rounded,
-                            label: 'SkillCoin',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.translate('stat_coins'),
                             value: '${user.saldoSkillcoin}',
                             color: Colors.amber,
                           ),
@@ -329,7 +327,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                         Expanded(
                           child: _buildStatCard(
                             icon: Icons.swap_horiz_rounded,
-                            label: 'Transaksi',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.translate('stat_trans'),
                             value: '${user.jumlahTransaksi}',
                             color: Colors.blue,
                           ),
@@ -338,7 +338,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                         Expanded(
                           child: _buildStatCard(
                             icon: Icons.access_time_filled_rounded,
-                            label: 'Jam',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.translate('stat_hours'),
                             value: '${user.totalJamBerkontribusi}',
                             color: Colors.green,
                           ),
@@ -358,7 +360,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       margin: const EdgeInsets.symmetric(horizontal: 20),
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: theme.cardColor,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
@@ -372,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         children: [
                           Icon(
                             Icons.format_quote_rounded,
-                            color: Colors.grey[300],
+                            color: isDark ? Colors.grey[600] : Colors.grey[300],
                             size: 32,
                           ),
                           const SizedBox(height: 8),
@@ -381,7 +383,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 15,
-                              color: Colors.grey[700],
+                              color: isDark
+                                  ? Colors.grey[300]
+                                  : Colors.grey[700],
                               height: 1.6,
                               fontStyle: FontStyle.italic,
                             ),
@@ -403,11 +407,15 @@ class _ProfileScreenState extends State<ProfileScreen>
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'Informasi Pribadi',
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('info_title'),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
+                              color: isDark
+                                  ? Colors.grey[300]
+                                  : Colors.grey[800],
                             ),
                           ),
                         ),
@@ -416,7 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -429,43 +437,65 @@ class _ProfileScreenState extends State<ProfileScreen>
                         child: Column(
                           children: [
                             _buildInfoTile(
+                              context,
                               icon: Icons.badge_rounded,
-                              title: 'NIK',
+                              title: AppLocalizations.of(
+                                context,
+                              )!.translate('label_nik'),
                               value: user.nik,
                               isFirst: true,
                               color: Colors.blue,
                             ),
                             _buildInfoTile(
+                              context,
                               icon: Icons.wc_rounded,
-                              title: 'Jenis Kelamin',
+                              title: AppLocalizations.of(
+                                context,
+                              )!.translate('label_gender'),
                               value: user.jenisKelamin == 'L'
-                                  ? 'Laki-laki'
-                                  : 'Perempuan',
+                                  ? AppLocalizations.of(
+                                      context,
+                                    )!.translate('gender_male')
+                                  : AppLocalizations.of(
+                                      context,
+                                    )!.translate('gender_female'),
                               color: Colors.purple,
                             ),
                             _buildInfoTile(
+                              context,
                               icon: Icons.cake_rounded,
-                              title: 'Tanggal Lahir',
+                              title: AppLocalizations.of(
+                                context,
+                              )!.translate('label_dob'),
                               value: _formatDate(user.tanggalLahir),
                               color: Colors.pink,
                             ),
                             _buildInfoTile(
+                              context,
                               icon: Icons.location_city_rounded,
-                              title: 'Kota',
+                              title: AppLocalizations.of(
+                                context,
+                              )!.translate('label_city'),
                               value: user.kota,
                               color: Colors.orange,
                             ),
                             if (user.pekerjaan != null)
                               _buildInfoTile(
+                                context,
                                 icon: Icons.work_rounded,
-                                title: 'Pekerjaan',
+                                title: AppLocalizations.of(
+                                  context,
+                                )!.translate('label_job'),
                                 value: user.pekerjaan!,
                                 color: Colors.brown,
                               ),
                             if (user.pendidikanTerakhir != null)
                               _buildInfoTile(
+                                context,
                                 icon: Icons.school_rounded,
-                                title: 'Pendidikan',
+                                title: AppLocalizations.of(
+                                  context,
+                                )!.translate('label_edu'),
                                 value: user.pendidikanTerakhir!,
                                 color: Colors.teal,
                                 isLast: true,
@@ -485,7 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -498,8 +528,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child: Column(
                       children: [
                         _buildMenuTile(
+                          context,
                           icon: Icons.lock_outline_rounded,
-                          title: 'Ubah Password',
+                          title: AppLocalizations.of(
+                            context,
+                          )!.translate('menu_password'),
                           color: Colors.deepOrange,
                           onTap: () {
                             Navigator.push(
@@ -513,16 +546,27 @@ class _ProfileScreenState extends State<ProfileScreen>
                           isFirst: true,
                         ),
                         _buildMenuTile(
+                          context,
                           icon: Icons.settings_outlined,
-                          title: 'Pengaturan',
+                          title: AppLocalizations.of(
+                            context,
+                          )!.translate('settings_title'),
                           color: Colors.indigo,
                           onTap: () {
-                            // TODO: Navigate to settings
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsScreen(),
+                              ),
+                            );
                           },
                         ),
                         _buildMenuTile(
+                          context,
                           icon: Icons.help_outline_rounded,
-                          title: 'Bantuan',
+                          title: AppLocalizations.of(
+                            context,
+                          )!.translate('menu_help'),
                           color: Colors.cyan,
                           onTap: () {
                             Navigator.push(
@@ -554,10 +598,13 @@ class _ProfileScreenState extends State<ProfileScreen>
     required String value,
     required Color color,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -581,10 +628,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3142),
+              color: isDark ? Colors.white : const Color(0xFF2D3142),
             ),
           ),
           const SizedBox(height: 4),
@@ -592,7 +639,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[500],
+              color: isDark ? Colors.grey[400] : Colors.grey[500],
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -601,7 +648,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildInfoTile({
+  Widget _buildInfoTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String value,
@@ -609,10 +657,17 @@ class _ProfileScreenState extends State<ProfileScreen>
     bool isFirst = false,
     bool isLast = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       children: [
         if (!isFirst)
-          Divider(height: 1, color: Colors.grey.shade100, indent: 60),
+          Divider(
+            height: 1,
+            color: isDark ? Colors.white12 : Colors.grey.shade100,
+            indent: 60,
+          ),
         ListTile(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
@@ -631,17 +686,17 @@ class _ProfileScreenState extends State<ProfileScreen>
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[500],
+              color: isDark ? Colors.grey[400] : Colors.grey[500],
             ),
           ),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2D3142),
+                color: isDark ? Colors.white : const Color(0xFF2D3142),
               ),
             ),
           ),
@@ -650,7 +705,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildMenuTile({
+  Widget _buildMenuTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required Color color,
@@ -658,10 +714,17 @@ class _ProfileScreenState extends State<ProfileScreen>
     bool isFirst = false,
     bool isLast = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       children: [
         if (!isFirst)
-          Divider(height: 1, color: Colors.grey.shade100, indent: 60),
+          Divider(
+            height: 1,
+            color: isDark ? Colors.white12 : Colors.grey.shade100,
+            indent: 60,
+          ),
         ListTile(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(
@@ -684,10 +747,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           title: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF2D3142),
+              color: isDark ? Colors.white : const Color(0xFF2D3142),
             ),
           ),
           trailing: Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),

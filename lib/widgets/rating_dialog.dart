@@ -66,7 +66,7 @@ class _RatingDialogState extends State<RatingDialog> {
         String errorMessage = 'Terjadi kesalahan saat mengirim rating';
 
         if (e is DioException) {
-          final dioError = e as DioException;
+          final dioError = e;
           if (dioError.response?.data != null &&
               dioError.response?.data is Map &&
               (dioError.response?.data as Map)['error'] != null) {

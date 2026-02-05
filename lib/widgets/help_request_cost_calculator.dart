@@ -15,6 +15,7 @@ class HelpRequestCostCalculator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final totalCost = durasiJam * hargaPerJam;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
       elevation: 2,
@@ -41,9 +42,15 @@ class HelpRequestCostCalculator extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: isDark
+                    ? Colors.blue.withOpacity(0.2)
+                    : Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.blue.withOpacity(0.4)
+                      : Colors.blue.withOpacity(0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +59,7 @@ class HelpRequestCostCalculator extends StatelessWidget {
                     'Skill yang Diminta',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[700],
+                      color: isDark ? Colors.grey[400] : Colors.grey[700],
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -72,7 +79,7 @@ class HelpRequestCostCalculator extends StatelessWidget {
                           '$durasiJam jam × $hargaPerJam coin/jam',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey[700],
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
                           ),
                         ),
                       ),
@@ -105,9 +112,15 @@ class HelpRequestCostCalculator extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: isDark
+                    ? Colors.red.withOpacity(0.2)
+                    : Colors.red.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.red.withOpacity(0.4)
+                      : Colors.red.shade200,
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -129,7 +142,9 @@ class HelpRequestCostCalculator extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red.shade900,
+                          color: isDark
+                              ? Colors.redAccent
+                              : Colors.red.shade900,
                         ),
                       ),
                     ],
@@ -143,7 +158,9 @@ class HelpRequestCostCalculator extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: isDark
+                    ? Colors.orange.withOpacity(0.2)
+                    : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -159,7 +176,9 @@ class HelpRequestCostCalculator extends StatelessWidget {
                       'Skillcoin akan dipotong dari saldo Anda setelah partner menerima permintaan',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.orange.shade900,
+                        color: isDark
+                            ? Colors.orangeAccent
+                            : Colors.orange.shade900,
                       ),
                     ),
                   ),

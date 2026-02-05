@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
 // import '../../providers/notification_provider.dart';
 // import '../../services/fcm_service.dart';
+import '../../services/app_localizations.dart';
 import 'package:glossy/glossy.dart';
 
 import '../../widgets/animated_background.dart';
@@ -109,7 +110,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // Title
                         Text(
-                          'SkillBarter',
+                          AppLocalizations.of(
+                            context,
+                          )!.translate('auth_welcome_title'),
                           style: Theme.of(context).textTheme.headlineLarge
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -121,7 +124,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 8),
 
                         Text(
-                          'Tukar Keahlian, Tingkatkan Skill',
+                          AppLocalizations.of(
+                            context,
+                          )!.translate('auth_welcome_sub'),
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: Colors.white.withOpacity(0.7),
@@ -136,11 +141,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _nikController,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            labelText: 'NIK',
+                            labelText: AppLocalizations.of(
+                              context,
+                            )!.translate('auth_nik_label'),
                             labelStyle: TextStyle(
                               color: Colors.white.withOpacity(0.7),
                             ),
-                            hintText: '16 digit NIK',
+                            hintText: AppLocalizations.of(
+                              context,
+                            )!.translate('auth_nik_hint'),
                             hintStyle: TextStyle(
                               color: Colors.white.withOpacity(0.4),
                             ),
@@ -188,11 +197,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _passwordController,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            labelText: 'Password',
+                            labelText: AppLocalizations.of(
+                              context,
+                            )!.translate('auth_password_label'),
                             labelStyle: TextStyle(
                               color: Colors.white.withOpacity(0.7),
                             ),
-                            hintText: 'Masukkan password',
+                            hintText: AppLocalizations.of(
+                              context,
+                            )!.translate('auth_password_hint'),
                             hintStyle: TextStyle(
                               color: Colors.white.withOpacity(0.4),
                             ),
@@ -288,9 +301,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text(
-                                        'Login',
-                                        style: TextStyle(
+                                    : Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.translate('auth_login_btn'),
+                                        style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
                                           letterSpacing: 1,
@@ -307,7 +322,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Belum punya akun? ',
+                              AppLocalizations.of(
+                                context,
+                              )!.translate('auth_no_account'),
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.7),
                               ),
@@ -317,7 +334,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Navigator.pushNamed(context, '/register');
                               },
                               child: Text(
-                                'Daftar Sekarang',
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('auth_register_link'),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Theme.of(context).primaryColorLight,

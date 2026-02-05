@@ -42,20 +42,20 @@ async function notifyOfferReceived(offer) {
     data
   );
 
-  // Send push notification (DISABLED FOR TESTING)
-  // try {
-  //   const user = await User.findByNik(offer.nik_ditawar);
-  //   if (user && user.fcm_token) {
-  //     await sendPushNotification(user.fcm_token, {
-  //       judul: title,
-  //       pesan: message,
-  //       tipe: 'offer_received',
-  //       data: data
-  //     });
-  //   }
-  // } catch (error) {
-  //   console.error('FCM push error:', error.message);
-  // }
+  // Send push notification
+  try {
+    const user = await User.findByNik(offer.nik_ditawar);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: title,
+        pesan: message,
+        tipe: 'offer_received',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when offer is accepted
@@ -74,20 +74,20 @@ async function notifyOfferAccepted(offer) {
     data
   );
 
-  // Send push notification (DISABLED FOR TESTING)
-  // try {
-  //   const user = await User.findByNik(offer.nik_penawar);
-  //   if (user && user.fcm_token) {
-  //     await sendPushNotification(user.fcm_token, {
-  //       judul: 'Penawaran Diterima',
-  //       pesan: `${offer.nama_ditawar} menerima penawaran barter Anda`,
-  //       tipe: 'offer_accepted',
-  //       data: data
-  //     });
-  //   }
-  // } catch (error) {
-  //   console.error('FCM push error:', error.message);
-  // }
+  // Send push notification
+  try {
+    const user = await User.findByNik(offer.nik_penawar);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: 'Penawaran Diterima',
+        pesan: `${offer.nama_ditawar} menerima penawaran barter Anda`,
+        tipe: 'offer_accepted',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when offer is rejected
@@ -108,20 +108,20 @@ async function notifyOfferRejected(offer) {
     data
   );
 
-  // Send push notification (DISABLED FOR TESTING)
-  // try {
-  //   const user = await User.findByNik(offer.nik_penawar);
-  //   if (user && user.fcm_token) {
-  //     await sendPushNotification(user.fcm_token, {
-  //       judul: 'Penawaran Ditolak',
-  //       pesan: `${offer.nama_ditawar} menolak penawaran barter Anda`,
-  //       tipe: 'offer_rejected',
-  //       data: data
-  //     });
-  //   }
-  // } catch (error) {
-  //   console.error('FCM push error:', error.message);
-  // }
+  // Send push notification
+  try {
+    const user = await User.findByNik(offer.nik_penawar);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: 'Penawaran Ditolak',
+        pesan: `${offer.nama_ditawar} menolak penawaran barter Anda`,
+        tipe: 'offer_rejected',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when offer is cancelled
@@ -164,6 +164,31 @@ async function notifyBarterStarted(barter) {
     'Barter Anda telah dimulai. Jangan lupa konfirmasi setelah selesai!',
     data
   );
+
+  // Send push notification to both
+  try {
+    const penawar = await User.findByNik(barter.nik_penawar);
+    if (penawar && penawar.fcm_token) {
+      await sendPushNotification(penawar.fcm_token, {
+        judul: 'Barter Dimulai',
+        pesan: 'Barter Anda telah dimulai. Jangan lupa konfirmasi setelah selesai!',
+        tipe: 'barter_started',
+        data: data
+      });
+    }
+
+    const ditawar = await User.findByNik(barter.nik_ditawar);
+    if (ditawar && ditawar.fcm_token) {
+      await sendPushNotification(ditawar.fcm_token, {
+        judul: 'Barter Dimulai',
+        pesan: 'Barter Anda telah dimulai. Jangan lupa konfirmasi setelah selesai!',
+        tipe: 'barter_started',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when confirmation is needed
@@ -184,6 +209,21 @@ async function notifyConfirmationNeeded(barter, nikConfirmed) {
     'Partner Anda sudah konfirmasi selesai. Silakan konfirmasi juga!',
     data
   );
+
+  // Send push notification
+  try {
+    const user = await User.findByNik(nikToNotify);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: 'Konfirmasi Diperlukan',
+        pesan: 'Partner Anda sudah konfirmasi selesai. Silakan konfirmasi juga!',
+        tipe: 'confirmation_needed',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when barter is completed
@@ -209,6 +249,31 @@ async function notifyBarterCompleted(barter) {
     'Barter telah selesai. Jangan lupa beri review!',
     data
   );
+
+  // Send push notification to both
+  try {
+    const penawar = await User.findByNik(barter.nik_penawar);
+    if (penawar && penawar.fcm_token) {
+      await sendPushNotification(penawar.fcm_token, {
+        judul: 'Barter Selesai',
+        pesan: 'Barter telah selesai. Jangan lupa beri review!',
+        tipe: 'barter_completed',
+        data: data
+      });
+    }
+
+    const ditawar = await User.findByNik(barter.nik_ditawar);
+    if (ditawar && ditawar.fcm_token) {
+      await sendPushNotification(ditawar.fcm_token, {
+        judul: 'Barter Selesai',
+        pesan: 'Barter telah selesai. Jangan lupa beri review!',
+        tipe: 'barter_completed',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when review is received
@@ -226,6 +291,21 @@ async function notifyReviewReceived(review, namaReviewer) {
     `${namaReviewer} memberi Anda rating ${review.rating} bintang`,
     data
   );
+
+  // Send push notification
+  try {
+    const user = await User.findByNik(review.nik_reviewed);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: 'Review Baru',
+        pesan: `${namaReviewer} memberi Anda rating ${review.rating} bintang`,
+        tipe: 'review_received',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when SkillCoin is received
@@ -235,13 +315,30 @@ async function notifySkillCoinReceived(nik, jumlah, namaPengirim) {
     nik_pengirim: namaPengirim
   };
 
+  const message = `Anda menerima ${jumlah} SkillCoin dari ${namaPengirim}`;
+
   await createNotification(
     nik,
     'skillcoin_received',
     'SkillCoin Diterima',
-    `Anda menerima ${jumlah} SkillCoin dari ${namaPengirim}`,
+    message,
     data
   );
+
+  // Send push notification
+  try {
+    const user = await User.findByNik(nik);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: 'SkillCoin Diterima',
+        pesan: message,
+        tipe: 'skillcoin_received',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 // Notify when SkillCoin is sent
@@ -251,13 +348,30 @@ async function notifySkillCoinSent(nik, jumlah, namaPenerima) {
     nik_penerima: namaPenerima
   };
 
+  const message = `Anda mengirim ${jumlah} SkillCoin ke ${namaPenerima}`;
+
   await createNotification(
     nik,
     'skillcoin_sent',
     'SkillCoin Terkirim',
-    `Anda mengirim ${jumlah} SkillCoin ke ${namaPenerima}`,
+    message,
     data
   );
+
+  // Send push notification
+  try {
+    const user = await User.findByNik(nik);
+    if (user && user.fcm_token) {
+      await sendPushNotification(user.fcm_token, {
+        judul: 'SkillCoin Terkirim',
+        pesan: message,
+        tipe: 'skillcoin_sent',
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('FCM push error:', error.message);
+  }
 }
 
 module.exports = {

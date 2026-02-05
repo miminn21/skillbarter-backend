@@ -13,6 +13,7 @@ import '../../widgets/proof_upload_dialog.dart';
 import '../../widgets/rating_dialog.dart';
 import '../../services/rating_service.dart';
 import '../chat/chat_screen.dart';
+import '../../services/app_localizations.dart';
 
 class OfferDetailScreen extends StatefulWidget {
   final int offerId;
@@ -38,7 +39,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
     // Initialize Animation Controller
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 1), // "Aga lama" (1 second)
+      duration: const Duration(seconds: 2), // Diperlambat jadi 2 detik
     );
 
     // Header Slide: From Top (-1.0) to Center (0.0)
@@ -129,8 +130,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
             if (mounted) {
               BeautifulNotification.show(
                 context,
-                title: 'Berhasil!',
-                message: 'Bukti pelaksanaan berhasil diupload',
+                title: AppLocalizations.of(
+                  context,
+                )!.translate('dialog_upload_title'),
+                message: AppLocalizations.of(
+                  context,
+                )!.translate('dialog_upload_success'),
                 type: NotificationType.success,
               );
             }
@@ -138,7 +143,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
             if (mounted) {
               BeautifulNotification.show(
                 context,
-                title: 'Gagal!',
+                title: AppLocalizations.of(
+                  context,
+                )!.translate('dialog_error_title'),
                 message: provider.error ?? 'Gagal upload bukti',
                 type: NotificationType.error,
               );
@@ -153,19 +160,22 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Penyelesaian'),
-        content: const Text(
-          'Apakah Anda yakin sesi barter sudah selesai dilaksanakan? '
-          'Setelah kedua pihak konfirmasi, skillcoin akan ditransfer.',
+        title: Text(
+          AppLocalizations.of(context)!.translate('dialog_confirm_title'),
+        ),
+        content: Text(
+          AppLocalizations.of(context)!.translate('dialog_confirm_body'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(AppLocalizations.of(context)!.translate('btn_cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Ya, Konfirmasi'),
+            child: Text(
+              AppLocalizations.of(context)!.translate('btn_confirm_yes'),
+            ),
           ),
         ],
       ),
@@ -179,8 +189,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
         if (mounted) {
           BeautifulNotification.show(
             context,
-            title: 'Berhasil!',
-            message: 'Penyelesaian berhasil dikonfirmasi',
+            title: AppLocalizations.of(
+              context,
+            )!.translate('dialog_upload_title'),
+            message: AppLocalizations.of(
+              context,
+            )!.translate('notif_confirm_success'),
             type: NotificationType.success,
             duration: const Duration(milliseconds: 1500),
           );
@@ -250,6 +264,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -270,9 +286,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        title: const Text(
-          'Detail Penawaran',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          AppLocalizations.of(context)!.translate('detail_title'),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -298,7 +317,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                   ElevatedButton.icon(
                     onPressed: _loadData,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Coba Lagi'),
+                    label: Text(
+                      AppLocalizations.of(context)!.translate('btn_retry'),
+                    ),
                   ),
                 ],
               ),
@@ -350,7 +371,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Kode: ${offer.kodeTransaksi ?? "-"}',
+                                '${AppLocalizations.of(context)!.translate('label_code')}: ${offer.kodeTransaksi ?? "-"}',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -366,7 +387,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                       // Main Info Card
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
@@ -400,7 +421,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                                   Text(
                                     offer.isHelpRequest &&
                                             offer.status == 'menunggu'
-                                        ? 'Menunggu partner...'
+                                        ? AppLocalizations.of(
+                                            context,
+                                          )!.translate('status_waiting_partner')
                                         : 'Status: ${offer.status.toUpperCase()}',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
@@ -426,7 +449,11 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: Colors.grey.shade200,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.grey.shade700
+                                                : Colors.grey.shade200,
                                           ),
                                         ),
                                         child: CircleAvatar(
@@ -512,7 +539,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                                     children: [
                                       Expanded(
                                         child: _buildCompactSkillInfo(
-                                          'Anda Beri',
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.translate('label_you_give'),
                                           offer.skillOwn ?? '-',
                                           Theme.of(context).primaryColor,
                                         ),
@@ -529,7 +558,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                                       ),
                                       Expanded(
                                         child: _buildCompactSkillInfo(
-                                          'Anda Terima',
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.translate('label_you_receive'),
                                           offer.skillPartner ?? '-',
                                           Colors.orange,
                                         ),
@@ -548,7 +579,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                       // Skillcoin Calc
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -578,7 +609,11 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                       const SizedBox(height: 20),
 
                       // Transaction Details
-                      _buildSectionHeader('Detail Transaksi'),
+                      _buildSectionHeader(
+                        AppLocalizations.of(
+                          context,
+                        )!.translate('section_trans_detail'),
+                      ),
                       const SizedBox(height: 12),
                       _buildModernTransactionDetails(offer),
 
@@ -654,7 +689,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                   value,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.grey[800],
                     fontSize: 13,
                   ),
                   maxLines: 1,
@@ -671,7 +708,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
   Widget _buildModernTransactionDetails(BarterOffer offer) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -745,9 +782,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
                 ),
               ),
             ],
@@ -783,7 +823,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -1008,6 +1048,10 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: const BorderSide(color: Colors.red),
                   foregroundColor: Colors.red,
+                  backgroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                      ? Colors.red.withOpacity(0.1)
+                      : null,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1129,19 +1173,32 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.green.withOpacity(0.15)
+                  : Colors.green.shade50,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.green.withOpacity(0.5)
+                    : Colors.green,
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.check_circle, color: Colors.green),
+                Icon(
+                  Icons.check_circle,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.greenAccent
+                      : Colors.green,
+                ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Transaksi Selesai',
                   style: TextStyle(
-                    color: Colors.green,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.greenAccent
+                        : Colors.green,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -1198,10 +1255,18 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: _hasRated
-                    ? Colors.amber.shade50
+                    ? (Theme.of(context).brightness == Brightness.dark
+                          ? Colors.amber.withOpacity(0.15)
+                          : Colors.amber.shade50)
                     : Colors.amber,
-                disabledBackgroundColor: Colors.amber.shade50,
-                disabledForegroundColor: Colors.amber[800],
+                disabledBackgroundColor:
+                    Theme.of(context).brightness == Brightness.dark
+                    ? Colors.amber.withOpacity(0.15)
+                    : Colors.amber.shade50,
+                disabledForegroundColor:
+                    Theme.of(context).brightness == Brightness.dark
+                    ? Colors.amberAccent
+                    : Colors.amber[800],
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(

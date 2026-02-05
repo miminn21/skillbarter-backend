@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/app_localizations.dart';
 import 'package:glossy/glossy.dart';
 
 import '../../widgets/animated_background.dart';
@@ -155,9 +156,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
-          'Daftar Akun',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          AppLocalizations.of(context)!.translate('auth_register_title'),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -236,7 +240,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             foregroundColor: Colors.white,
                           ),
-                          child: const Text('Kembali'),
+                          child: Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('auth_back_btn'),
+                          ),
                         ),
                       ),
                     if (_currentPage > 0) const SizedBox(width: 16),
@@ -267,7 +275,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                   )
                                 : Text(
-                                    _currentPage < 2 ? 'Lanjut' : 'Daftar',
+                                    _currentPage < 2
+                                        ? AppLocalizations.of(
+                                            context,
+                                          )!.translate('auth_next_btn')
+                                        : AppLocalizations.of(
+                                            context,
+                                          )!.translate('auth_register_btn'),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -293,7 +307,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Data Pribadi',
+            AppLocalizations.of(context)!.translate('auth_personal_data'),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -305,9 +319,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _nikController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'NIK *',
+              labelText:
+                  '${AppLocalizations.of(context)!.translate('auth_nik_label')} *',
               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-              hintText: '16 digit NIK',
+              hintText: AppLocalizations.of(
+                context,
+              )!.translate('auth_nik_hint'),
               hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
               prefixIcon: Icon(
                 Icons.badge,
@@ -338,7 +355,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _namaLengkapController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'Nama Lengkap *',
+              labelText:
+                  '${AppLocalizations.of(context)!.translate('auth_fullname_label')} *',
               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
               prefixIcon: Icon(
                 Icons.person,
@@ -369,7 +387,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _namaPanggilanController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'Nama Panggilan *',
+              labelText:
+                  '${AppLocalizations.of(context)!.translate('auth_nickname_label')} *',
               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
               prefixIcon: Icon(
                 Icons.person_outline,
@@ -402,7 +421,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             style: const TextStyle(color: Colors.white),
             dropdownColor: const Color(0xFF16213E),
             decoration: InputDecoration(
-              labelText: 'Jenis Kelamin *',
+              labelText:
+                  '${AppLocalizations.of(context)!.translate('auth_gender_label')} *',
               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
               prefixIcon: Icon(Icons.wc, color: Colors.white.withOpacity(0.7)),
               filled: true,
@@ -416,9 +436,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
               ),
             ),
-            items: const [
-              DropdownMenuItem(value: 'L', child: Text('Laki-laki')),
-              DropdownMenuItem(value: 'P', child: Text('Perempuan')),
+            items: [
+              DropdownMenuItem(
+                value: 'L',
+                child: Text(
+                  AppLocalizations.of(context)!.translate('auth_gender_male'),
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'P',
+                child: Text(
+                  AppLocalizations.of(context)!.translate('auth_gender_female'),
+                ),
+              ),
             ],
             onChanged: (value) {
               setState(() {
@@ -433,7 +463,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             onTap: _selectDate,
             child: InputDecorator(
               decoration: InputDecoration(
-                labelText: 'Tanggal Lahir *',
+                labelText:
+                    '${AppLocalizations.of(context)!.translate('auth_dob_label')} *',
                 labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
                 prefixIcon: Icon(
                   Icons.calendar_today,
@@ -474,7 +505,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Alamat',
+            AppLocalizations.of(context)!.translate('auth_address_title'),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -486,7 +517,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _alamatController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'Alamat Lengkap *',
+              labelText:
+                  '${AppLocalizations.of(context)!.translate('auth_address_label')} *',
               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
               hintText: 'Jl. Contoh No. 123',
               hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
@@ -519,7 +551,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _kotaController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'Kota *',
+              labelText:
+                  '${AppLocalizations.of(context)!.translate('auth_city_label')} *',
               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
               hintText: 'Jakarta',
               hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
@@ -557,7 +590,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Keamanan & Bio',
+            AppLocalizations.of(context)!.translate('auth_security_title'),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -569,7 +602,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _passwordController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'Password *',
+              labelText:
+                  '${AppLocalizations.of(context)!.translate('auth_password_label')} *',
               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
               hintText: 'Minimal 6 karakter',
               hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
@@ -612,7 +646,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _confirmPasswordController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'Konfirmasi Password *',
+              labelText:
+                  '${AppLocalizations.of(context)!.translate('auth_confirm_pass_label')} *',
               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
               prefixIcon: Icon(
                 Icons.lock_outline,
@@ -657,9 +692,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: _bioController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              labelText: 'Bio (Opsional)',
+              labelText: AppLocalizations.of(
+                context,
+              )!.translate('auth_bio_label'),
               labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-              hintText: 'Ceritakan tentang diri Anda...',
+              hintText: AppLocalizations.of(
+                context,
+              )!.translate('auth_bio_hint'),
               hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
               prefixIcon: Icon(
                 Icons.info_outline,

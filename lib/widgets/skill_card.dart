@@ -16,10 +16,19 @@ class SkillCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final hasImage = skill.gambarSkill != null && skill.gambarSkill!.isNotEmpty;
-    final textColor = hasImage ? Colors.white : Colors.black87;
-    final subTextColor = hasImage ? Colors.white70 : Colors.grey[600];
-    final iconColor = hasImage ? Colors.white : Colors.grey[600];
+    final textColor = hasImage
+        ? Colors.white
+        : (isDark ? Colors.white : Colors.black87);
+    final subTextColor = hasImage
+        ? Colors.white70
+        : (isDark ? Colors.grey[400] : Colors.grey[600]);
+    final iconColor = hasImage
+        ? Colors.white
+        : (isDark ? Colors.grey[400] : Colors.grey[600]);
 
     return Card(
       clipBehavior: Clip.antiAlias,

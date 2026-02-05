@@ -10,6 +10,7 @@ import '../../widgets/skillcoin_calculator.dart';
 import '../../widgets/help_request_cost_calculator.dart';
 import '../../widgets/beautiful_notification.dart';
 import '../../services/api_service.dart';
+import '../../services/app_localizations.dart';
 
 class CreateOfferScreen extends StatefulWidget {
   final String? targetNik;
@@ -124,9 +125,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   @override
   Widget build(BuildContext context) {
     final isHelpRequest = _tipeTransaksi == 'bantuan';
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -146,7 +149,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           ),
         ),
         title: Text(
-          isHelpRequest ? 'Minta Bantuan' : 'Buat Penawaran',
+          isHelpRequest
+              ? AppLocalizations.of(context)!.translate('create_title_help')
+              : AppLocalizations.of(context)!.translate('create_title_offer'),
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -164,7 +169,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
             _buildSkillsPreview(),
             const SizedBox(height: 32),
 
-            _buildSectionTitle('Detail Sesi'),
+            _buildSectionTitle(
+              AppLocalizations.of(context)!.translate('section_session_detail'),
+            ),
             const SizedBox(height: 16),
 
             // Duration
@@ -173,16 +180,23 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
               child: TextFormField(
                 controller: _durationController,
                 decoration: _inputFieldDecoration(
-                  'Durasi (jam)',
+                  AppLocalizations.of(context)!.translate('label_duration'),
                   Icons.timer_rounded,
-                  helperText: 'Berapa lama sesi barter?',
+                  helperText: AppLocalizations.of(
+                    context,
+                  )!.translate('helper_duration'),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Wajib diisi';
+                  if (value == null || value.isEmpty)
+                    return AppLocalizations.of(
+                      context,
+                    )!.translate('error_required');
                   final duration = int.tryParse(value);
                   if (duration == null || duration <= 0) {
-                    return 'Min. 1 jam';
+                    return AppLocalizations.of(
+                      context,
+                    )!.translate('error_min_hour');
                   }
                   return null;
                 },
@@ -215,8 +229,10 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Tanggal',
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('label_date'),
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.grey,
@@ -229,7 +245,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                                       ? DateFormat(
                                           'dd MMM yyyy',
                                         ).format(_selectedDate!)
-                                      : 'Pilih Tgl',
+                                      : AppLocalizations.of(
+                                          context,
+                                        )!.translate('placeholder_select_date'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14,
@@ -265,8 +283,10 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Waktu',
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('label_time'),
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.grey,
@@ -277,7 +297,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                                 Text(
                                   _selectedTime != null
                                       ? _selectedTime!.format(context)
-                                      : 'Pilih Jam',
+                                      : AppLocalizations.of(
+                                          context,
+                                        )!.translate('placeholder_select_time'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14,
@@ -295,7 +317,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
             ),
             const SizedBox(height: 32),
 
-            _buildSectionTitle('Lokasi & Preferensi'),
+            const SizedBox(height: 32),
+
+            _buildSectionTitle(
+              AppLocalizations.of(context)!.translate('section_loc_pref'),
+            ),
             const SizedBox(height: 16),
 
             // Location type
@@ -303,7 +329,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
               builder: (context, constraints) {
                 return Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
@@ -316,17 +342,17 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   child: Row(
                     children: [
                       _buildLocationOption(
-                        'Online',
+                        AppLocalizations.of(context)!.translate('loc_online'),
                         'online',
                         Icons.videocam_rounded,
                       ),
                       _buildLocationOption(
-                        'Offline',
+                        AppLocalizations.of(context)!.translate('loc_offline'),
                         'offline',
                         Icons.location_on_rounded,
                       ),
                       _buildLocationOption(
-                        'Hybrid',
+                        AppLocalizations.of(context)!.translate('loc_hybrid'),
                         'hybrid',
                         Icons.swap_horiz_rounded,
                       ),
@@ -344,8 +370,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 controller: _locationController,
                 decoration: _inputFieldDecoration(
                   _locationType == 'online'
-                      ? 'Link Meeting (Zoom/GMeet)'
-                      : 'Alamat Lengkap',
+                      ? AppLocalizations.of(context)!.translate('hint_link')
+                      : AppLocalizations.of(context)!.translate('hint_address'),
                   _locationType == 'online'
                       ? Icons.link_rounded
                       : Icons.map_rounded,
@@ -361,9 +387,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
               child: TextFormField(
                 controller: _notesController,
                 decoration: _inputFieldDecoration(
-                  'Catatan (Opsional)',
+                  AppLocalizations.of(context)!.translate('label_notes'),
                   Icons.note_alt_rounded,
-                  helperText: 'Info tambahan untuk partner',
+                  helperText: AppLocalizations.of(
+                    context,
+                  )!.translate('helper_notes'),
                 ),
                 maxLines: 3,
               ),
@@ -443,8 +471,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                               const SizedBox(width: 12),
                               Text(
                                 isHelpRequest
-                                    ? 'Kirim Permintaan'
-                                    : 'Kirim Penawaran',
+                                    ? AppLocalizations.of(
+                                        context,
+                                      )!.translate('btn_send_request')
+                                    : AppLocalizations.of(
+                                        context,
+                                      )!.translate('btn_send_offer'),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -480,7 +512,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
 
                         // Success State
                         if (_isSent)
-                          const Row(
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
@@ -489,7 +521,10 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                               ),
                               SizedBox(width: 12),
                               Text(
-                                'Berhasil Dikirim',
+                                // 'Berhasil Dikirim',
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('msg_success_sent'),
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -512,19 +547,20 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF2D3142),
+        color: isDark ? Colors.white : const Color(0xFF2D3142),
       ),
     );
   }
 
   BoxDecoration _inputDecoration() {
     return BoxDecoration(
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
@@ -564,7 +600,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: isSelected ? Theme.of(context).primaryColor : Colors.white,
+            color: isSelected
+                ? Theme.of(context).primaryColor
+                : Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: isSelected
                 ? [
@@ -600,6 +638,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   }
 
   Widget _buildSkillsPreview() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isHelpRequest = _tipeTransaksi == 'bantuan';
 
     // Use selected skill if available, otherwise use widget param
@@ -610,7 +650,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -634,10 +674,10 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 const SizedBox(width: 8),
                 Text(
                   isHelpRequest ? 'Permintaan Bantuan' : 'Pertukaran Skill',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3142),
+                    color: isDark ? Colors.white : const Color(0xFF2D3142),
                   ),
                 ),
               ],
@@ -701,6 +741,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     VoidCallback? onTap,
     bool isSelectable = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -715,7 +757,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? theme.cardColor : Colors.white,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 20),
@@ -742,7 +784,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: const Color(0xFF2D3142),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF2D3142),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1000,190 +1044,224 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         // Show custom selection dialog
         final selected = await showDialog<Map<String, dynamic>>(
           context: context,
-          builder: (context) => Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            elevation: 10,
-            backgroundColor: Colors.white,
-            child: Container(
-              padding: const EdgeInsets.all(0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Dialog Header
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).primaryColor,
-                          const Color(0xFF1E88E5),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
-                    ),
-                    child: const Column(
-                      children: [
-                        Icon(
-                          Icons.auto_awesome_rounded,
-                          size: 48,
-                          color: Colors.white,
+          builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final theme = Theme.of(context);
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              elevation: 10,
+              backgroundColor: isDark
+                  ? theme.scaffoldBackgroundColor
+                  : Colors.white,
+              child: Container(
+                padding: const EdgeInsets.all(0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Dialog Header
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [theme.primaryColor, const Color(0xFF1E88E5)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Pilih Skill Anda',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(24),
+                          topRight: Radius.circular(24),
+                        ),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 48,
                             color: Colors.white,
                           ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Pilih skill yang ingin Anda tawarkan',
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                      ],
+                          SizedBox(height: 16),
+                          Text(
+                            'Pilih Skill Anda',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Pilih skill yang ingin Anda tawarkan',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Skills List
-                  Flexible(
-                    child: Container(
-                      constraints: const BoxConstraints(maxHeight: 300),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: skills.length,
-                        separatorBuilder: (ctx, i) =>
-                            const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final skill = skills[index];
-                          return Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => Navigator.pop(context, skill),
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF8F9FD),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Colors.grey.shade200,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black12,
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Icon(
-                                        Icons.star_rounded,
-                                        color: Colors.orange.shade400,
-                                        size: 24,
-                                      ),
+                    // Skills List
+                    Flexible(
+                      child: Container(
+                        constraints: const BoxConstraints(maxHeight: 300),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: skills.length,
+                          separatorBuilder: (ctx, i) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final skill = skills[index];
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Navigator.pop(context, skill),
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? theme.cardColor
+                                        : const Color(0xFFF8F9FD),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? Colors.white10
+                                          : Colors.grey.shade200,
                                     ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            skill['nama'],
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: Color(0xFF2D3142),
-                                            ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.05)
+                                              : Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
                                           ),
-                                          const SizedBox(height: 4),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.green.shade50,
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              '${skill['harga']} SC/jam',
+                                          boxShadow: [
+                                            if (!isDark)
+                                              BoxShadow(
+                                                color: Colors.black12,
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.star_rounded,
+                                          color: Colors.orange.shade400,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              skill['nama'],
                                               style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.green.shade700,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : const Color(0xFF2D3142),
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                            const SizedBox(height: 4),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? Colors.green.withOpacity(
+                                                        0.2,
+                                                      )
+                                                    : Colors.green.shade50,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                '${skill['harga']} SC/jam',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isDark
+                                                      ? Colors.greenAccent
+                                                      : Colors.green.shade700,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    Icon(
-                                      Icons.arrow_forward_ios_rounded,
-                                      size: 16,
-                                      color: Colors.grey.shade400,
-                                    ),
-                                  ],
+                                      Icon(
+                                        Icons.arrow_forward_ios_rounded,
+                                        size: 16,
+                                        color: isDark
+                                            ? Colors.white54
+                                            : Colors.grey.shade400,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
+                    // Divider
+                    Divider(
+                      height: 1,
+                      color: isDark ? Colors.white10 : Colors.grey.shade200,
+                    ),
+
+                    // Footer / Cancel
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-
-                  // Divider
-                  const Divider(height: 1),
-
-                  // Footer / Cancel
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        child: Text(
-                          'Batal',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                          child: Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('btn_cancel'),
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.white70
+                                  : Colors.grey.shade600,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
 
         if (selected != null) {
@@ -1195,8 +1273,10 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal memuat skill Anda'),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.translate('error_load_skills'),
+            ),
             backgroundColor: Colors.red,
           ),
         );

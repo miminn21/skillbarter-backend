@@ -69,7 +69,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -103,7 +103,9 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).cardColor
+                          : Colors.grey[100],
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -201,7 +203,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     shape: BoxShape.circle,
                     border: Border.all(color: color.withOpacity(0.5), width: 2),
                     boxShadow: [
@@ -219,7 +221,9 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                     child: Container(
                       width: 2,
                       margin: const EdgeInsets.symmetric(vertical: 4),
-                      color: Colors.grey[200],
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[800]
+                          : Colors.grey[200],
                     ),
                   ),
               ],
@@ -231,7 +235,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
             child: Container(
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -259,10 +263,14 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                             Expanded(
                               child: Text(
                                 auth.judul,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
-                                  color: Color(0xFF2D3142),
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : const Color(0xFF2D3142),
                                 ),
                               ),
                             ),

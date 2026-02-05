@@ -81,8 +81,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // 1. Animated Header (Slide Down)
@@ -177,6 +179,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                         ),
                     child: Card(
                       elevation: 10,
+                      color: theme.cardColor,
                       shadowColor: Colors.black.withOpacity(0.1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -188,18 +191,30 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                           child: Column(
                             children: [
                               // Icon Header inside card
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).primaryColor.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.lock_reset_rounded,
-                                  size: 48,
-                                  color: Theme.of(context).primaryColor,
+                              Center(
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Theme.of(
+                                            context,
+                                          ).primaryColor.withOpacity(0.2)
+                                        : Theme.of(
+                                            context,
+                                          ).primaryColor.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.lock_reset_rounded,
+                                    size: 48,
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Theme.of(context).primaryColor,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 32),
@@ -211,7 +226,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                                 icon: Icons.lock_outline_rounded,
                                 onToggle: () =>
                                     setState(() => _obscureOld = !_obscureOld),
-                                validator: (v) => v!.isEmpty
+
+                                validator: (v) => (v == null || v.isEmpty)
                                     ? 'Password lama wajib diisi'
                                     : null,
                               ),
@@ -224,7 +240,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                                 onToggle: () =>
                                     setState(() => _obscureNew = !_obscureNew),
                                 validator: (v) {
-                                  if (v!.isEmpty)
+                                  if (v == null || v.isEmpty)
                                     return 'Password baru wajib diisi';
                                   if (v.length < 6) return 'Minimal 6 karakter';
                                   return null;
@@ -240,7 +256,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                                   () => _obscureConfirm = !_obscureConfirm,
                                 ),
                                 validator: (v) {
-                                  if (v!.isEmpty)
+                                  if (v == null || v.isEmpty)
                                     return 'Konfirmasi wajib diisi';
                                   if (v != _newPasswordController.text) {
                                     return 'Password tidak sama';
@@ -310,22 +326,34 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
     required VoidCallback onToggle,
     required String? Function(String?) validator,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return TextFormField(
       controller: controller,
       obscureText: obscure,
-      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: 15,
+        color: isDark ? Colors.white : Colors.black87,
+      ),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
-          color: Colors.grey[600],
+          color: isDark ? Colors.grey[400] : Colors.grey[600],
           fontWeight: FontWeight.normal,
         ),
-        prefixIcon: Icon(icon, color: Colors.grey[400], size: 22),
+        prefixIcon: Icon(
+          icon,
+          color: isDark ? Colors.grey[400] : Colors.grey[400],
+          size: 22,
+        ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: isDark ? Colors.grey[800] : Colors.grey[50],
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[700]! : Colors.grey.shade200,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -345,7 +373,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-            color: Colors.grey[400],
+            color: isDark ? Colors.grey[400] : Colors.grey[400],
             size: 22,
           ),
           onPressed: onToggle,

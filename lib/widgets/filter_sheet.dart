@@ -151,18 +151,39 @@ class _FilterSheetState extends State<FilterSheet> {
               const SizedBox(height: 24),
 
               // Apply button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _apply,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+              InkWell(
+                onTap: _apply,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).primaryColor,
+                        const Color(0xFF1E88E5),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).primaryColor.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Text(
-                    'Terapkan Filter',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  child: const Center(
+                    child: Text(
+                      'Terapkan Filter',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),

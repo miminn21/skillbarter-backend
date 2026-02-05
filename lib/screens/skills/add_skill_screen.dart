@@ -7,7 +7,9 @@ import '../../models/category_model.dart';
 import '../../widgets/custom_notification.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../../services/app_localizations.dart';
 
 class AddSkillScreen extends StatefulWidget {
   final String? initialTipe;
@@ -75,7 +77,7 @@ class _AddSkillScreenState extends State<AddSkillScreen>
     if (_selectedCategory == null) {
       CustomNotification.showWarning(
         context,
-        'Silakan pilih kategori terlebih dahulu',
+        AppLocalizations.of(context)!.translate('error_select_category'),
       );
       return;
     }
@@ -116,13 +118,17 @@ class _AddSkillScreenState extends State<AddSkillScreen>
     if (!mounted) return;
 
     if (success) {
-      CustomNotification.showSuccess(context, '✨ Skill berhasil ditambahkan!');
+      CustomNotification.showSuccess(
+        context,
+        AppLocalizations.of(context)!.translate('success_skill_added'),
+      );
       Navigator.pop(context, true);
     } else {
       print('[AddSkill] Error: ${skillProvider.error}');
       CustomNotification.showError(
         context,
-        skillProvider.error ?? 'Gagal menambahkan skill',
+        skillProvider.error ??
+            AppLocalizations.of(context)!.translate('error_add_skill'),
       );
     }
   }
@@ -153,7 +159,7 @@ class _AddSkillScreenState extends State<AddSkillScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // 1. Fixed Wave Background Header
@@ -182,9 +188,11 @@ class _AddSkillScreenState extends State<AddSkillScreen>
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Tambah Skill Baru',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('add_skill_title'),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -231,14 +239,22 @@ class _AddSkillScreenState extends State<AddSkillScreen>
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      _buildSectionTitle('Informasi Skill'),
+                                      _buildSectionTitle(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.translate('section_skill_info'),
+                                      ),
                                       const SizedBox(height: 16),
                                       _buildTextField(
                                         controller: _namaController,
-                                        label: 'Nama Keahlian',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_skill_name'),
                                         icon: Icons.star_rounded,
                                         validator: (v) => v?.isEmpty == true
-                                            ? 'Wajib diisi'
+                                            ? AppLocalizations.of(
+                                                context,
+                                              )!.translate('error_required')
                                             : null,
                                       ),
                                       const SizedBox(height: 16),
@@ -246,15 +262,21 @@ class _AddSkillScreenState extends State<AddSkillScreen>
                                       const SizedBox(height: 16),
                                       _buildDropdown(
                                         value: _tipe,
-                                        label: 'Tipe',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_type'),
                                         icon: Icons.swap_horiz_rounded,
-                                        items: const [
+                                        items: [
                                           {
-                                            'label': 'Dikuasai (Saya bisa)',
+                                            'label': AppLocalizations.of(
+                                              context,
+                                            )!.translate('label_mastered_expl'),
                                             'value': 'dikuasai',
                                           },
                                           {
-                                            'label': 'Dicari (Saya butuh)',
+                                            'label': AppLocalizations.of(
+                                              context,
+                                            )!.translate('label_wanted_expl'),
                                             'value': 'dicari',
                                           },
                                         ],
@@ -264,19 +286,35 @@ class _AddSkillScreenState extends State<AddSkillScreen>
                                       const SizedBox(height: 16),
                                       _buildDropdown(
                                         value: _tingkat,
-                                        label: 'Tingkat Keahlian',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_skill_level'),
                                         icon: Icons.trending_up_rounded,
-                                        items: const [
+                                        items: [
                                           {
-                                            'label': 'Pemula',
+                                            'label': AppLocalizations.of(
+                                              context,
+                                            )!.translate('level_beginner'),
                                             'value': 'pemula',
                                           },
                                           {
-                                            'label': 'Menengah',
+                                            'label': AppLocalizations.of(
+                                              context,
+                                            )!.translate('level_intermediate'),
                                             'value': 'menengah',
                                           },
-                                          {'label': 'Mahir', 'value': 'mahir'},
-                                          {'label': 'Ahli', 'value': 'ahli'},
+                                          {
+                                            'label': AppLocalizations.of(
+                                              context,
+                                            )!.translate('level_advanced'),
+                                            'value': 'mahir',
+                                          },
+                                          {
+                                            'label': AppLocalizations.of(
+                                              context,
+                                            )!.translate('level_expert'),
+                                            'value': 'ahli',
+                                          },
                                         ],
                                         onChanged: (v) =>
                                             setState(() => _tingkat = v),
@@ -304,31 +342,43 @@ class _AddSkillScreenState extends State<AddSkillScreen>
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      _buildSectionTitle('Detail Tambahan'),
+                                      _buildSectionTitle(
+                                        AppLocalizations.of(context)!.translate(
+                                          'section_additional_details',
+                                        ),
+                                      ),
                                       const SizedBox(height: 16),
                                       _buildTextField(
                                         controller: _hargaController,
-                                        label: 'Harga per Sesi (SkillCoin)',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_price'),
                                         icon: Icons.monetization_on_rounded,
                                         keyboardType: TextInputType.number,
                                       ),
                                       const SizedBox(height: 16),
                                       _buildTextField(
                                         controller: _pengalamanController,
-                                        label: 'Pengalaman (Tahun/Proyek)',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_experience'),
                                         icon: Icons.work_history_rounded,
                                       ),
                                       const SizedBox(height: 16),
                                       _buildTextField(
                                         controller: _deskripsiController,
-                                        label: 'Deskripsi Lengkap',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_description'),
                                         icon: Icons.description_rounded,
                                         maxLines: 4,
                                       ),
                                       const SizedBox(height: 16),
                                       _buildTextField(
                                         controller: _linkController,
-                                        label: 'Link Portofolio (URL)',
+                                        label: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_portfolio'),
                                         icon: Icons.link_rounded,
                                         keyboardType: TextInputType.url,
                                       ),
@@ -375,8 +425,10 @@ class _AddSkillScreenState extends State<AddSkillScreen>
                                           ? const CircularProgressIndicator(
                                               color: Colors.white,
                                             )
-                                          : const Text(
-                                              'Simpan & Publikasikan',
+                                          : Text(
+                                              AppLocalizations.of(
+                                                context,
+                                              )!.translate('btn_save_publish'),
                                               style: TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
@@ -403,15 +455,18 @@ class _AddSkillScreenState extends State<AddSkillScreen>
   }
 
   Widget _buildImagePicker() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: _pickImage,
       child: Container(
         height: 200,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? Theme.of(context).cardColor : Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+            color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -446,7 +501,9 @@ class _AddSkillScreenState extends State<AddSkillScreen>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Upload Foto Sampul',
+                    AppLocalizations.of(
+                      context,
+                    )!.translate('label_upload_cover'),
                     style: TextStyle(
                       color: Colors.grey[700],
                       fontWeight: FontWeight.bold,
@@ -455,7 +512,9 @@ class _AddSkillScreenState extends State<AddSkillScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Tap untuk memilih gambar',
+                    AppLocalizations.of(
+                      context,
+                    )!.translate('hint_upload_cover'),
                     style: TextStyle(color: Colors.grey[500], fontSize: 12),
                   ),
                 ],
@@ -513,14 +572,20 @@ class _AddSkillScreenState extends State<AddSkillScreen>
                           color: Colors.black.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.edit, color: Colors.white, size: 14),
-                            SizedBox(width: 4),
+                            const Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 4),
                             Text(
-                              'Ganti Foto',
-                              style: TextStyle(
+                              AppLocalizations.of(
+                                context,
+                              )!.translate('btn_change_photo'),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -538,15 +603,16 @@ class _AddSkillScreenState extends State<AddSkillScreen>
   }
 
   Widget _buildSectionTitle(String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: isDark ? Colors.white : Colors.black87,
           ),
         ),
         const SizedBox(height: 4),
@@ -570,15 +636,17 @@ class _AddSkillScreenState extends State<AddSkillScreen>
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
       validator: validator,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
-          color: Colors.grey[600],
+          color: isDark ? Colors.grey[400] : Colors.grey[600],
           fontWeight: FontWeight.normal,
         ),
         alignLabelWithHint: maxLines > 1,
@@ -586,14 +654,21 @@ class _AddSkillScreenState extends State<AddSkillScreen>
           padding: EdgeInsets.only(bottom: maxLines > 1 ? 60 : 0),
           child: Icon(
             icon,
-            color: Theme.of(context).primaryColor.withOpacity(0.7),
+            color: isDark
+                ? Colors.white70
+                : Theme.of(context).primaryColor.withOpacity(0.7),
           ),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: isDark
+            ? Theme.of(context).scaffoldBackgroundColor
+            : Colors.grey.shade50,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -621,20 +696,32 @@ class _AddSkillScreenState extends State<AddSkillScreen>
   Widget _buildCategoryDropdown() {
     return Consumer<SkillProvider>(
       builder: (context, skillProvider, _) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return DropdownButtonFormField<CategoryModel>(
           value: _selectedCategory,
           decoration: InputDecoration(
-            labelText: 'Kategori Keahlian',
-            labelStyle: TextStyle(color: Colors.grey[600]),
+            labelText: AppLocalizations.of(
+              context,
+            )!.translate('label_category'),
+            labelStyle: TextStyle(
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+            ),
             prefixIcon: Icon(
               Icons.category_rounded,
-              color: Theme.of(context).primaryColor.withOpacity(0.7),
+              color: isDark
+                  ? Colors.white70
+                  : Theme.of(context).primaryColor.withOpacity(0.7),
             ),
             filled: true,
-            fillColor: Colors.grey.shade50,
+            fillColor: isDark
+                ? Theme.of(context).scaffoldBackgroundColor
+                : Colors.grey.shade50,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+                width: 1.5,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -645,17 +732,28 @@ class _AddSkillScreenState extends State<AddSkillScreen>
             ),
           ),
           items: skillProvider.categories.map((category) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
             return DropdownMenuItem(
               value: category,
-              child: Text(category.namaKategori),
+              child: Text(
+                category.namaKategori,
+                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+              ),
             );
           }).toList(),
+          dropdownColor: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).cardColor
+              : Colors.white,
           onChanged: (value) {
             setState(() {
               _selectedCategory = value;
             });
           },
-          validator: (value) => value == null ? 'Kategori wajib dipilih' : null,
+          validator: (value) => value == null
+              ? AppLocalizations.of(
+                  context,
+                )!.translate('error_category_required')
+              : null,
         );
       },
     );
@@ -668,28 +766,45 @@ class _AddSkillScreenState extends State<AddSkillScreen>
     required List<Map<String, dynamic>> items,
     required Function(dynamic) onChanged,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return DropdownButtonFormField<dynamic>(
       value: value,
       items: items.map((item) {
         return DropdownMenuItem(
           value: item['value'],
-          child: Text(item['label']),
+          child: Text(
+            item['label'],
+            style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+          ),
         );
       }).toList(),
       onChanged: onChanged,
-      dropdownColor: Colors.white,
+      dropdownColor: isDark ? Theme.of(context).cardColor : Colors.white,
+      style: TextStyle(
+        color: isDark ? Colors.white : Colors.black87,
+        fontSize: 16,
+      ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.grey[600]),
+        labelStyle: TextStyle(
+          color: isDark ? Colors.grey[400] : Colors.grey[600],
+        ),
         prefixIcon: Icon(
           icon,
-          color: Theme.of(context).primaryColor.withOpacity(0.7),
+          color: isDark
+              ? Colors.white70
+              : Theme.of(context).primaryColor.withOpacity(0.7),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: isDark
+            ? Theme.of(context).scaffoldBackgroundColor
+            : Colors.grey.shade50,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -707,7 +822,9 @@ class _AddSkillScreenState extends State<AddSkillScreen>
       onTap: () => _selectExpiryDate(context),
       child: InputDecorator(
         decoration: InputDecoration(
-          labelText: 'Tanggal Berakhir (Opsional)',
+          labelText: AppLocalizations.of(
+            context,
+          )!.translate('label_expiry_date'),
           labelStyle: TextStyle(color: Colors.grey[600]),
           prefixIcon: Icon(
             Icons.event_rounded,
@@ -730,7 +847,7 @@ class _AddSkillScreenState extends State<AddSkillScreen>
         child: Text(
           _expiryDate != null
               ? DateFormat('dd MMMM yyyy', 'id_ID').format(_expiryDate!)
-              : 'Pilih Tanggal',
+              : AppLocalizations.of(context)!.translate('placeholder_date'),
           style: TextStyle(
             color: _expiryDate != null ? Colors.black87 : Colors.grey[500],
             fontSize: 16,

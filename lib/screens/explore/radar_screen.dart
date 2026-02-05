@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../../services/api_service.dart';
 import '../../providers/auth_provider.dart';
 import 'user_profile_screen.dart';
+import '../../services/app_localizations.dart';
 
 class RadarScreen extends StatefulWidget {
   const RadarScreen({super.key});
@@ -50,7 +51,9 @@ class _RadarScreenState extends State<RadarScreen> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final address = data['display_name'] ?? 'Alamat tidak ditemukan';
+        final address =
+            data['display_name'] ??
+            AppLocalizations.of(context)!.translate('radar_address_not_found');
         _addressCache[key] = address;
         if (mounted) setState(() {}); // Refresh UI if needed
         return address;
@@ -58,7 +61,7 @@ class _RadarScreenState extends State<RadarScreen> {
     } catch (e) {
       debugPrint("Geocoding error: $e");
     }
-    return "Gagal memuat alamat";
+    return AppLocalizations.of(context)!.translate('radar_address_fail');
   }
 
   void _showUserDetail(BuildContext context, dynamic user) {
@@ -70,7 +73,7 @@ class _RadarScreenState extends State<RadarScreen> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -130,9 +133,15 @@ class _RadarScreenState extends State<RadarScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).scaffoldBackgroundColor
+                      : Colors.grey[50], // Adaptive
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey[200]!),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[800]!
+                        : Colors.grey[200]!,
+                  ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,12 +163,18 @@ class _RadarScreenState extends State<RadarScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "Lokasi Terkini",
+                          Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('radar_current_location'),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
-                              color: Colors.black87,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black87,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -168,8 +183,10 @@ class _RadarScreenState extends State<RadarScreen> {
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return const Text(
-                                  "Memuat alamat...",
+                                return Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('radar_address_loading'),
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 13,
@@ -177,10 +194,17 @@ class _RadarScreenState extends State<RadarScreen> {
                                 );
                               }
                               return Text(
-                                snapshot.data ?? "Alamat tidak tersedia",
-                                style: const TextStyle(
+                                snapshot.data ??
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.translate('radar_address_unavailable'),
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.black54,
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey[400]
+                                      : Colors.black54,
                                   height: 1.4,
                                 ),
                               );
@@ -211,7 +235,9 @@ class _RadarScreenState extends State<RadarScreen> {
                     );
                   },
                   icon: const Icon(Icons.visibility_rounded),
-                  label: const Text("Lihat Profil Lengkap"),
+                  label: Text(
+                    AppLocalizations.of(context)!.translate('btn_view_profile'),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
@@ -325,12 +351,18 @@ class _RadarScreenState extends State<RadarScreen> {
                     const CircularProgressIndicator(),
                     const SizedBox(height: 16),
                     Text(
-                      "Mengkalibrasi GPS...",
+                      AppLocalizations.of(
+                        context,
+                      )!.translate('radar_calibrating'),
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                   ],
                 )
-              : const Text("Izin Lokasi diperlukan"),
+              : Text(
+                  AppLocalizations.of(
+                    context,
+                  )!.translate('radar_permission_needed'),
+                ),
         ),
       );
     }

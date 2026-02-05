@@ -9,17 +9,34 @@ const admin = require('firebase-admin');
 function initializeFCM() {
   if (!admin.apps.length) {
     try {
+      // Use service account key file if available (Priority for Local Dev)
+      const serviceAccount = require('../../serviceAccountKey.json');
+      
       admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL
-        })
+        credential: admin.credential.cert(serviceAccount)
       });
-      console.log('✅ Firebase Admin initialized');
+      
+      console.log('✅ Firebase Admin initialized with serviceAccountKey.json');
     } catch (error) {
-      console.error('❌ Firebase Admin initialization failed:', error.message);
-      console.error('   Push notifications will not work!');
+      // Fallback to env vars (For Railway/Cloud)
+      try {
+        console.log('⚠️ Failed to load serviceAccountKey.json, trying env vars...');
+        if (process.env.FIREBASE_PRIVATE_KEY) {
+           admin.initializeApp({
+            credential: admin.credential.cert({
+              projectId: process.env.FIREBASE_PROJECT_ID,
+              privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+              clientEmail: process.env.FIREBASE_CLIENT_EMAIL
+            })
+          });
+          console.log('✅ Firebase Admin initialized with Env Vars');
+        } else {
+          throw new Error('No Firebase configuration found');
+        }
+      } catch (envError) {
+        console.error('❌ Firebase Admin initialization failed:', envError.message);
+        console.error('   Push notifications will not work!');
+      }
     }
   }
 }

@@ -46,10 +46,13 @@ class OfferCard extends StatelessWidget {
         statusColor = Colors.grey;
     }
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(20), // Softer radius
         boxShadow: [
           BoxShadow(
@@ -83,13 +86,17 @@ class OfferCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.grey.shade100,
+                          color: isDark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade100,
                           width: 2,
                         ),
                       ),
                       child: CircleAvatar(
                         radius: 24,
-                        backgroundColor: Colors.grey.shade50,
+                        backgroundColor: isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade50,
                         backgroundImage: offer.fotoPartner != null
                             ? MemoryImage(base64Decode(offer.fotoPartner!))
                             : null,
@@ -114,10 +121,12 @@ class OfferCard extends StatelessWidget {
                         children: [
                           Text(
                             offer.namaPartner ?? 'Unknown User',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: Color(0xFF2D3142),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF2D3142),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -126,7 +135,9 @@ class OfferCard extends StatelessWidget {
                                 ? 'Penawaran Terkirim'
                                 : 'Penawaran Masuk',
                             style: TextStyle(
-                              color: Colors.grey[500],
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[500],
                               fontSize: 11,
                             ),
                           ),
@@ -135,7 +146,9 @@ class OfferCard extends StatelessWidget {
                             Text(
                               offer.kodeTransaksi!,
                               style: TextStyle(
-                                color: Colors.grey[400],
+                                color: isDark
+                                    ? Colors.grey[500]
+                                    : Colors.grey[400],
                                 fontSize: 10,
                                 fontFamily: 'monospace',
                               ),
@@ -159,7 +172,9 @@ class OfferCard extends StatelessWidget {
                     vertical: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50.withOpacity(0.5),
+                    color: isDark
+                        ? Colors.blue.withOpacity(0.1)
+                        : Colors.blue.shade50.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -179,10 +194,12 @@ class OfferCard extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               offer.skillOwn ?? '-',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
-                                color: Color(0xFF2D3142),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF2D3142),
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -216,10 +233,12 @@ class OfferCard extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               offer.skillPartner ?? '-',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
-                                color: Color(0xFF2D3142),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF2D3142),
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -290,7 +309,9 @@ class OfferCard extends StatelessWidget {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.amber.shade50.withOpacity(0.5),
+                      color: isDark
+                          ? Colors.amber.withOpacity(0.1)
+                          : Colors.amber.shade50.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.amber.withOpacity(0.3)),
                     ),

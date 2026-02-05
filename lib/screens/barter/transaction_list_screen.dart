@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/barter_provider.dart';
 import '../../widgets/offer_card.dart';
+import '../../services/app_localizations.dart';
 import 'offer_detail_screen.dart';
 import '../skills/add_skill_screen.dart';
 
@@ -98,7 +99,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD), // Soft premium background
+      backgroundColor: Theme.of(
+        context,
+      ).scaffoldBackgroundColor, // Soft premium background
       body: Column(
         children: [
           // Custom Gradient Header with Animation
@@ -141,7 +144,8 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Transaksi Barter',
+                          // AppLocalizations.of(context)!.translate('trans_title'),
+                          'Transaksi Barter', // Keep for now or replace if desired. Logic suggests replace.
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -197,14 +201,18 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                         ),
                         indicatorSize: TabBarIndicatorSize.tab,
                         dividerColor: Colors.transparent,
-                        tabs: const [
+                        tabs: [
                           Tab(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.send_rounded, size: 18),
                                 SizedBox(width: 6),
-                                Text('Terkirim'),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('tab_sent'),
+                                ),
                               ],
                             ),
                           ),
@@ -214,7 +222,11 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                               children: [
                                 Icon(Icons.inbox_rounded, size: 18),
                                 SizedBox(width: 6),
-                                Text('Diterima'),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('tab_received'),
+                                ),
                               ],
                             ),
                           ),
@@ -224,7 +236,11 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                               children: [
                                 Icon(Icons.cancel_rounded, size: 18),
                                 SizedBox(width: 6),
-                                Text('Ditolak'),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('tab_rejected'),
+                                ),
                               ],
                             ),
                           ),
@@ -234,7 +250,11 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                               children: [
                                 Icon(Icons.history_rounded, size: 18),
                                 SizedBox(width: 6),
-                                Text('Riwayat'),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('tab_history'),
+                                ),
                               ],
                             ),
                           ),
@@ -288,9 +308,12 @@ class _TransactionListScreenState extends State<TransactionListScreen>
         },
         backgroundColor: Theme.of(context).primaryColor,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text(
-          'Buat Barter',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        label: Text(
+          AppLocalizations.of(context)!.translate('fab_create'),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         elevation: 4,
       ),
@@ -305,7 +328,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
         child: Row(
           children: [
             FilterChip(
-              label: const Text('Semua'),
+              label: Text(
+                AppLocalizations.of(context)!.translate('filter_all'),
+              ),
               selected: _selectedStatus == null,
               onSelected: (selected) {
                 setState(() {
@@ -316,7 +341,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
             ),
             const SizedBox(width: 8),
             FilterChip(
-              label: const Text('Menunggu'),
+              label: Text(
+                AppLocalizations.of(context)!.translate('filter_waiting'),
+              ),
               selected: _selectedStatus == 'menunggu',
               onSelected: (selected) {
                 setState(() {
@@ -327,7 +354,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
             ),
             const SizedBox(width: 8),
             FilterChip(
-              label: const Text('Diterima'),
+              label: Text(
+                AppLocalizations.of(context)!.translate('filter_accepted'),
+              ),
               selected: _selectedStatus == 'diterima',
               onSelected: (selected) {
                 setState(() {
@@ -338,7 +367,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
             ),
             const SizedBox(width: 8),
             FilterChip(
-              label: const Text('Berlangsung'),
+              label: Text(
+                AppLocalizations.of(context)!.translate('filter_ongoing'),
+              ),
               selected: _selectedStatus == 'berlangsung',
               onSelected: (selected) {
                 setState(() {
@@ -349,7 +380,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
             ),
             const SizedBox(width: 8),
             FilterChip(
-              label: const Text('Selesai'),
+              label: Text(
+                AppLocalizations.of(context)!.translate('filter_completed'),
+              ),
               selected: _selectedStatus == 'selesai',
               onSelected: (selected) {
                 setState(() {
@@ -360,7 +393,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
             ),
             const SizedBox(width: 8),
             FilterChip(
-              label: const Text('Ditolak'),
+              label: Text(
+                AppLocalizations.of(context)!.translate('filter_rejected'),
+              ),
               selected: _selectedStatus == 'ditolak',
               onSelected: (selected) {
                 setState(() {
@@ -398,7 +433,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                 ElevatedButton.icon(
                   onPressed: _loadData,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Coba Lagi'),
+                  label: Text(
+                    AppLocalizations.of(context)!.translate('btn_retry'),
+                  ),
                 ),
               ],
             ),
@@ -420,8 +457,10 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                 const SizedBox(height: 16),
                 Text(
                   isSent
-                      ? 'Belum ada penawaran terkirim'
-                      : 'Belum ada penawaran diterima',
+                      ? AppLocalizations.of(context)!.translate('empty_sent')
+                      : AppLocalizations.of(
+                          context,
+                        )!.translate('empty_received'),
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
               ],
@@ -478,7 +517,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                 ElevatedButton.icon(
                   onPressed: _loadData,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Coba Lagi'),
+                  label: Text(
+                    AppLocalizations.of(context)!.translate('btn_retry'),
+                  ),
                 ),
               ],
             ),
@@ -493,14 +534,14 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                 Icon(Icons.history, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
-                  'Belum ada riwayat transaksi',
+                  AppLocalizations.of(context)!.translate('empty_history'),
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
                 if (_selectedStatus == 'ditolak')
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      'Tidak ada penawaran yang ditolak',
+                      AppLocalizations.of(context)!.translate('empty_rejected'),
                       style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                     ),
                   ),
@@ -558,7 +599,9 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                 ElevatedButton.icon(
                   onPressed: _loadData,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Coba Lagi'),
+                  label: Text(
+                    AppLocalizations.of(context)!.translate('btn_retry'),
+                  ),
                 ),
               ],
             ),
@@ -575,7 +618,7 @@ class _TransactionListScreenState extends State<TransactionListScreen>
                 Icon(Icons.cancel_outlined, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
-                  'Tidak ada penawaran yang ditolak',
+                  AppLocalizations.of(context)!.translate('empty_rejected'),
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
               ],

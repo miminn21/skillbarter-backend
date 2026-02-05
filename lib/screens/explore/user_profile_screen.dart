@@ -5,6 +5,7 @@ import '../../models/user_public_model.dart';
 import '../../services/explore_service.dart';
 import '../../widgets/skill_card.dart';
 import '../skills/skill_detail_screen.dart';
+import '../../services/app_localizations.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String nik;
@@ -22,14 +23,32 @@ class _UserProfileScreenState extends State<UserProfileScreen>
   bool _isLoading = true;
   String? _error;
   late AnimationController _entryAnimController;
+  late Animation<Offset> _headerAnim;
+  late Animation<Offset> _contentAnim;
 
   @override
   void initState() {
     super.initState();
     _entryAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 2000), // "Agak lama" (2 detik)
     );
+
+    _headerAnim = Tween<Offset>(begin: const Offset(0, -1.0), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entryAnimController,
+            curve: Curves.fastOutSlowIn,
+          ),
+        );
+
+    _contentAnim = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entryAnimController,
+            curve: Curves.easeOutQuart,
+          ),
+        );
     _loadUserProfile();
   }
 
@@ -79,25 +98,38 @@ class _UserProfileScreenState extends State<UserProfileScreen>
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Profil User')),
+        appBar: AppBar(
+          title: Text(
+            AppLocalizations.of(context)!.translate('user_profile_title'),
+          ),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error != null || _user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Profil User')),
+        appBar: AppBar(
+          title: Text(
+            AppLocalizations.of(context)!.translate('user_profile_title'),
+          ),
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
-              Text(_error ?? 'User tidak ditemukan'),
+              Text(
+                _error ??
+                    AppLocalizations.of(context)!.translate('user_not_found'),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Kembali'),
+                child: Text(
+                  AppLocalizations.of(context)!.translate('btn_back'),
+                ),
               ),
             ],
           ),
@@ -109,7 +141,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
     final dicari = _user!.skills.where((s) => s.tipe == 'dicari').toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       body: DefaultTabController(
         length: 2,
@@ -141,20 +173,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                   child: Column(
                     children: [
                       SlideTransition(
-                        position:
-                            Tween<Offset>(
-                              begin: const Offset(0, -1.0),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: _entryAnimController,
-                                curve: const Interval(
-                                  0.0,
-                                  1.0,
-                                  curve: Curves.easeOutQuart,
-                                ),
-                              ),
-                            ),
+                        position: _headerAnim,
                         child: Stack(
                           clipBehavior: Clip.none,
                           alignment: Alignment.bottomCenter,
@@ -211,179 +230,231 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                       ),
 
                       const SizedBox(height: 60), // Spacer for Avatar
-                      // 2. Name & Handle
-                      Text(
-                        _user!.namaLengkap,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3142),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '@${_user!.namaPanggilan}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[500],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // 3. Stats Row
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      // CONTENT ANIMATION START
+                      SlideTransition(
+                        position: _contentAnim,
+                        child: Column(
                           children: [
-                            _buildStatCard(
-                              icon: Icons.monetization_on_rounded,
-                              label: 'SkillCoin',
-                              value: _user!.saldoSkillcoin.toString(),
-                              color: Colors.amber,
+                            // 2. Name & Handle
+                            Text(
+                              _user!.namaLengkap,
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : const Color(0xFF2D3142),
+                              ),
                             ),
-                            const SizedBox(width: 12),
-                            _buildStatCard(
-                              icon: Icons.star_rounded,
-                              label: 'Rating',
-                              value: _user!.ratingRataRata.toStringAsFixed(1),
-                              color: Colors.orange,
+                            const SizedBox(height: 4),
+                            Text(
+                              '@${_user!.namaPanggilan}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                            const SizedBox(width: 12),
-                            _buildStatCard(
-                              icon: Icons.swap_horiz_rounded,
-                              label: 'Transaksi',
-                              value: _user!.jumlahTransaksi.toString(),
-                              color: Colors.blue,
+
+                            const SizedBox(height: 24),
+
+                            // 3. Stats Row
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _buildStatCard(
+                                    icon: Icons.monetization_on_rounded,
+                                    label: AppLocalizations.of(
+                                      context,
+                                    )!.translate('stat_coins'),
+                                    value: _user!.saldoSkillcoin.toString(),
+                                    color: Colors.amber,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildStatCard(
+                                    icon: Icons.star_rounded,
+                                    label: AppLocalizations.of(
+                                      context,
+                                    )!.translate('stat_rating'),
+                                    value: _user!.ratingRataRata
+                                        .toStringAsFixed(1),
+                                    color: Colors.orange,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildStatCard(
+                                    icon: Icons.swap_horiz_rounded,
+                                    label: AppLocalizations.of(
+                                      context,
+                                    )!.translate('stat_trans'),
+                                    value: _user!.jumlahTransaksi.toString(),
+                                    color: Colors.blue,
+                                  ),
+                                ],
+                              ),
                             ),
+
+                            const SizedBox(height: 24),
+
+                            // 4. Bio
+                            if (_user!.bio != null && _user!.bio!.isNotEmpty)
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).cardColor,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.03),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.format_quote_rounded,
+                                      color: Colors.grey[300],
+                                      size: 32,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      _user!.bio!,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey[300]
+                                            : Colors.grey[700],
+                                        height: 1.6,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            // Spacer if bio exists
+                            if (_user!.bio != null && _user!.bio!.isNotEmpty)
+                              const SizedBox(height: 24),
+
+                            // 5. Personal Info
+                            if (_user!.kota != null ||
+                                _user!.pekerjaan != null ||
+                                _user!.pendidikanTerakhir != null) ...[
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                ),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.translate('info_title'),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.grey[800],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).cardColor,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.04),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    if (_user!.jenisKelamin != null)
+                                      _buildInfoTile(
+                                        icon: Icons.wc_rounded,
+                                        title: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_gender'),
+                                        value: _user!.jenisKelamin == 'L'
+                                            ? AppLocalizations.of(
+                                                context,
+                                              )!.translate('gender_male')
+                                            : AppLocalizations.of(
+                                                context,
+                                              )!.translate('gender_female'),
+                                        color: Colors.purple,
+                                        isFirst: true,
+                                      ),
+                                    if (_user!.tanggalLahir != null)
+                                      _buildInfoTile(
+                                        icon: Icons.cake_rounded,
+                                        title: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_dob'),
+                                        value: _formatDate(_user!.tanggalLahir),
+                                        color: Colors.pink,
+                                      ),
+                                    if (_user!.kota != null)
+                                      _buildInfoTile(
+                                        icon: Icons.location_city_rounded,
+                                        title: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_city'),
+                                        value: _user!.kota!,
+                                        color: Colors.orange,
+                                      ),
+                                    if (_user!.pekerjaan != null)
+                                      _buildInfoTile(
+                                        icon: Icons.work_rounded,
+                                        title: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_job'),
+                                        value: _user!.pekerjaan!,
+                                        color: Colors.brown,
+                                      ),
+                                    if (_user!.pendidikanTerakhir != null)
+                                      _buildInfoTile(
+                                        icon: Icons.school_rounded,
+                                        title: AppLocalizations.of(
+                                          context,
+                                        )!.translate('label_edu'),
+                                        value: _user!.pendidikanTerakhir!,
+                                        color: Colors.teal,
+                                        isLast: true,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                            ],
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // 4. Bio
-                      if (_user!.bio != null && _user!.bio!.isNotEmpty)
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20),
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.format_quote_rounded,
-                                color: Colors.grey[300],
-                                size: 32,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _user!.bio!,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.grey[700],
-                                  height: 1.6,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      // Spacer if bio exists
-                      if (_user!.bio != null && _user!.bio!.isNotEmpty)
-                        const SizedBox(height: 24),
-
-                      // 5. Personal Info
-                      if (_user!.kota != null ||
-                          _user!.pekerjaan != null ||
-                          _user!.pendidikanTerakhir != null) ...[
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Informasi Pribadi',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[800],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              if (_user!.jenisKelamin != null)
-                                _buildInfoTile(
-                                  icon: Icons.wc_rounded,
-                                  title: 'Jenis Kelamin',
-                                  value: _user!.jenisKelamin == 'L'
-                                      ? 'Laki-laki'
-                                      : 'Perempuan',
-                                  color: Colors.purple,
-                                  isFirst: true,
-                                ),
-                              if (_user!.tanggalLahir != null)
-                                _buildInfoTile(
-                                  icon: Icons.cake_rounded,
-                                  title: 'Tanggal Lahir',
-                                  value: _formatDate(_user!.tanggalLahir),
-                                  color: Colors.pink,
-                                ),
-                              if (_user!.kota != null)
-                                _buildInfoTile(
-                                  icon: Icons.location_city_rounded,
-                                  title: 'Kota',
-                                  value: _user!.kota!,
-                                  color: Colors.orange,
-                                ),
-                              if (_user!.pekerjaan != null)
-                                _buildInfoTile(
-                                  icon: Icons.work_rounded,
-                                  title: 'Pekerjaan',
-                                  value: _user!.pekerjaan!,
-                                  color: Colors.brown,
-                                ),
-                              if (_user!.pendidikanTerakhir != null)
-                                _buildInfoTile(
-                                  icon: Icons.school_rounded,
-                                  title: 'Pendidikan',
-                                  value: _user!.pendidikanTerakhir!,
-                                  color: Colors.teal,
-                                  isLast: true,
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                      ],
                     ],
                   ),
                 ),
@@ -406,17 +477,23 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                         ),
                       ],
                     ),
-                    labelColor: Theme.of(context).primaryColor,
+                    labelColor: const Color(
+                      0xFF2D3142,
+                    ), // Dark text for white background
                     unselectedLabelColor: Colors.white,
                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                    tabs: const [
+                    tabs: [
                       Tab(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.workspace_premium_rounded, size: 20),
                             SizedBox(width: 8),
-                            Text('Dikuasai'),
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.translate('tab_mastered'),
+                            ),
                           ],
                         ),
                       ),
@@ -426,30 +503,42 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                           children: [
                             Icon(Icons.search_rounded, size: 20),
                             SizedBox(width: 8),
-                            Text('Dicari'),
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.translate('tab_wanted'),
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
+                  _contentAnim, // Pass animation
                 ),
                 pinned: true,
               ),
             ];
           },
-          body: TabBarView(
-            children: [
-              _buildSkillGrid(
-                dikuasai,
-                Icons.workspace_premium_rounded,
-                'Belum ada skill dikuasai',
-              ),
-              _buildSkillGrid(
-                dicari,
-                Icons.person_search_rounded,
-                'Belum ada skill dicari',
-              ),
-            ],
+          body: SlideTransition(
+            position: _contentAnim,
+            child: TabBarView(
+              children: [
+                _buildSkillGrid(
+                  dikuasai,
+                  Icons.workspace_premium_rounded,
+                  AppLocalizations.of(
+                    context,
+                  )!.translate('empty_skills_mastered'),
+                ),
+                _buildSkillGrid(
+                  dicari,
+                  Icons.person_search_rounded,
+                  AppLocalizations.of(
+                    context,
+                  )!.translate('empty_skills_wanted'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -466,7 +555,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -490,10 +579,12 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3142),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : const Color(0xFF2D3142),
               ),
             ),
             const SizedBox(height: 2),
@@ -784,8 +875,9 @@ class _AnimatedProfileHeaderState extends State<_AnimatedProfileHeader>
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar _tabBar;
+  final Animation<Offset> animation;
 
-  _SliverAppBarDelegate(this._tabBar);
+  _SliverAppBarDelegate(this._tabBar, this.animation);
 
   @override
   double get minExtent => _tabBar.preferredSize.height + 24;
@@ -799,22 +891,25 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(
-      color: const Color(0xFFF8F9FD),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    return SlideTransition(
+      position: animation,
       child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(30),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: _tabBar,
         ),
-        child: _tabBar,
       ),
     );
   }
 
   @override
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return false;
+    return true;
   }
 }

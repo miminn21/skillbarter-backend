@@ -6,6 +6,7 @@ import '../../widgets/custom_notification.dart';
 import 'add_skill_screen.dart';
 import 'edit_skill_screen.dart';
 import 'skill_detail_screen.dart';
+import '../../services/app_localizations.dart';
 
 class SkillListScreen extends StatefulWidget {
   const SkillListScreen({super.key});
@@ -17,11 +18,37 @@ class SkillListScreen extends StatefulWidget {
 class _SkillListScreenState extends State<SkillListScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  late AnimationController _entryAnimController;
+  late Animation<Offset> _headerAnim;
+  late Animation<Offset> _contentAnim;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+
+    _entryAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _headerAnim = Tween<Offset>(begin: const Offset(0, -1.0), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entryAnimController,
+            curve: Curves.easeOutQuart,
+          ),
+        );
+
+    _contentAnim = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entryAnimController,
+            curve: Curves.easeOutQuart,
+          ),
+        );
+
+    _entryAnimController.forward();
 
     // Load skills on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -32,6 +59,7 @@ class _SkillListScreenState extends State<SkillListScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _entryAnimController.dispose();
     super.dispose();
   }
 
@@ -63,108 +91,125 @@ class _SkillListScreenState extends State<SkillListScreen>
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        title: const Text(
-          'Keahlian Saya',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          AppLocalizations.of(context)!.translate('title_my_skills'),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
       body: Stack(
         children: [
           // Animated Background Header
-          Align(
-            alignment: Alignment.topCenter,
-            child: ClipPath(
-              clipper: _HeaderClipper(),
-              child: const _AnimatedHeader(),
+          SlideTransition(
+            position: _headerAnim,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ClipPath(
+                clipper: _HeaderClipper(),
+                child: const _AnimatedHeader(),
+              ),
             ),
           ),
 
           // Content
-          Column(
-            children: [
-              SizedBox(
-                height:
-                    kToolbarHeight + MediaQuery.of(context).padding.top + 10,
-              ), // Spacing for AppBar
-              // Custom Tab Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  height: 50,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    dividerColor: Colors.transparent,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicator: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(26),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+          SlideTransition(
+            position: _contentAnim,
+            child: Column(
+              children: [
+                SizedBox(
+                  height:
+                      kToolbarHeight + MediaQuery.of(context).padding.top + 10,
+                ), // Spacing for AppBar
+                // Custom Tab Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    height: 50,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      dividerColor: Colors.transparent,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicator: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(26),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      labelColor: Theme.of(context).primaryColor,
+                      unselectedLabelColor: Colors.white,
+                      labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                      tabs: [
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.workspace_premium_rounded, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('tab_mastered'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search_rounded, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('tab_wanted'),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    labelColor: Theme.of(context).primaryColor,
-                    unselectedLabelColor: Colors.white,
-                    labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                    tabs: const [
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.workspace_premium_rounded, size: 20),
-                            SizedBox(width: 8),
-                            Text('Dikuasai'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.search_rounded, size: 20),
-                            SizedBox(width: 8),
-                            Text('Dicari'),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Tab View List
-              Expanded(
-                child: Consumer<SkillProvider>(
-                  builder: (context, skillProvider, _) {
-                    if (skillProvider.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                // Tab View List
+                Expanded(
+                  child: Consumer<SkillProvider>(
+                    builder: (context, skillProvider, _) {
+                      if (skillProvider.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                    return TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildSkillList(
-                          skillProvider.dikuasaiSkills,
-                          'dikuasai',
-                        ),
-                        _buildSkillList(skillProvider.dicariSkills, 'dicari'),
-                      ],
-                    );
-                  },
+                      return TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildSkillList(
+                            skillProvider.dikuasaiSkills,
+                            'dikuasai',
+                          ),
+                          _buildSkillList(skillProvider.dicariSkills, 'dicari'),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -186,6 +231,8 @@ class _SkillListScreenState extends State<SkillListScreen>
   }
 
   Widget _buildSkillList(List<SkillModel> skills, String tipe) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (skills.isEmpty) {
       return Center(
         child: Column(
@@ -194,7 +241,7 @@ class _SkillListScreenState extends State<SkillListScreen>
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -207,17 +254,21 @@ class _SkillListScreenState extends State<SkillListScreen>
               child: Icon(
                 tipe == 'dikuasai' ? Icons.workspace_premium : Icons.search,
                 size: 64,
-                color: Colors.grey[300],
+                color: isDark ? Colors.grey[600] : Colors.grey[300],
               ),
             ),
             const SizedBox(height: 24),
             Text(
               tipe == 'dikuasai'
-                  ? 'Belum ada skill yang dikuasai'
-                  : 'Belum ada skill yang dicari',
+                  ? AppLocalizations.of(
+                      context,
+                    )!.translate('empty_skills_mastered')
+                  : AppLocalizations.of(
+                      context,
+                    )!.translate('empty_skills_wanted'),
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -236,7 +287,9 @@ class _SkillListScreenState extends State<SkillListScreen>
                 }
               },
               icon: const Icon(Icons.add),
-              label: const Text('Tambah Skill'),
+              label: Text(
+                AppLocalizations.of(context)!.translate('btn_add_skill'),
+              ),
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -266,18 +319,29 @@ class _SkillListScreenState extends State<SkillListScreen>
   }
 
   Widget _buildSkillCard(SkillModel skill) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
+          isDark
+              ? BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              : BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
         ],
+        border: isDark
+            ? Border.all(color: Colors.white.withOpacity(0.05))
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -331,10 +395,13 @@ class _SkillListScreenState extends State<SkillListScreen>
                               Flexible(
                                 child: Text(
                                   skill.namaKeahlian,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     height: 1.2,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
                                   ),
                                 ),
                               ),
@@ -350,10 +417,15 @@ class _SkillListScreenState extends State<SkillListScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            skill.namaKategori ?? 'Uncategorized',
+                            skill.namaKategori ??
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('label_category_general'),
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[500],
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[500],
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -363,7 +435,11 @@ class _SkillListScreenState extends State<SkillListScreen>
 
                     // Menu / Actions
                     PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert, color: Colors.grey[400]),
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: isDark ? Colors.grey[400] : Colors.grey[400],
+                      ),
+                      color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -383,23 +459,45 @@ class _SkillListScreenState extends State<SkillListScreen>
                         }
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'edit',
                           child: Row(
                             children: [
-                              Icon(Icons.edit, size: 20, color: Colors.blue),
-                              SizedBox(width: 12),
-                              Text('Edit'),
+                              const Icon(
+                                Icons.edit,
+                                size: 20,
+                                color: Colors.blue,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('menu_edit'),
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete, size: 20, color: Colors.red),
-                              SizedBox(width: 12),
-                              Text('Hapus'),
+                              const Icon(
+                                Icons.delete,
+                                size: 20,
+                                color: Colors.red,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.translate('menu_delete'),
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -524,6 +622,8 @@ class _SkillListScreenState extends State<SkillListScreen>
   }
 
   Future<void> _confirmDelete(SkillModel skill) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
@@ -533,7 +633,7 @@ class _SkillListScreenState extends State<SkillListScreen>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -549,7 +649,7 @@ class _SkillListScreenState extends State<SkillListScreen>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50,
+                  color: Colors.red.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -559,15 +659,22 @@ class _SkillListScreenState extends State<SkillListScreen>
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Hapus Skill',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                AppLocalizations.of(context)!.translate('dialog_delete_title'),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
-                'Apakah Anda yakin ingin menghapus "${skill.namaKeahlian}"?\nTindakan ini tidak dapat dibatalkan.',
+                AppLocalizations.of(context)!.translate('dialog_delete_body'),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600], height: 1.5),
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 28),
               Row(
@@ -580,12 +687,16 @@ class _SkillListScreenState extends State<SkillListScreen>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        side: BorderSide(color: Colors.grey.shade300),
+                        side: BorderSide(
+                          color: isDark
+                              ? Colors.grey[700]!
+                              : Colors.grey.shade300,
+                        ),
                       ),
                       child: Text(
-                        'Batal',
+                        AppLocalizations.of(context)!.translate('btn_cancel'),
                         style: TextStyle(
-                          color: Colors.grey[700],
+                          color: isDark ? Colors.white : Colors.grey[700],
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -603,9 +714,9 @@ class _SkillListScreenState extends State<SkillListScreen>
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Hapus',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context)!.translate('btn_delete'),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -627,11 +738,15 @@ class _SkillListScreenState extends State<SkillListScreen>
       if (!mounted) return;
 
       if (success) {
-        CustomNotification.showSuccess(context, '🗑️ Skill berhasil dihapus');
+        CustomNotification.showSuccess(
+          context,
+          '🗑️ ${AppLocalizations.of(context)!.translate('success_skill_deleted')}',
+        );
       } else {
         CustomNotification.showError(
           context,
-          skillProvider.error ?? 'Gagal menghapus skill',
+          skillProvider.error ??
+              AppLocalizations.of(context)!.translate('error_delete_skill'),
         );
       }
     }

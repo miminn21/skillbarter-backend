@@ -5,6 +5,7 @@ import '../../providers/skill_provider.dart';
 import '../../widgets/skill_card.dart';
 import '../../widgets/filter_sheet.dart';
 import '../skills/skill_detail_screen.dart';
+import '../../services/app_localizations.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -136,8 +137,11 @@ class _ExploreScreenState extends State<ExploreScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
           // Custom Gradient Header with Animation
@@ -156,10 +160,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).primaryColor,
-                      const Color(0xFF1E88E5),
-                    ],
+                    colors: [theme.primaryColor, const Color(0xFF1E88E5)],
                   ),
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(32),
@@ -167,7 +168,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      color: theme.primaryColor.withOpacity(0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -178,9 +179,11 @@ class _ExploreScreenState extends State<ExploreScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Jelajah Skill',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.translate('explore_title'),
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -230,7 +233,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                             ),
                           ],
                         ),
-                        labelColor: Theme.of(context).primaryColor,
+                        labelColor: theme.primaryColor,
                         unselectedLabelColor: Colors.white.withOpacity(0.9),
                         labelStyle: const TextStyle(
                           fontWeight: FontWeight.bold,
@@ -242,14 +245,18 @@ class _ExploreScreenState extends State<ExploreScreen>
                         ),
                         indicatorSize: TabBarIndicatorSize.tab,
                         dividerColor: Colors.transparent,
-                        tabs: const [
+                        tabs: [
                           Tab(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.workspace_premium_rounded, size: 18),
-                                SizedBox(width: 8),
-                                Text('Dikuasai'),
+                                const SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('tab_mastered'),
+                                ),
                               ],
                             ),
                           ),
@@ -258,8 +265,12 @@ class _ExploreScreenState extends State<ExploreScreen>
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.search_rounded, size: 18),
-                                SizedBox(width: 8),
-                                Text('Dicari'),
+                                const SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.translate('tab_wanted'),
+                                ),
                               ],
                             ),
                           ),
@@ -284,7 +295,10 @@ class _ExploreScreenState extends State<ExploreScreen>
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDark
+                              ? const Color(0xFF2D3142)
+                              : theme
+                                    .cardColor, // Distinct dark color for search
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
@@ -296,9 +310,18 @@ class _ExploreScreenState extends State<ExploreScreen>
                         ),
                         child: TextField(
                           controller: _searchController,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                           decoration: InputDecoration(
-                            hintText: 'Cari skill...',
-                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            hintText: AppLocalizations.of(
+                              context,
+                            )!.translate('search_hint'),
+                            hintStyle: TextStyle(
+                              color: isDark
+                                  ? Colors.grey[500]
+                                  : Colors.grey[400],
+                            ),
                             prefixIcon: const Icon(
                               Icons.search_rounded,
                               color: Colors.grey,
@@ -332,7 +355,9 @@ class _ExploreScreenState extends State<ExploreScreen>
                     const SizedBox(width: 12),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark
+                            ? const Color(0xFF2D3142)
+                            : theme.cardColor,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
@@ -345,7 +370,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                       child: IconButton(
                         icon: Icon(
                           Icons.filter_list_rounded,
-                          color: Theme.of(context).primaryColor,
+                          color: theme.primaryColor,
                         ),
                         onPressed: _showFilterSheet,
                         padding: const EdgeInsets.all(12),
@@ -378,19 +403,19 @@ class _ExploreScreenState extends State<ExploreScreen>
                   children: [
                     if (provider.currentFilter.searchQuery != null)
                       _buildFilterChip(
-                        'Pencarian: ${provider.currentFilter.searchQuery}',
+                        '${AppLocalizations.of(context)!.translate('chip_search')}${provider.currentFilter.searchQuery}',
                         () => provider.searchSkills(''),
                       ),
                     if (provider.currentFilter.tipe != null)
                       _buildFilterChip(
-                        'Tipe: ${provider.currentFilter.tipe}',
+                        '${AppLocalizations.of(context)!.translate('chip_type')}${provider.currentFilter.tipe}',
                         () => provider.applyFilter(
                           provider.currentFilter.copyWith(tipe: null),
                         ),
                       ),
                     if (provider.currentFilter.tingkat != null)
                       _buildFilterChip(
-                        'Tingkat: ${provider.currentFilter.tingkat}',
+                        '${AppLocalizations.of(context)!.translate('chip_level')}${provider.currentFilter.tingkat}',
                         () => provider.applyFilter(
                           provider.currentFilter.copyWith(tingkat: null),
                         ),
@@ -398,7 +423,11 @@ class _ExploreScreenState extends State<ExploreScreen>
                     TextButton.icon(
                       onPressed: () => provider.clearFilter(),
                       icon: const Icon(Icons.clear_all, size: 16),
-                      label: const Text('Hapus Semua'),
+                      label: Text(
+                        AppLocalizations.of(
+                          context,
+                        )!.translate('btn_clear_all'),
+                      ),
                     ),
                   ],
                 ),
@@ -429,7 +458,11 @@ class _ExploreScreenState extends State<ExploreScreen>
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _loadData,
-                          child: const Text('Coba Lagi'),
+                          child: Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('btn_retry'),
+                          ),
                         ),
                       ],
                     ),
@@ -448,7 +481,9 @@ class _ExploreScreenState extends State<ExploreScreen>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Tidak ada skill ditemukan',
+                          AppLocalizations.of(
+                            context,
+                          )!.translate('empty_explore_title'),
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey[600],
@@ -457,7 +492,11 @@ class _ExploreScreenState extends State<ExploreScreen>
                         const SizedBox(height: 8),
                         TextButton(
                           onPressed: () => provider.clearFilter(),
-                          child: const Text('Hapus Filter'),
+                          child: Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.translate('btn_clear_filter'),
+                          ),
                         ),
                       ],
                     ),

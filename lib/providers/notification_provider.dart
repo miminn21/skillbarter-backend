@@ -4,8 +4,11 @@ import '../services/notification_service.dart';
 import '../models/notification_model.dart';
 import 'auth_provider.dart';
 
+import '../services/fcm_service.dart';
+
 class NotificationProvider with ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
+  final FCMService _fcmService = FCMService();
 
   List<NotificationModel> _notifications = [];
   int _unreadCount = 0;
@@ -24,6 +27,7 @@ class NotificationProvider with ChangeNotifier {
     _authProvider = auth;
 
     if (_authProvider?.isAuthenticated == true) {
+      _fcmService.init(); // Initialize Firebase Cloud Messaging
       _startPolling();
       fetchNotifications();
       fetchUnreadCount();

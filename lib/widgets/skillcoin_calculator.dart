@@ -20,9 +20,12 @@ class SkillcoinCalculator extends StatelessWidget {
   Widget build(BuildContext context) {
     final skillcoinAnda = durasiJam * hargaPerJamAnda;
     final skillcoinPartner = durasiJam * hargaPerJamPartner;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Card(
       elevation: 2,
+      color: theme.cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -32,11 +35,15 @@ class SkillcoinCalculator extends StatelessWidget {
             // Header
             Row(
               children: [
-                Icon(Icons.calculate, color: Colors.amber.shade700),
+                Icon(Icons.calculate, color: Colors.orange),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Perhitungan Skillcoin',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                 ),
               ],
             ),
@@ -49,8 +56,9 @@ class SkillcoinCalculator extends StatelessWidget {
               duration: durasiJam,
               pricePerHour: hargaPerJamAnda,
               total: skillcoinAnda,
-              color: Colors.green,
+              color: isDark ? Colors.greenAccent : Colors.green,
               isIncome: true,
+              isDark: isDark,
             ),
             const SizedBox(height: 12),
 
@@ -63,6 +71,7 @@ class SkillcoinCalculator extends StatelessWidget {
               total: skillcoinPartner,
               color: Colors.blue,
               isIncome: false,
+              isDark: isDark,
             ),
             const SizedBox(height: 16),
 
@@ -70,9 +79,15 @@ class SkillcoinCalculator extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50,
+                color: isDark
+                    ? Colors.orange.withOpacity(0.1)
+                    : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.shade200),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.orange.withOpacity(0.3)
+                      : Colors.orange.shade200,
+                ),
               ),
               child: Column(
                 children: [
@@ -80,17 +95,20 @@ class SkillcoinCalculator extends StatelessWidget {
                     alignment: WrapAlignment.spaceBetween,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         'Anda Akan Terima: ',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
                       ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.monetization_on,
                             size: 20,
-                            color: Colors.amber.shade700,
+                            color: Colors.orange,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -98,7 +116,9 @@ class SkillcoinCalculator extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.amber.shade900,
+                              color: isDark
+                                  ? Colors.orangeAccent
+                                  : Colors.orange.shade900,
                             ),
                           ),
                         ],
@@ -110,17 +130,20 @@ class SkillcoinCalculator extends StatelessWidget {
                     alignment: WrapAlignment.spaceBetween,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         'Partner Akan Terima: ',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
                       ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.monetization_on,
                             size: 20,
-                            color: Colors.amber.shade700,
+                            color: Colors.orange,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -128,7 +151,9 @@ class SkillcoinCalculator extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.amber.shade900,
+                              color: isDark
+                                  ? Colors.orangeAccent
+                                  : Colors.orange.shade900,
                             ),
                           ),
                         ],
@@ -144,7 +169,9 @@ class SkillcoinCalculator extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: isDark
+                    ? Colors.blue.withOpacity(0.1)
+                    : Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -152,7 +179,7 @@ class SkillcoinCalculator extends StatelessWidget {
                   Icon(
                     Icons.info_outline,
                     size: 16,
-                    color: Colors.blue.shade700,
+                    color: isDark ? Colors.blueAccent : Colors.blue.shade700,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -160,7 +187,9 @@ class SkillcoinCalculator extends StatelessWidget {
                       'Skillcoin akan ditransfer setelah kedua pihak mengkonfirmasi penyelesaian barter',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.blue.shade900,
+                        color: isDark
+                            ? Colors.blue.shade100
+                            : Colors.blue.shade900,
                       ),
                     ),
                   ),
@@ -181,13 +210,14 @@ class SkillcoinCalculator extends StatelessWidget {
     required int total,
     required Color color,
     required bool isIncome,
+    required bool isDark,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withOpacity(isDark ? 0.05 : 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withOpacity(isDark ? 0.2 : 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,14 +226,18 @@ class SkillcoinCalculator extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[700],
+              color: isDark ? Colors.grey[400] : Colors.grey[700],
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             skill,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -211,7 +245,10 @@ class SkillcoinCalculator extends StatelessWidget {
               Expanded(
                 child: Text(
                   '$duration jam × $pricePerHour coin/jam',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey[400] : Colors.grey[700],
+                  ),
                 ),
               ),
               Row(

@@ -10,6 +10,7 @@ import '../explore/radar_screen.dart'; // Import RadarScreen
 import '../notifications/notification_screen.dart';
 import '../../providers/notification_provider.dart';
 import '../profile/activity_log_screen.dart'; // Import ActivityLogScreen
+import '../../services/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -55,7 +56,9 @@ class _HomeScreenState extends State<HomeScreen> {
         maxLine: 1,
         shadowElevation: 5,
         kBottomRadius: 28.0,
-        notchColor: theme.colorScheme.primary,
+        notchColor: theme.brightness == Brightness.dark
+            ? const Color(0xFF1565C0) // Darker blue for dark mode
+            : theme.colorScheme.primary,
         removeMargins: true,
         bottomBarWidth: MediaQuery.of(context).size.width,
         showShadow: true,
@@ -70,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
             activeItem: const Icon(Icons.home, color: Colors.white),
-            itemLabel: 'Beranda',
+            itemLabel: AppLocalizations.of(context)!.translate('nav_home'),
           ),
           BottomBarItem(
             inActiveItem: Icon(
@@ -78,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
             activeItem: const Icon(Icons.explore, color: Colors.white),
-            itemLabel: 'Jelajah',
+            itemLabel: AppLocalizations.of(context)!.translate('nav_explore'),
           ),
           BottomBarItem(
             inActiveItem: Icon(
@@ -86,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
             activeItem: const Icon(Icons.radar, color: Colors.white),
-            itemLabel: 'Radar',
+            itemLabel: AppLocalizations.of(context)!.translate('nav_radar'),
           ),
           BottomBarItem(
             inActiveItem: Icon(
@@ -94,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
             activeItem: const Icon(Icons.swap_horiz, color: Colors.white),
-            itemLabel: 'Transaksi',
+            itemLabel: AppLocalizations.of(context)!.translate('nav_trans'),
           ),
           BottomBarItem(
             inActiveItem: Icon(
@@ -102,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
             activeItem: const Icon(Icons.person, color: Colors.white),
-            itemLabel: 'Profil',
+            itemLabel: AppLocalizations.of(context)!.translate('nav_profile'),
           ),
         ],
         onTap: (index) {
@@ -201,8 +204,11 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           final user = authProvider.user;
@@ -238,11 +244,13 @@ class _DashboardPageState extends State<DashboardPage>
                             _buildStatsGrid(context, user),
                             const SizedBox(height: 25),
                             Text(
-                              'Aksi Cepat',
+                              AppLocalizations.of(
+                                context,
+                              )!.translate('quick_actions'),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey[800],
+                                color: isDark ? Colors.white : Colors.grey[800],
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -296,7 +304,9 @@ class _DashboardPageState extends State<DashboardPage>
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Mau tukar skill apa hari ini?',
+                          AppLocalizations.of(
+                            context,
+                          )!.translate('welcome_sub'),
                           style: TextStyle(
                             fontSize: 15,
                             color: Colors.white.withOpacity(0.9),
@@ -389,7 +399,7 @@ class _DashboardPageState extends State<DashboardPage>
               _buildStatCard(
                 context,
                 icon: Icons.monetization_on_rounded,
-                title: 'SkillCoin',
+                title: AppLocalizations.of(context)!.translate('stat_coins'),
                 value: '${user?.saldoSkillcoin ?? 0}',
                 color: const Color(0xFFFFB300), // Richer Amber
                 delay: 0,
@@ -398,7 +408,7 @@ class _DashboardPageState extends State<DashboardPage>
               _buildStatCard(
                 context,
                 icon: Icons.swap_vertical_circle_rounded, // Better icon
-                title: 'Transaksi',
+                title: AppLocalizations.of(context)!.translate('stat_trans'),
                 value: '${user?.jumlahTransaksi ?? 0}',
                 color: const Color(0xFF1E88E5), // Richer Blue
                 delay: 100,
@@ -413,7 +423,7 @@ class _DashboardPageState extends State<DashboardPage>
               _buildStatCard(
                 context,
                 icon: Icons.star_rounded,
-                title: 'Rating',
+                title: AppLocalizations.of(context)!.translate('stat_rating'),
                 value: '${user?.ratingRataRata.toStringAsFixed(1) ?? "0.0"}',
                 color: const Color(0xFFFF7043), // Deep Orange
                 delay: 200,
@@ -422,7 +432,9 @@ class _DashboardPageState extends State<DashboardPage>
               _buildStatCard(
                 context,
                 icon: Icons.timer_rounded, // Better icon
-                title: 'Jam Kontribusi',
+                title: AppLocalizations.of(
+                  context,
+                )!.translate('stat_hours_contrib'),
                 value: '${user?.totalJamBerkontribusi ?? 0}',
                 color: const Color(0xFF43A047), // Richer Green
                 delay: 300,
@@ -442,6 +454,9 @@ class _DashboardPageState extends State<DashboardPage>
     required Color color,
     required int delay,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: Duration(milliseconds: 600 + delay),
@@ -453,7 +468,7 @@ class _DashboardPageState extends State<DashboardPage>
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -477,10 +492,10 @@ class _DashboardPageState extends State<DashboardPage>
             const SizedBox(height: 16),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF2D3142),
+                color: isDark ? Colors.white : const Color(0xFF2D3142),
                 height: 1.2,
               ),
             ),
@@ -489,7 +504,7 @@ class _DashboardPageState extends State<DashboardPage>
               title,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey[600],
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -510,8 +525,8 @@ class _DashboardPageState extends State<DashboardPage>
       children: [
         _buildActionCard(
           context,
-          'Tambah Skill',
-          'Mulai berbagi',
+          AppLocalizations.of(context)!.translate('action_add_skill'),
+          AppLocalizations.of(context)!.translate('action_add_skill_sub'),
           Icons.add_circle_outline_rounded,
           const Color(0xFF5E35B1), // Deep Purple
           () => Navigator.pushNamed(context, '/skills'),
@@ -519,8 +534,8 @@ class _DashboardPageState extends State<DashboardPage>
         ),
         _buildActionCard(
           context,
-          'Cari Skill',
-          'Temukan mentor',
+          AppLocalizations.of(context)!.translate('action_search'),
+          AppLocalizations.of(context)!.translate('action_search_sub'),
           Icons.search_rounded,
           const Color(0xFFE91E63), // Pink
           () => Navigator.pushNamed(context, '/explore'),
@@ -528,8 +543,8 @@ class _DashboardPageState extends State<DashboardPage>
         ),
         _buildActionCard(
           context,
-          'Leaderboard',
-          'Top pengguna',
+          AppLocalizations.of(context)!.translate('action_leaderboard'),
+          AppLocalizations.of(context)!.translate('action_leaderboard_sub'),
           Icons.emoji_events_rounded, // Rounded variant
           const Color(0xFFFF8F00), // Amber Dark
           () => Navigator.pushNamed(context, '/leaderboard'),
@@ -537,8 +552,8 @@ class _DashboardPageState extends State<DashboardPage>
         ),
         _buildActionCard(
           context,
-          'Riwayat',
-          'Log aktivitas',
+          AppLocalizations.of(context)!.translate('action_history'),
+          AppLocalizations.of(context)!.translate('action_history_sub'),
           Icons.history_edu_rounded, // More specific icon
           const Color(0xFF00897B), // Teal
           () {
@@ -564,6 +579,9 @@ class _DashboardPageState extends State<DashboardPage>
     VoidCallback onTap,
     int delay,
   ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: Duration(milliseconds: 600 + delay),
@@ -581,7 +599,7 @@ class _DashboardPageState extends State<DashboardPage>
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -622,10 +640,10 @@ class _DashboardPageState extends State<DashboardPage>
               const Spacer(),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Color(0xFF2D3142),
+                  color: isDark ? Colors.white : const Color(0xFF2D3142),
                 ),
               ),
               const SizedBox(height: 4),
@@ -633,7 +651,7 @@ class _DashboardPageState extends State<DashboardPage>
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[500],
+                  color: isDark ? Colors.grey[400] : Colors.grey[500],
                   fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,

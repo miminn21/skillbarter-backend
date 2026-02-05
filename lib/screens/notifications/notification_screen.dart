@@ -156,7 +156,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -334,7 +334,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -356,7 +356,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -408,13 +408,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: notification.isRead
-                          ? Colors.white
-                          : Colors.blue.shade50.withOpacity(0.5),
+                          ? Theme.of(context).cardColor
+                          : (Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(
+                                    context,
+                                  ).primaryColor.withOpacity(0.1)
+                                : Colors.blue.shade50.withOpacity(0.5)),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: notification.isRead
                             ? Colors.transparent
-                            : Colors.blue.withOpacity(0.2),
+                            : (Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(
+                                      context,
+                                    ).primaryColor.withOpacity(0.3)
+                                  : Colors.blue.withOpacity(0.2)),
                         width: 1,
                       ),
                       boxShadow: [
@@ -469,7 +477,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 15,
-                                              color: const Color(0xFF2D3142),
+                                              color:
+                                                  Theme.of(
+                                                        context,
+                                                      ).brightness ==
+                                                      Brightness.dark
+                                                  ? Colors.white
+                                                  : const Color(0xFF2D3142),
                                             ),
                                           ),
                                         ),

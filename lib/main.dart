@@ -12,6 +12,9 @@ import 'providers/category_provider.dart';
 import 'providers/skill_request_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/settings_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'services/app_localizations.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -23,12 +26,12 @@ import 'screens/barter/create_offer_screen.dart';
 import 'screens/splash_screen.dart';
 
 // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
-// import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
-  // await Firebase.initializeApp();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -39,6 +42,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => SkillProvider()),
         ChangeNotifierProvider(create: (_) => ExploreProvider()),
@@ -69,39 +73,89 @@ class MyApp extends StatelessWidget {
               (previous ?? NotificationProvider())..updateAuth(auth),
         ),
       ],
-      child: MaterialApp(
-        title: 'SkillBarter',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
-          inputDecorationTheme: InputDecorationTheme(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            filled: true,
-            fillColor: Colors.grey[50],
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+      child: Consumer<SettingsProvider>(
+        builder: (context, settings, child) {
+          return MaterialApp(
+            title: 'SkillBarter',
+            debugShowCheckedModeBanner: false,
+            // Apply Locale
+            locale: settings.locale,
+            supportedLocales: const [Locale('id', ''), Locale('en', '')],
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            // Apply Theme Mode
+            themeMode: settings.themeMode,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.blue,
+                brightness: Brightness.light,
+              ),
+              useMaterial3: true,
+              scaffoldBackgroundColor: const Color(0xFFF8F9FD),
+              inputDecorationTheme: InputDecorationTheme(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
+              ),
+              appBarTheme: const AppBarTheme(
+                surfaceTintColor: Colors.transparent,
+              ),
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        home: const SplashScreen(),
-        routes: {
-          '/login': (context) => const LoginScreen(),
-          '/register': (context) => const RegisterScreen(),
-          '/home': (context) => const HomeScreen(),
-          '/skills': (context) => const SkillListScreen(),
-          '/explore': (context) => const ExploreScreen(),
-          '/leaderboard': (context) => const LeaderboardScreen(),
-          '/transactions': (context) => const TransactionListScreen(),
-          '/create-offer': (context) => const CreateOfferScreen(),
+            darkTheme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.blue,
+                brightness: Brightness.dark,
+                surface: const Color(0xFF1E1E1E), // Dark surface for cards
+                background: const Color(0xFF121212), // Darker background
+              ),
+              useMaterial3: true,
+              scaffoldBackgroundColor: const Color(0xFF121212),
+              cardColor: const Color(0xFF1E1E1E),
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Color(0xFF121212), // Match scaffold
+                surfaceTintColor: Colors.transparent,
+                foregroundColor: Colors.white,
+              ),
+              bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+                backgroundColor: Color(0xFF1E1E1E),
+                selectedItemColor: Colors.blueAccent,
+                unselectedItemColor: Colors.grey,
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: const Color(0xFF2C2C2C), // Darker input fill
+                hintStyle: TextStyle(color: Colors.grey[500]),
+              ),
+            ),
+            home: const SplashScreen(),
+            routes: {
+              '/login': (context) => const LoginScreen(),
+              '/register': (context) => const RegisterScreen(),
+              '/home': (context) => const HomeScreen(),
+              '/skills': (context) => const SkillListScreen(),
+              '/explore': (context) => const ExploreScreen(),
+              '/leaderboard': (context) => const LeaderboardScreen(),
+              '/transactions': (context) => const TransactionListScreen(),
+              '/create-offer': (context) => const CreateOfferScreen(),
+            },
+          );
         },
       ),
     );
