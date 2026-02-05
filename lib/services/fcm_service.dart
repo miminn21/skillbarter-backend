@@ -79,7 +79,13 @@ class FCMService {
           iOS: initializationSettingsDarwin,
         );
 
-    await _localNotifications.initialize(initializationSettings);
+    await _localNotifications.initialize(
+      settings: initializationSettings,
+      onDidReceiveNotificationResponse:
+          (NotificationResponse notificationResponse) {
+            print('Notification tapped: ${notificationResponse.payload}');
+          },
+    );
   }
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {
@@ -102,10 +108,10 @@ class FCMService {
       );
 
       await _localNotifications.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        platformDetails,
+        id: notification.hashCode,
+        title: notification.title,
+        body: notification.body,
+        notificationDetails: platformDetails,
       );
     }
   }
