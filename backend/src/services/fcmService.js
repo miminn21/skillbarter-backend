@@ -52,6 +52,10 @@ function initializeFCM() {
  * @param {number} notification.unread_count - Badge count
  */
 async function sendPushNotification(fcmToken, notification) {
+  console.log('🔔 ===== SEND PUSH NOTIFICATION CALLED =====');
+  console.log('📱 FCM Token:', fcmToken ? `${fcmToken.substring(0, 20)}...` : 'NULL/EMPTY');
+  console.log('📦 Notification:', JSON.stringify(notification, null, 2));
+  
   if (!fcmToken) {
     console.log('⚠️ No FCM token provided, skipping push');
     return null;
@@ -61,6 +65,8 @@ async function sendPushNotification(fcmToken, notification) {
     console.log('⚠️ Firebase not initialized, skipping push');
     return null;
   }
+
+  console.log('✅ Firebase initialized, apps count:', admin.apps.length);
 
   // DATA-ONLY STRATEGY: More reliable for custom notification handling
   const message = {
@@ -92,12 +98,16 @@ async function sendPushNotification(fcmToken, notification) {
     }
   };
 
+  console.log('📤 Sending FCM message:', JSON.stringify(message, null, 2));
+
   try {
     const response = await admin.messaging().send(message);
-    console.log('✅ Push notification sent:', response);
+    console.log('✅ Push notification sent successfully:', response);
     return response;
   } catch (error) {
     console.error('❌ Push notification failed:', error.message);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Full error:', JSON.stringify(error, null, 2));
     if (error.code === 'messaging/invalid-registration-token' ||
         error.code === 'messaging/registration-token-not-registered') {
       console.log('   Token is invalid or expired, should be removed from DB');
