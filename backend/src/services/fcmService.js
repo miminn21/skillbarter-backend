@@ -64,19 +64,26 @@ async function sendPushNotification(fcmToken, notification) {
 
   const message = {
     token: fcmToken,
-    // REMOVED 'notification' key to prevent System Tray suppression.
-    // We now send EVERYTHING in 'data' and handle it manually in Flutter.
+    notification: {
+      title: notification.judul || 'SkillBarter',
+      body: notification.pesan || 'Anda memiliki notifikasi baru'
+    },
     data: {
-      title: notification.judul || 'SkillBarter', // Moved to data
-      body: notification.pesan || 'Anda memiliki notifikasi baru', // Moved to data
       id_notifikasi: notification.id?.toString() || '',
       id_barter: notification.data?.id_barter?.toString() || '',
       tipe: notification.tipe || 'general',
       click_action: 'FLUTTER_NOTIFICATION_CLICK'
     },
     android: {
-      priority: 'high', // Critical for wake-up
-      // Notification block removed from here too
+      priority: 'high',
+      notification: {
+        sound: 'default',
+        channelId: 'skillbarter_urgent_v3', // Fresh Channel V3
+        priority: 'high',
+        defaultSound: true,
+        defaultVibrateTimings: true,
+        visibility: 'public'
+      }
     },
     apns: {
       payload: {
@@ -126,9 +133,11 @@ async function sendMulticastPushNotification(fcmTokens, notification) {
 
   const message = {
     tokens: fcmTokens,
-    data: {
+    notification: {
       title: notification.judul || 'SkillBarter',
-      body: notification.pesan || 'Anda memiliki notifikasi baru',
+      body: notification.pesan || 'Anda memiliki notifikasi baru'
+    },
+    data: {
       id_notifikasi: notification.id?.toString() || '',
       id_barter: notification.data?.id_barter?.toString() || '',
       tipe: notification.tipe || 'general'
