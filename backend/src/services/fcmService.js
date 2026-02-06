@@ -62,13 +62,12 @@ async function sendPushNotification(fcmToken, notification) {
     return null;
   }
 
+  // DATA-ONLY STRATEGY: More reliable for custom notification handling
   const message = {
     token: fcmToken,
-    notification: {
-      title: notification.judul || 'SkillBarter',
-      body: notification.pesan || 'Anda memiliki notifikasi baru'
-    },
     data: {
+      title: notification.judul || 'SkillBarter',
+      body: notification.pesan || 'Anda memiliki notifikasi baru',
       id_notifikasi: notification.id?.toString() || '',
       id_barter: notification.data?.id_barter?.toString() || '',
       tipe: notification.tipe || 'general',
@@ -76,20 +75,7 @@ async function sendPushNotification(fcmToken, notification) {
     },
     android: {
       priority: 'high',
-      ttl: 86400, // 24 hours in seconds
-      notification: {
-        sound: 'default',
-        channelId: 'skillbarter_urgent_v3',
-        priority: 'high',
-        defaultSound: true,
-        defaultVibrateTimings: true,
-        visibility: 'public',
-        notificationPriority: 'PRIORITY_MAX', // Force max priority
-        category: 'call', // 'call' category forces heads-up on most devices
-        showWhen: true,
-        localOnly: false,
-        sticky: false
-      }
+      ttl: 86400,
     },
     apns: {
       payload: {
