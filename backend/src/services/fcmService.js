@@ -78,10 +78,11 @@ async function sendPushNotification(fcmToken, notification) {
       priority: 'high',
       notification: {
         sound: 'default',
-        channelId: 'skillbarter_urgent_v1',
+        channelId: 'skillbarter_urgent_v2',
         priority: 'high',
         defaultSound: true,
-        defaultVibrateTimings: true
+        defaultVibrateTimings: true,
+        visibility: 'public'
       }
     },
     apns: {

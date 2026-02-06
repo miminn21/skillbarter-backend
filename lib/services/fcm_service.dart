@@ -78,11 +78,13 @@ class FCMService {
 
   Future<void> _createNotificationChannel() async {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'skillbarter_urgent_v1', // Must match backend
-      'SkillBarter Information', // Title
-      description: 'Important notifications from SkillBarter',
-      importance: Importance.max, // Required for Heads-up
+      'skillbarter_urgent_v2', // Bump version to force update
+      'SkillBarter Alert', // Title
+      description: 'Urgent notifications (Offers, Chats)',
+      importance: Importance.max,
       playSound: true,
+      enableVibration: true,
+      enableLights: true,
     );
 
     await _localNotifications
@@ -121,8 +123,8 @@ class FCMService {
     if (notification != null && android != null) {
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-            'skillbarter_urgent_v1', // Use the unified channel ID
-            'SkillBarter Information',
+            'skillbarter_urgent_v2',
+            'SkillBarter Alert',
             channelDescription: 'Important notifications from SkillBarter',
             importance: Importance.max,
             priority: Priority.high,
