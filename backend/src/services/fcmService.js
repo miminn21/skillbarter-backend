@@ -76,21 +76,27 @@ async function sendPushNotification(fcmToken, notification) {
     },
     android: {
       priority: 'high',
+      ttl: 86400, // 24 hours in seconds
       notification: {
         sound: 'default',
-        channelId: 'skillbarter_urgent_v3', // Fresh Channel V3
+        channelId: 'skillbarter_urgent_v3',
         priority: 'high',
         defaultSound: true,
         defaultVibrateTimings: true,
-        visibility: 'public'
+        visibility: 'public',
+        notificationPriority: 'PRIORITY_MAX', // Force max priority
+        category: 'call', // 'call' category forces heads-up on most devices
+        showWhen: true,
+        localOnly: false,
+        sticky: false
       }
     },
     apns: {
       payload: {
         aps: {
-          alert: { // APNS still needs this structure
-             title: notification.judul || 'SkillBarter',
-             body: notification.pesan || 'Anda memiliki notifikasi baru',
+          alert: {
+            title: notification.judul || 'SkillBarter',
+            body: notification.pesan || 'Anda memiliki notifikasi baru',
           },
           sound: 'default',
           badge: notification.unread_count || 1,

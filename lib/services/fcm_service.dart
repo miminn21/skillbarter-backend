@@ -27,12 +27,11 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (message.notification == null && message.data.isNotEmpty) {
     String title = message.data['title'] ?? 'SkillBarter';
     String body = message.data['body'] ?? 'You have a new message';
-    String channelId = 'skillbarter_urgent_v2';
 
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-          'skillbarter_urgent_v2', // Updated Channel ID
-          'SkillBarter Alert',
+          'skillbarter_urgent_v3', // FIXED: Must match backend & manifest
+          'SkillBarter Alerts',
           channelDescription: 'Urgent notifications (Offers, Chats)',
           importance: Importance.max,
           priority: Priority.high,
@@ -126,13 +125,14 @@ class FCMService {
 
   Future<void> _createNotificationChannel() async {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'skillbarter_urgent_v2', // Bump version to force update
-      'SkillBarter Alert', // Title
+      'skillbarter_urgent_v3',
+      'SkillBarter Alerts',
       description: 'Urgent notifications (Offers, Chats)',
       importance: Importance.max,
       playSound: true,
       enableVibration: true,
       enableLights: true,
+      showBadge: true,
     );
 
     await _localNotifications
@@ -171,8 +171,8 @@ class FCMService {
     if (notification != null && android != null) {
       const AndroidNotificationDetails androidDetails =
           AndroidNotificationDetails(
-            'skillbarter_urgent_v2',
-            'SkillBarter Alert',
+            'skillbarter_urgent_v3',
+            'SkillBarter Alerts',
             channelDescription: 'Important notifications from SkillBarter',
             importance: Importance.max,
             priority: Priority.high,
