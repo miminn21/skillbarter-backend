@@ -27,11 +27,19 @@ import 'screens/splash_screen.dart';
 
 // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'services/fcm_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // TEMPORARILY DISABLED FOR WEB TESTING - UNCOMMENT TO RE-ENABLE FIREBASE
+
+  // CRITICAL: Initialize Firebase FIRST
   await Firebase.initializeApp();
+
+  // CRITICAL: Register background handler BEFORE runApp()
+  // This MUST be at top-level, not inside FCMService
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
   runApp(const MyApp());
 }
 

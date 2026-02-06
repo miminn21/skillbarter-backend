@@ -3,9 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'api_service.dart';
 
+// Export background handler so it can be used in main.dart
+export 'fcm_service.dart' show firebaseMessagingBackgroundHandler;
+
 // Background message handler must be a top-level function
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('🔔 ===== BACKGROUND MESSAGE RECEIVED =====');
   print('📱 Message ID: ${message.messageId}');
   print('📦 Data: ${message.data}');
@@ -130,11 +133,10 @@ class FCMService {
           >()
           ?.requestNotificationsPermission();
 
-      // 4. Register Background Handler
-      FirebaseMessaging.onBackgroundMessage(
-        _firebaseMessagingBackgroundHandler,
-      );
+      // NOTE: Background handler is registered in main.dart
+      // FirebaseMessaging.onBackgroundMessage() must be called at top-level
 
+      // 4. Get Token and Save to Backend
       // 5. Get Token and Save to Backend
       String? token = await _firebaseMessaging.getToken();
       if (token != null) {
