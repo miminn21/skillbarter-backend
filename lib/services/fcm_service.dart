@@ -6,8 +6,10 @@ import 'api_service.dart';
 // Background message handler must be a top-level function
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Handling a background message: ${message.messageId}');
-  print('Background Data: ${message.data}');
+  print('🔔 ===== BACKGROUND MESSAGE RECEIVED =====');
+  print('📱 Message ID: ${message.messageId}');
+  print('📦 Data: ${message.data}');
+  print('🔕 Notification object: ${message.notification}');
 
   // Explicitly initialize Local Notifications for background isolate
   final FlutterLocalNotificationsPlugin localNotifications =
@@ -22,11 +24,33 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   await localNotifications.initialize(initializationSettings);
 
+  // CRITICAL: Create notification channel BEFORE showing notification
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'skillbarter_urgent_v3',
+    'SkillBarter Alerts',
+    description: 'Urgent notifications (Offers, Chats)',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+    enableLights: true,
+    showBadge: true,
+  );
+
+  await localNotifications
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(channel);
+
+  print('✅ Notification channel created in background handler');
+
   // If message contains data but NO notification payload (Data-Only),
   // parse it and show notification manually.
   if (message.notification == null && message.data.isNotEmpty) {
     String title = message.data['title'] ?? 'SkillBarter';
     String body = message.data['body'] ?? 'You have a new message';
+
+    print('📢 Showing notification: $title - $body');
 
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
@@ -57,7 +81,15 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       platformDetails,
       payload: message.data['id_barter'],
     );
+
+    print('✅ Notification displayed successfully');
+  } else {
+    print(
+      '⚠️ Skipping notification display - notification object exists or data is empty',
+    );
   }
+
+  print('🔔 ===== BACKGROUND HANDLER COMPLETE =====');
 }
 
 class FCMService {
