@@ -64,30 +64,27 @@ async function sendPushNotification(fcmToken, notification) {
 
   const message = {
     token: fcmToken,
-    notification: {
-      title: notification.judul || 'SkillBarter',
-      body: notification.pesan || 'Anda memiliki notifikasi baru'
-    },
+    // REMOVED 'notification' key to prevent System Tray suppression.
+    // We now send EVERYTHING in 'data' and handle it manually in Flutter.
     data: {
+      title: notification.judul || 'SkillBarter', // Moved to data
+      body: notification.pesan || 'Anda memiliki notifikasi baru', // Moved to data
       id_notifikasi: notification.id?.toString() || '',
       id_barter: notification.data?.id_barter?.toString() || '',
       tipe: notification.tipe || 'general',
       click_action: 'FLUTTER_NOTIFICATION_CLICK'
     },
     android: {
-      priority: 'high',
-      notification: {
-        sound: 'default',
-        channelId: 'skillbarter_urgent_v2',
-        priority: 'high',
-        defaultSound: true,
-        defaultVibrateTimings: true,
-        visibility: 'public'
-      }
+      priority: 'high', // Critical for wake-up
+      // Notification block removed from here too
     },
     apns: {
       payload: {
         aps: {
+          alert: { // APNS still needs this structure
+             title: notification.judul || 'SkillBarter',
+             body: notification.pesan || 'Anda memiliki notifikasi baru',
+          },
           sound: 'default',
           badge: notification.unread_count || 1,
           contentAvailable: true
@@ -129,11 +126,9 @@ async function sendMulticastPushNotification(fcmTokens, notification) {
 
   const message = {
     tokens: fcmTokens,
-    notification: {
-      title: notification.judul || 'SkillBarter',
-      body: notification.pesan || 'Anda memiliki notifikasi baru'
-    },
     data: {
+      title: notification.judul || 'SkillBarter',
+      body: notification.pesan || 'Anda memiliki notifikasi baru',
       id_notifikasi: notification.id?.toString() || '',
       id_barter: notification.data?.id_barter?.toString() || '',
       tipe: notification.tipe || 'general'

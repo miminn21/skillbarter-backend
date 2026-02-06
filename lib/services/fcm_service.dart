@@ -7,6 +7,54 @@ import 'api_service.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('Handling a background message: ${message.messageId}');
+  print('Background Data: ${message.data}');
+
+  // Explicitly initialize Local Notifications for background isolate
+  final FlutterLocalNotificationsPlugin localNotifications =
+      FlutterLocalNotificationsPlugin();
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  await localNotifications.initialize(initializationSettings);
+
+  // If message contains data but NO notification payload (Data-Only),
+  // parse it and show notification manually.
+  if (message.notification == null && message.data.isNotEmpty) {
+    String title = message.data['title'] ?? 'SkillBarter';
+    String body = message.data['body'] ?? 'You have a new message';
+    String channelId = 'skillbarter_urgent_v2';
+
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'skillbarter_urgent_v2', // Updated Channel ID
+          'SkillBarter Alert',
+          channelDescription: 'Urgent notifications (Offers, Chats)',
+          importance: Importance.max,
+          priority: Priority.high,
+          ticker: 'ticker',
+          playSound: true,
+          enableVibration: true,
+          enableLights: true,
+          visibility: NotificationVisibility.public,
+        );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    await localNotifications.show(
+      DateTime.now().millisecond, // Unique ID
+      title,
+      body,
+      platformDetails,
+      payload: message.data['id_barter'],
+    );
+  }
 }
 
 class FCMService {
