@@ -144,13 +144,16 @@ class FCMService {
 
       // 6. Build Foreground Listener
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        print('Got a message whilst in the foreground!');
-        print('Message data: ${message.data}');
+        print('🔔 Got a message whilst in the foreground!');
+        print('📦 Message data: ${message.data}');
+        print('🔕 Notification object: ${message.notification}');
 
-        if (message.notification != null) {
-          print(
-            'Message also contained a notification: ${message.notification}',
-          );
+        // Handle DATA-ONLY messages (backend sends data-only)
+        if (message.notification == null && message.data.isNotEmpty) {
+          print('📢 Showing data-only notification in foreground');
+          _showDataOnlyNotification(message);
+        } else if (message.notification != null) {
+          print('📢 Showing standard notification in foreground');
           _showForegroundNotification(message);
         }
       });
@@ -228,6 +231,44 @@ class FCMService {
         platformDetails,
       );
     }
+  }
+
+  Future<void> _showDataOnlyNotification(RemoteMessage message) async {
+    // Extract title and body from data payload
+    String title = message.data['title'] ?? 'SkillBarter';
+    String body = message.data['body'] ?? 'You have a new message';
+
+    print('📢 Displaying data-only notification: $title - $body');
+
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'skillbarter_urgent_v3',
+          'SkillBarter Alerts',
+          channelDescription: 'Important notifications from SkillBarter',
+          importance: Importance.max,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.call, // Force heads-up
+          showWhen: true,
+          visibility: NotificationVisibility.public,
+          fullScreenIntent: true, // Force full-screen on some devices
+          playSound: true,
+          enableVibration: true,
+          enableLights: true,
+        );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    await _localNotifications.show(
+      DateTime.now().millisecond, // Unique ID
+      title,
+      body,
+      platformDetails,
+      payload: message.data['id_barter'],
+    );
+
+    print('✅ Data-only notification displayed in foreground');
   }
 
   Future<void> _updateBackendToken(String token) async {
