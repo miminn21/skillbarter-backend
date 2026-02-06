@@ -40,6 +40,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           enableVibration: true,
           enableLights: true,
           visibility: NotificationVisibility.public,
+          category:
+              AndroidNotificationCategory.call, // CRITICAL: Force heads-up
+          showWhen: true,
+          fullScreenIntent: true, // Force full-screen on some devices
         );
 
     const NotificationDetails platformDetails = NotificationDetails(
@@ -176,6 +180,9 @@ class FCMService {
             channelDescription: 'Important notifications from SkillBarter',
             importance: Importance.max,
             priority: Priority.high,
+            category: AndroidNotificationCategory.call,
+            showWhen: true,
+            visibility: NotificationVisibility.public,
           );
 
       const NotificationDetails platformDetails = NotificationDetails(
