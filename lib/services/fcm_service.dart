@@ -137,14 +137,13 @@ class FCMService {
       // FirebaseMessaging.onBackgroundMessage() must be called at top-level
 
       // 4. Get Token and Save to Backend
-      // 5. Get Token and Save to Backend
       String? token = await _firebaseMessaging.getToken();
       if (token != null) {
         print('FCM Token: $token');
         await _updateBackendToken(token);
       }
 
-      // 6. Build Foreground Listener
+      // 5. Build Foreground Listener
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         print('🔔 Got a message whilst in the foreground!');
         print('📦 Message data: ${message.data}');
