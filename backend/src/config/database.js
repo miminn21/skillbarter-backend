@@ -14,7 +14,12 @@ const pool = mysql.createPool({
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
-  connectTimeout: 30000 // 30 second timeout for Railway
+  connectTimeout: 30000, // 30 second timeout for Railway/Render
+  // Wajib untuk TiDB Cloud / Aiven
+  ssl: {
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized: true
+  }
 });
 
 // Get promise-based pool
